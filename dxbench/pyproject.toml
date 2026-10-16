@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dxbench"
+version = "0.1.0"
+description = "DX Hub RB-Y1 household benchmark (bedroom tasks) on IsaacLab-Arena"
+requires-python = ">=3.11"
+dependencies = []  # runs inside the dx_arena conda env (Isaac Sim 6.1 / Isaac Lab 3.0 / Arena 0.3.1); install with --no-deps
+
+[tool.setuptools.packages.find]
+include = ["dxbench*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.usda", "*.usd", "*.json", "*.yaml", "*.npz"]

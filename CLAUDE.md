@@ -45,6 +45,12 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
   변형체 충돌 설정은 `collision_props=[PhysxCollisionCfg(...)]`(fragment 리스트).
 - `MeshRectangleCfg.edge_refinement`는 trimesh `subdivide_to_size`로 반씩만 쪼갬 → 1.5 m 천의 노드 간격 4.7 / 2.3 / 1.2 cm.
 - 바퀴 부호: 오른 바퀴는 −y. 반시계 yaw면 오른 바퀴가 빨라야 함(v_r = v + ω·W/2). +바퀴 관절 속도 = 후진.
-- 몸통 deep 프리셋 + 팔 전방 뻗기 → 무게중심이 앞바퀴 축(x 0.228) 앞으로 나가 넘어짐. 바닥 집기 자세는 COM 여유를 확인할 것.
+- 몸통 자세 전환은 torso_1·2·3를 **동기 보간**할 것(D-15). 관절별 등속 램프는 (90, −90, 90)° 같은 불안정 중간 자세를 지나 넘어진다.
+  deep(90, −130, 90)° 정지 자세는 안정(COM x 0.13, 앞바퀴 축 0.228). 진단: `t5_embodiment.py --test torso_ramp`.
 - 오른 손목 arm_5 상한 1.92 rad: 그리퍼 아래 방향 + 높은 TCP(z ≳ 1.1 m)에서 한계에 걸림.
 - 안전 검사: `rm`에 글롭/변수 경로를 쓰면 막힌다. 결과 정리는 태그로 구분하거나 사람에게 맡길 것.
+- Isaac Lab 3.0 AppLauncher엔 `--headless`가 없다(기본이 headless). GUI는 `--visualizer kit`.
+- USD `customLayerData`에 파이썬 list를 넣으면 타입 없는 `color = [..]`로 저장돼 레이어 자체가 안 열린다 → `Gf.Vec3f` 등 타입 값 사용.
+  USD 경고가 음소거돼 Isaac Lab은 "Expected 1 prims ... found 0"만 보여 준다 → `Usd.Stage.Open`으로 파일을 직접 열어 확인.
+- `pkill -f <패턴>`은 그 패턴이 들어간 내 bash 명령 자신도 죽인다 → PID로 kill.
+- 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.

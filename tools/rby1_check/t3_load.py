@@ -42,6 +42,7 @@ parser.add_argument("--sweep_joints", default="", help="comma list (default: all
 parser.add_argument("--caster_mu", type=float, default=0.3, help="friction of the base caster cylinders (original 0.3)")
 parser.add_argument("--fix_root", action="store_true", help="pin the base (used to measure torso tracking without tipping)")
 parser.add_argument("--spawn", default="0,0,0", help="robot init position x,y,z (render/pose sync check)")
+parser.add_argument("--arms_ready", action="store_true")
 parser.add_argument("--usd", default=None)
 parser.add_argument("--tag", default="")
 AppLauncher.add_app_launcher_args(parser)
@@ -107,6 +108,13 @@ def build_scene():
     if args.fix_root:
         robot_cfg.spawn.articulation_props.fix_root_link = True
     robot_cfg.init_state.pos = tuple(float(v) for v in args.spawn.split(","))
+    if args.arms_ready:  # dxbench READY_ARMS (elbows bent, forearms forward)
+        jp = {n: 0.0 for n in ["right_wheel", "left_wheel"] + [f"torso_{i}" for i in range(6)] + ["head_0", "head_1"]
+              + [f"{s}_arm_{i}" for s in ("right", "left") for i in range(7)]}
+        jp.update({"right_arm_0": -0.5, "right_arm_1": -0.2, "right_arm_3": -1.6, "right_arm_5": 0.3,
+                   "left_arm_0": -0.5, "left_arm_1": 0.2, "left_arm_3": -1.6, "left_arm_5": 0.3,
+                   "gripper_finger_[lr]1": 0.0, "gripper_finger_[lr]2": 0.0})
+        robot_cfg.init_state.joint_pos = jp
 
     @configclass
     class SceneCfg(InteractiveSceneCfg):

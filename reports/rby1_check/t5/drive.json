@@ -1,0 +1,26 @@
+{
+  "straight": {
+    "forward_m": 0.890009343624115,
+    "lateral_m": -0.012163209728896618,
+    "yaw_rad": -0.017188485486322236,
+    "expected_m": 0.8999999999999999,
+    "err": 0.011100729306538801
+  },
+  "spin": {
+    "forward_m": 0.1859341710805893,
+    "lateral_m": -0.22182592749595642,
+    "yaw_rad": 1.3844956577838992,
+    "expected_rad": 1.5,
+    "err": 0.0770028948107339
+  },
+  "criteria": {
+    "straight<=10%": true,
+    "spin<=10%": true
+  },
+  "pass": true,
+  "test": "drive",
+  "embodiment": "rby1_joint",
+  "wall_s": 5.06160044670105,
+  "physics_dt": 0.004166666666666667,
+  "step_dt": 0.06666666666666667
+}

@@ -1,0 +1,19 @@
+{
+  "bed_centre_px": [
+    141.53542040623955,
+    321.2584698690181
+  ],
+  "bed_visible": true,
+  "rgb_mean": 106.06045572916666,
+  "image": "/home/cai/dx_bench/reports/rby1_check/t5/bedroom_head_rgb.png",
+  "criteria": {
+    "bed_in_head_camera": true,
+    "not_black": true
+  },
+  "pass": true,
+  "test": "bedroom_camera",
+  "embodiment": "rby1_joint",
+  "wall_s": 5.345648765563965,
+  "physics_dt": 0.004166666666666667,
+  "step_dt": 0.06666666666666667
+}

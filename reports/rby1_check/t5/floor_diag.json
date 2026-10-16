@@ -1,0 +1,81 @@
+{
+  "tries": [
+    {
+      "preset": "deep",
+      "ahead_target_m": 0.15,
+      "phase_tilt": {
+        "after_preset": 52.574944067497256,
+        "com_after_preset": 0.4645741283893585,
+        "after_pre": 52.53312704702438,
+        "com_after_pre": 0.4542923867702484,
+        "after_servo": 52.526969718697906,
+        "com_after_servo": 0.4539943337440491
+      },
+      "servo_err": [
+        0.010999898426234722,
+        0.01751720747620667
+      ],
+      "fingertip_z_m": 0.006718057632446289,
+      "ahead_of_base_front_m": 0.15650453448295593,
+      "tilt_deg": 52.52687834040293,
+      "com_x_m": 0.45405313372612,
+      "com_margin_to_front_axle_m": -0.22605313372612,
+      "ok": false
+    },
+    {
+      "preset": "deep",
+      "ahead_target_m": 0.2,
+      "phase_tilt": {
+        "after_preset": 114.70209327709706,
+        "com_after_preset": 0.7323421239852905,
+        "after_pre": 111.9838754562109,
+        "com_after_pre": 0.73324054479599,
+        "after_servo": 111.98376699241179,
+        "com_after_servo": 0.7336474061012268
+      },
+      "servo_err": [
+        1.1575400829315186,
+        2.527820193153626
+      ],
+      "fingertip_z_m": 0.49039258384704587,
+      "ahead_of_base_front_m": 1.2215794849395751,
+      "tilt_deg": 111.62487515984259,
+      "com_x_m": 0.7321810126304626,
+      "com_margin_to_front_axle_m": -0.5041810126304627,
+      "ok": false
+    }
+  ],
+  "best": {
+    "preset": "deep",
+    "ahead_target_m": 0.15,
+    "phase_tilt": {
+      "after_preset": 52.574944067497256,
+      "com_after_preset": 0.4645741283893585,
+      "after_pre": 52.53312704702438,
+      "com_after_pre": 0.4542923867702484,
+      "after_servo": 52.526969718697906,
+      "com_after_servo": 0.4539943337440491
+    },
+    "servo_err": [
+      0.010999898426234722,
+      0.01751720747620667
+    ],
+    "fingertip_z_m": 0.006718057632446289,
+    "ahead_of_base_front_m": 0.15650453448295593,
+    "tilt_deg": 52.52687834040293,
+    "com_x_m": 0.45405313372612,
+    "com_margin_to_front_axle_m": -0.22605313372612,
+    "ok": false
+  },
+  "criteria": {
+    "fingertip<=0.02m": true,
+    "15-50cm_ahead": true,
+    "no_tip": false
+  },
+  "pass": false,
+  "test": "floor",
+  "embodiment": "rby1_ik",
+  "wall_s": 312.5023555755615,
+  "physics_dt": 0.004166666666666667,
+  "step_dt": 0.06666666666666667
+}
