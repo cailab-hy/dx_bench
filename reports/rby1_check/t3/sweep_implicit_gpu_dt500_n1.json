@@ -1,0 +1,1017 @@
+{
+  "run": "sweep_implicit_gpu_dt500_n1",
+  "args": {
+    "test": "sweep",
+    "dt": 500,
+    "num_envs": 1,
+    "mode": "implicit",
+    "effort": "urdf",
+    "pose": "zero",
+    "duration": 10.0,
+    "friction": "full",
+    "no_friction": false,
+    "damping_ratio": null,
+    "gravity_comp": false,
+    "grip_mimic": false,
+    "crouch": "60,-90,60",
+    "sweep_joints": "",
+    "caster_mu": 0.3,
+    "fix_root": false,
+    "spawn": "0,0,0",
+    "usd": null,
+    "tag": "",
+    "xr": false,
+    "device": "cuda:0",
+    "visualizer": [],
+    "cpu": false,
+    "verbose": false,
+    "info": false,
+    "deterministic": false,
+    "kit_args": "",
+    "anim_recording_enabled": false,
+    "anim_recording_start_time": 0,
+    "anim_recording_stop_time": 10,
+    "headless": true,
+    "hide_ui": true,
+    "create_new_stage": false,
+    "physics_gpu": 0
+  },
+  "physics_device": "cuda:0",
+  "dt": 0.002,
+  "joint_names": [
+    "left_wheel",
+    "right_wheel",
+    "torso_0",
+    "torso_1",
+    "torso_2",
+    "torso_3",
+    "torso_4",
+    "torso_5",
+    "left_arm_0",
+    "right_arm_0",
+    "head_0",
+    "left_arm_1",
+    "right_arm_1",
+    "head_1",
+    "left_arm_2",
+    "right_arm_2",
+    "left_arm_3",
+    "right_arm_3",
+    "left_arm_4",
+    "right_arm_4",
+    "left_arm_5",
+    "right_arm_5",
+    "left_arm_6",
+    "right_arm_6",
+    "gripper_finger_l1",
+    "gripper_finger_l2",
+    "gripper_finger_r1",
+    "gripper_finger_r2"
+  ],
+  "body_names": [
+    "base",
+    "wheel_l",
+    "wheel_r",
+    "link_torso_0",
+    "link_torso_1",
+    "link_torso_2",
+    "link_torso_3",
+    "link_torso_4",
+    "link_torso_5",
+    "link_head_0",
+    "link_left_arm_0",
+    "link_right_arm_0",
+    "link_head_1",
+    "link_left_arm_1",
+    "link_right_arm_1",
+    "link_head_2",
+    "link_left_arm_2",
+    "link_right_arm_2",
+    "link_left_arm_3",
+    "link_right_arm_3",
+    "link_left_arm_4",
+    "link_right_arm_4",
+    "link_left_arm_5",
+    "link_right_arm_5",
+    "link_left_arm_6",
+    "link_right_arm_6",
+    "ee_left",
+    "ee_right",
+    "ee_finger_l1",
+    "ee_finger_l2",
+    "ee_finger_r1",
+    "ee_finger_r2"
+  ],
+  "root_body": "base",
+  "is_fixed_base": false,
+  "num_joints": 28,
+  "materials_bound": 6,
+  "body_mass_kg": {
+    "base": 60.080421447753906,
+    "wheel_l": 1.3778374195098877,
+    "wheel_r": 1.3778374195098877,
+    "link_torso_0": 2.242821216583252,
+    "link_torso_1": 9.721627235412598,
+    "link_torso_2": 9.2169189453125,
+    "link_torso_3": 4.186791896820068,
+    "link_torso_4": 4.455662727355957,
+    "link_torso_5": 14.732839584350586,
+    "link_head_0": 0.6573165059089661,
+    "link_left_arm_0": 1.2616424560546875,
+    "link_right_arm_0": 1.2616424560546875,
+    "link_head_1": 0.7047650218009949,
+    "link_left_arm_1": 2.2728703022003174,
+    "link_right_arm_1": 2.2728703022003174,
+    "link_head_2": 0.9526273608207703,
+    "link_left_arm_2": 2.4690942764282227,
+    "link_right_arm_2": 2.4690942764282227,
+    "link_left_arm_3": 2.2609949111938477,
+    "link_right_arm_3": 2.2609949111938477,
+    "link_left_arm_4": 0.4250870645046234,
+    "link_right_arm_4": 0.4250870645046234,
+    "link_left_arm_5": 1.6050670146942139,
+    "link_right_arm_5": 1.6050670146942139,
+    "link_left_arm_6": 0.4275166988372803,
+    "link_right_arm_6": 0.4275166988372803,
+    "ee_left": 0.4670499861240387,
+    "ee_right": 0.4670499861240387,
+    "ee_finger_l1": 0.03326999023556709,
+    "ee_finger_l2": 0.03326999023556709,
+    "ee_finger_r1": 0.03326999023556709,
+    "ee_finger_r2": 0.03326999023556709
+  },
+  "total_mass_kg": 132.2191925048828,
+  "body_pos_start": {
+    "base": [
+      1.6763806343078613e-06,
+      7.713679224252701e-07,
+      -1.1473894119262695e-06
+    ],
+    "wheel_l": [
+      0.2280019223690033,
+      0.26500052213668823,
+      0.09999898076057434
+    ],
+    "wheel_r": [
+      0.22800123691558838,
+      -0.26499947905540466,
+      0.09999916702508926
+    ],
+    "link_torso_0": [
+      1.4379620552062988e-06,
+      8.711795089766383e-07,
+      0.2804988920688629
+    ],
+    "link_torso_1": [
+      1.4402903616428375e-06,
+      8.66129994392395e-07,
+      0.2804988920688629
+    ],
+    "link_torso_2": [
+      1.750420778989792e-05,
+      9.909272193908691e-07,
+      0.6304987668991089
+    ],
+    "link_torso_3": [
+      9.573064744472504e-06,
+      1.1045485734939575e-06,
+      0.9804986119270325
+    ],
+    "link_torso_4": [
+      9.573996067047119e-06,
+      1.099095243262127e-06,
+      0.9804985523223877
+    ],
+    "link_torso_5": [
+      -2.387911081314087e-06,
+      1.5506520867347717e-07,
+      1.2899249792099
+    ],
+    "link_head_0": [
+      0.021992970257997513,
+      -2.2014137357473373e-07,
+      1.4099993705749512
+    ],
+    "link_left_arm_0": [
+      -5.341134965419769e-06,
+      0.21999989449977875,
+      1.3699991703033447
+    ],
+    "link_right_arm_0": [
+      -5.636364221572876e-06,
+      -0.22000008821487427,
+      1.3699979782104492
+    ],
+    "link_head_1": [
+      0.02198990061879158,
+      -4.5867636799812317e-07,
+      1.4899992942810059
+    ],
+    "link_left_arm_1": [
+      -5.340203642845154e-06,
+      0.21999989449977875,
+      1.3699991703033447
+    ],
+    "link_right_arm_1": [
+      -5.634967237710953e-06,
+      -0.22000007331371307,
+      1.3699979782104492
+    ],
+    "link_head_2": [
+      0.02198990061879158,
+      -4.6100467443466187e-07,
+      1.4899994134902954
+    ],
+    "link_left_arm_2": [
+      -5.340087227523327e-06,
+      0.21999989449977875,
+      1.3699992895126343
+    ],
+    "link_right_arm_2": [
+      -5.635200068354607e-06,
+      -0.22000008821487427,
+      1.3699978590011597
+    ],
+    "link_left_arm_3": [
+      0.03099890612065792,
+      0.22000069916248322,
+      1.0939998626708984
+    ],
+    "link_right_arm_3": [
+      0.030997851863503456,
+      -0.21999965608119965,
+      1.0939985513687134
+    ],
+    "link_left_arm_4": [
+      1.0133633622899652e-05,
+      0.22000153362751007,
+      0.8379983305931091
+    ],
+    "link_right_arm_4": [
+      9.988566489482764e-06,
+      -0.21999849379062653,
+      0.8379970192909241
+    ],
+    "link_left_arm_5": [
+      1.0133255273103714e-05,
+      0.22000154852867126,
+      0.8379983305931091
+    ],
+    "link_right_arm_5": [
+      9.9879689514637e-06,
+      -0.21999849379062653,
+      0.8379969596862793
+    ],
+    "link_left_arm_6": [
+      1.0136107448488474e-05,
+      0.22000153362751007,
+      0.8379983305931091
+    ],
+    "link_right_arm_6": [
+      9.98858013190329e-06,
+      -0.21999850869178772,
+      0.8379969596862793
+    ],
+    "ee_left": [
+      7.262919098138809e-06,
+      0.2200019210577011,
+      0.7118983268737793
+    ],
+    "ee_right": [
+      7.0517417043447495e-06,
+      -0.21999813616275787,
+      0.7118969559669495
+    ],
+    "ee_finger_l1": [
+      0.00300601776689291,
+      0.2200021594762802,
+      0.6368982791900635
+    ],
+    "ee_finger_l2": [
+      -0.0029996181838214397,
+      0.22000214457511902,
+      0.636898398399353
+    ],
+    "ee_finger_r1": [
+      0.003005793783813715,
+      -0.21999789774417877,
+      0.6368969082832336
+    ],
+    "ee_finger_r2": [
+      -0.002999495714902878,
+      -0.21999791264533997,
+      0.6368970274925232
+    ]
+  },
+  "joint_limits_rad": {
+    "left_wheel": [
+      -3.4028234663852886e+38,
+      3.4028234663852886e+38
+    ],
+    "right_wheel": [
+      -3.4028234663852886e+38,
+      3.4028234663852886e+38
+    ],
+    "torso_0": [
+      -0.2617993950843811,
+      0.2617993950843811
+    ],
+    "torso_1": [
+      -0.5235987901687622,
+      1.5707963705062866
+    ],
+    "torso_2": [
+      -2.6179938316345215,
+      1.5707963705062866
+    ],
+    "torso_3": [
+      -0.7853981852531433,
+      1.5707963705062866
+    ],
+    "torso_4": [
+      -0.5235987901687622,
+      0.5235987901687622
+    ],
+    "torso_5": [
+      -2.356194496154785,
+      2.356194496154785
+    ],
+    "left_arm_0": [
+      -3.1415927410125732,
+      3.1415927410125732
+    ],
+    "right_arm_0": [
+      -3.1415927410125732,
+      3.1415927410125732
+    ],
+    "head_0": [
+      -1.5707963705062866,
+      1.5707963705062866
+    ],
+    "left_arm_1": [
+      0.0,
+      3.1415927410125732
+    ],
+    "right_arm_1": [
+      -3.1415927410125732,
+      0.0
+    ],
+    "head_1": [
+      -1.5707963705062866,
+      1.5707963705062866
+    ],
+    "left_arm_2": [
+      -3.1415927410125732,
+      3.1415927410125732
+    ],
+    "right_arm_2": [
+      -3.1415927410125732,
+      3.1415927410125732
+    ],
+    "left_arm_3": [
+      -2.6179938316345215,
+      0.0
+    ],
+    "right_arm_3": [
+      -2.6179938316345215,
+      0.0
+    ],
+    "left_arm_4": [
+      -3.1415927410125732,
+      3.1415927410125732
+    ],
+    "right_arm_4": [
+      -3.1415927410125732,
+      3.1415927410125732
+    ],
+    "left_arm_5": [
+      -1.5707963705062866,
+      1.919862151145935
+    ],
+    "right_arm_5": [
+      -1.5707963705062866,
+      1.919862151145935
+    ],
+    "left_arm_6": [
+      -2.7052602767944336,
+      2.7052602767944336
+    ],
+    "right_arm_6": [
+      -2.7052602767944336,
+      2.7052602767944336
+    ],
+    "gripper_finger_l1": [
+      -0.05000000074505806,
+      0.0
+    ],
+    "gripper_finger_l2": [
+      0.0,
+      0.05000000074505806
+    ],
+    "gripper_finger_r1": [
+      -0.05000000074505806,
+      0.0
+    ],
+    "gripper_finger_r2": [
+      0.0,
+      0.05000000074505806
+    ]
+  },
+  "joint_effort_limits": {
+    "left_wheel": 100.0,
+    "right_wheel": 100.0,
+    "torso_0": 270.0,
+    "torso_1": 270.0,
+    "torso_2": 270.0,
+    "torso_3": 120.0,
+    "torso_4": 120.0,
+    "torso_5": 120.0,
+    "left_arm_0": 70.0,
+    "right_arm_0": 70.0,
+    "head_0": 70.0,
+    "left_arm_1": 70.0,
+    "right_arm_1": 70.0,
+    "head_1": 70.0,
+    "left_arm_2": 70.0,
+    "right_arm_2": 70.0,
+    "left_arm_3": 40.0,
+    "right_arm_3": 40.0,
+    "left_arm_4": 10.0,
+    "right_arm_4": 10.0,
+    "left_arm_5": 10.0,
+    "right_arm_5": 10.0,
+    "left_arm_6": 8.0,
+    "right_arm_6": 8.0,
+    "gripper_finger_l1": 75.0,
+    "gripper_finger_l2": 1000.0,
+    "gripper_finger_r1": 75.0,
+    "gripper_finger_r2": 1000.0
+  },
+  "joint_vel_limits": {
+    "left_wheel": 15.707962989807129,
+    "right_wheel": 15.707962989807129,
+    "torso_0": 2.094395160675049,
+    "torso_1": 2.094395160675049,
+    "torso_2": 2.094395160675049,
+    "torso_3": 3.1415927410125732,
+    "torso_4": 3.1415927410125732,
+    "torso_5": 3.1415927410125732,
+    "left_arm_0": 3.1415927410125732,
+    "right_arm_0": 3.1415927410125732,
+    "head_0": 3.140000104904175,
+    "left_arm_1": 3.1415927410125732,
+    "right_arm_1": 3.1415927410125732,
+    "head_1": 3.140000104904175,
+    "left_arm_2": 3.1415927410125732,
+    "right_arm_2": 3.1415927410125732,
+    "left_arm_3": 3.1415927410125732,
+    "right_arm_3": 3.1415927410125732,
+    "left_arm_4": 6.2831854820251465,
+    "right_arm_4": 6.2831854820251465,
+    "left_arm_5": 6.2831854820251465,
+    "right_arm_5": 6.2831854820251465,
+    "left_arm_6": 2.094395160675049,
+    "right_arm_6": 2.094395160675049,
+    "gripper_finger_l1": 0.05000000074505806,
+    "gripper_finger_l2": 0.05000000074505806,
+    "gripper_finger_r1": 0.05000000074505806,
+    "gripper_finger_r2": 0.05000000074505806
+  },
+  "joint_stiffness": {
+    "left_wheel": 0.0,
+    "right_wheel": 0.0,
+    "torso_0": 3911.0,
+    "torso_1": 3911.0,
+    "torso_2": 3911.0,
+    "torso_3": 573.5999755859375,
+    "torso_4": 573.5999755859375,
+    "torso_5": 573.5999755859375,
+    "left_arm_0": 208.60000610351562,
+    "right_arm_0": 208.60000610351562,
+    "head_0": 39.11000061035156,
+    "left_arm_1": 208.60000610351562,
+    "right_arm_1": 208.60000610351562,
+    "head_1": 39.11000061035156,
+    "left_arm_2": 208.60000610351562,
+    "right_arm_2": 208.60000610351562,
+    "left_arm_3": 91.2699966430664,
+    "right_arm_3": 91.2699966430664,
+    "left_arm_4": 39.11000061035156,
+    "right_arm_4": 39.11000061035156,
+    "left_arm_5": 39.11000061035156,
+    "right_arm_5": 39.11000061035156,
+    "left_arm_6": 39.11000061035156,
+    "right_arm_6": 39.11000061035156,
+    "gripper_finger_l1": 100.0,
+    "gripper_finger_l2": 0.30934953689575195,
+    "gripper_finger_r1": 100.0,
+    "gripper_finger_r2": 0.30934953689575195
+  },
+  "joint_damping": {
+    "left_wheel": 100.0,
+    "right_wheel": 100.0,
+    "torso_0": 7.039999961853027,
+    "torso_1": 7.039999961853027,
+    "torso_2": 7.039999961853027,
+    "torso_3": 2.0859999656677246,
+    "torso_4": 2.0859999656677246,
+    "torso_5": 2.0859999656677246,
+    "left_arm_0": 1.0429999828338623,
+    "right_arm_0": 1.0429999828338623,
+    "head_0": 0.18252000212669373,
+    "left_arm_1": 1.0429999828338623,
+    "right_arm_1": 1.0429999828338623,
+    "head_1": 0.18252000212669373,
+    "left_arm_2": 0.6430000066757202,
+    "right_arm_2": 0.6430000066757202,
+    "left_arm_3": 0.4171999990940094,
+    "right_arm_3": 0.4171999990940094,
+    "left_arm_4": 0.18252000212669373,
+    "right_arm_4": 0.18252000212669373,
+    "left_arm_5": 0.18252000212669373,
+    "right_arm_5": 0.18252000212669373,
+    "left_arm_6": 0.12251999974250793,
+    "right_arm_6": 0.12251999974250793,
+    "gripper_finger_l1": 1.0,
+    "gripper_finger_l2": 0.00012373982463032007,
+    "gripper_finger_r1": 1.0,
+    "gripper_finger_r2": 0.00012373982463032007
+  },
+  "joint_armature": {
+    "left_wheel": 0.5,
+    "right_wheel": 0.5,
+    "torso_0": 1.7000000476837158,
+    "torso_1": 1.7000000476837158,
+    "torso_2": 1.7000000476837158,
+    "torso_3": 1.7000000476837158,
+    "torso_4": 1.7000000476837158,
+    "torso_5": 1.7000000476837158,
+    "left_arm_0": 0.28999999165534973,
+    "right_arm_0": 0.28999999165534973,
+    "head_0": 0.5,
+    "left_arm_1": 0.28999999165534973,
+    "right_arm_1": 0.28999999165534973,
+    "head_1": 0.5,
+    "left_arm_2": 0.28999999165534973,
+    "right_arm_2": 0.28999999165534973,
+    "left_arm_3": 0.4000000059604645,
+    "right_arm_3": 0.4000000059604645,
+    "left_arm_4": 0.20000000298023224,
+    "right_arm_4": 0.20000000298023224,
+    "left_arm_5": 0.20000000298023224,
+    "right_arm_5": 0.20000000298023224,
+    "left_arm_6": 0.20000000298023224,
+    "right_arm_6": 0.20000000298023224,
+    "gripper_finger_l1": 0.0,
+    "gripper_finger_l2": 0.0,
+    "gripper_finger_r1": 0.0,
+    "gripper_finger_r2": 0.0
+  },
+  "wall_s": 251.88622760772705,
+  "kit_warnings": [],
+  "kit_warning_count": 0,
+  "result": {
+    "period_s": 10.0,
+    "joints": {
+      "torso_0": {
+        "range_cmd_rad": [
+          -0.20943951606750488,
+          0.20943951606750488
+        ],
+        "rms_err_rad": 0.021278513595461845,
+        "max_err_rad": 0.03500230610370636,
+        "overshoot_hi_rad": 0.029406175017356873,
+        "overshoot_lo_rad": 0.028036147356033325,
+        "reached_hi_rad": 0.23884569108486176,
+        "reached_lo_rad": -0.2374756634235382,
+        "max_tau_Nm": 137.46478271484375,
+        "other_joints_max_dev_rad": 0.027558857575058937,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.28049933910369873,
+        "nan": false,
+        "flags": []
+      },
+      "torso_1": {
+        "range_cmd_rad": [
+          -0.41887903213500977,
+          1.2566370964050293
+        ],
+        "rms_err_rad": 0.09840527921915054,
+        "max_err_rad": 0.445395827293396,
+        "overshoot_hi_rad": 0.06525063514709473,
+        "overshoot_lo_rad": 0.023248344659805298,
+        "reached_hi_rad": 1.321887731552124,
+        "reached_lo_rad": -0.44212737679481506,
+        "max_tau_Nm": 270.0,
+        "other_joints_max_dev_rad": 0.22482982277870178,
+        "max_tilt_deg": 120.20655059814453,
+        "min_link_origin_z_m": 0.039644189178943634,
+        "nan": false,
+        "flags": [
+          "tip>10deg",
+          "max_err>0.1rad"
+        ]
+      },
+      "torso_2": {
+        "range_cmd_rad": [
+          -2.094395160675049,
+          1.2566370964050293
+        ],
+        "rms_err_rad": 0.14797453582286835,
+        "max_err_rad": 0.5737373232841492,
+        "overshoot_hi_rad": 0.0648583173751831,
+        "overshoot_lo_rad": 0.05079150199890137,
+        "reached_hi_rad": 1.3214954137802124,
+        "reached_lo_rad": -2.14518666267395,
+        "max_tau_Nm": 270.0,
+        "other_joints_max_dev_rad": 0.1559881716966629,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.1034928634762764,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "torso_3": {
+        "range_cmd_rad": [
+          -0.6283185482025146,
+          1.2566370964050293
+        ],
+        "rms_err_rad": 0.10794306546449661,
+        "max_err_rad": 0.18301188945770264,
+        "overshoot_hi_rad": 0.1319979429244995,
+        "overshoot_lo_rad": 0.09840166568756104,
+        "reached_hi_rad": 1.3886350393295288,
+        "reached_lo_rad": -0.7267202138900757,
+        "max_tau_Nm": 105.57701110839844,
+        "other_joints_max_dev_rad": 0.11717633903026581,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804988622665405,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "torso_4": {
+        "range_cmd_rad": [
+          -0.41887903213500977,
+          0.41887903213500977
+        ],
+        "rms_err_rad": 0.0543854720890522,
+        "max_err_rad": 0.09872323274612427,
+        "overshoot_hi_rad": 0.052870988845825195,
+        "overshoot_lo_rad": 0.054893434047698975,
+        "reached_hi_rad": 0.47175002098083496,
+        "reached_lo_rad": -0.47377246618270874,
+        "max_tau_Nm": 56.92181396484375,
+        "other_joints_max_dev_rad": 0.04217356815934181,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804993987083435,
+        "nan": false,
+        "flags": []
+      },
+      "torso_5": {
+        "range_cmd_rad": [
+          -1.884955644607544,
+          1.884955644607544
+        ],
+        "rms_err_rad": 0.03308738023042679,
+        "max_err_rad": 0.10301486402750015,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 1.8710216283798218,
+        "reached_lo_rad": -1.8713834285736084,
+        "max_tau_Nm": 61.787662506103516,
+        "other_joints_max_dev_rad": 0.023863794282078743,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804994285106659,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "right_arm_0": {
+        "range_cmd_rad": [
+          -2.5132741928100586,
+          2.5132741928100586
+        ],
+        "rms_err_rad": 0.10531363636255264,
+        "max_err_rad": 0.17276346683502197,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.4037795066833496,
+        "reached_lo_rad": -2.414917469024658,
+        "max_tau_Nm": 37.07408142089844,
+        "other_joints_max_dev_rad": 0.08526486903429031,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804991900920868,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "right_arm_1": {
+        "range_cmd_rad": [
+          -2.5132741928100586,
+          0.0
+        ],
+        "rms_err_rad": 0.08297301083803177,
+        "max_err_rad": 0.18945598602294922,
+        "overshoot_hi_rad": 5.326631367097434e-07,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 5.326631367097434e-07,
+        "reached_lo_rad": -2.3990437984466553,
+        "max_tau_Nm": 40.437862396240234,
+        "other_joints_max_dev_rad": 0.05927198752760887,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804993987083435,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "right_arm_2": {
+        "range_cmd_rad": [
+          -2.5132741928100586,
+          2.5132741928100586
+        ],
+        "rms_err_rad": 0.04873247072100639,
+        "max_err_rad": 0.09052561223506927,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.4894375801086426,
+        "reached_lo_rad": -2.489454507827759,
+        "max_tau_Nm": 20.19345474243164,
+        "other_joints_max_dev_rad": 0.01830556057393551,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.28049948811531067,
+        "nan": false,
+        "flags": []
+      },
+      "right_arm_3": {
+        "range_cmd_rad": [
+          -2.094395160675049,
+          0.0
+        ],
+        "rms_err_rad": 0.07094703614711761,
+        "max_err_rad": 0.15823662281036377,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": -0.0006132083362899721,
+        "reached_lo_rad": -1.9682036638259888,
+        "max_tau_Nm": 14.767133712768555,
+        "other_joints_max_dev_rad": 0.032069940119981766,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804994285106659,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "right_arm_4": {
+        "range_cmd_rad": [
+          -2.5132741928100586,
+          2.5132741928100586
+        ],
+        "rms_err_rad": 0.10693978518247604,
+        "max_err_rad": 0.18503490090370178,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.4608266353607178,
+        "reached_lo_rad": -2.4607722759246826,
+        "max_tau_Nm": 7.483706474304199,
+        "other_joints_max_dev_rad": 0.01749139279127121,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.28049948811531067,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "right_arm_5": {
+        "range_cmd_rad": [
+          -1.2566370964050293,
+          1.535889744758606
+        ],
+        "rms_err_rad": 0.09141578525304794,
+        "max_err_rad": 0.1362716555595398,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 1.437672734260559,
+        "reached_lo_rad": -1.1595523357391357,
+        "max_tau_Nm": 5.479897975921631,
+        "other_joints_max_dev_rad": 0.01755671575665474,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804994285106659,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "right_arm_6": {
+        "range_cmd_rad": [
+          -2.164208173751831,
+          2.164208173751831
+        ],
+        "rms_err_rad": 0.05484626442193985,
+        "max_err_rad": 0.1328488290309906,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.137515068054199,
+        "reached_lo_rad": -2.1375789642333984,
+        "max_tau_Nm": 5.4074835777282715,
+        "other_joints_max_dev_rad": 0.017262142151594162,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804994583129883,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "left_arm_0": {
+        "range_cmd_rad": [
+          -2.5132741928100586,
+          2.5132741928100586
+        ],
+        "rms_err_rad": 0.10501735657453537,
+        "max_err_rad": 0.17096233367919922,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.403700351715088,
+        "reached_lo_rad": -2.415001153945923,
+        "max_tau_Nm": 36.61294937133789,
+        "other_joints_max_dev_rad": 0.08513277769088745,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804991602897644,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "left_arm_1": {
+        "range_cmd_rad": [
+          0.0,
+          2.5132741928100586
+        ],
+        "rms_err_rad": 0.08293130993843079,
+        "max_err_rad": 0.18812692165374756,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.3988258838653564,
+        "reached_lo_rad": 5.557504664466251e-06,
+        "max_tau_Nm": 40.17014694213867,
+        "other_joints_max_dev_rad": 0.061246201395988464,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804994285106659,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "left_arm_2": {
+        "range_cmd_rad": [
+          -2.5132741928100586,
+          2.5132741928100586
+        ],
+        "rms_err_rad": 0.04873181879520416,
+        "max_err_rad": 0.09052697569131851,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.4894354343414307,
+        "reached_lo_rad": -2.489459753036499,
+        "max_tau_Nm": 20.19373893737793,
+        "other_joints_max_dev_rad": 0.01831231638789177,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.28049948811531067,
+        "nan": false,
+        "flags": []
+      },
+      "left_arm_3": {
+        "range_cmd_rad": [
+          -2.094395160675049,
+          0.0
+        ],
+        "rms_err_rad": 0.0703779086470604,
+        "max_err_rad": 0.15433156490325928,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": -0.0005762287764810026,
+        "reached_lo_rad": -1.9688118696212769,
+        "max_tau_Nm": 14.417181015014648,
+        "other_joints_max_dev_rad": 0.030994996428489685,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804994583129883,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "left_arm_4": {
+        "range_cmd_rad": [
+          -2.5132741928100586,
+          2.5132741928100586
+        ],
+        "rms_err_rad": 0.10693898051977158,
+        "max_err_rad": 0.185033917427063,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.460792064666748,
+        "reached_lo_rad": -2.46083402633667,
+        "max_tau_Nm": 7.483680725097656,
+        "other_joints_max_dev_rad": 0.017649676650762558,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804994583129883,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "left_arm_5": {
+        "range_cmd_rad": [
+          -1.2566370964050293,
+          1.535889744758606
+        ],
+        "rms_err_rad": 0.09127955883741379,
+        "max_err_rad": 0.13630160689353943,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 1.4376765489578247,
+        "reached_lo_rad": -1.159570574760437,
+        "max_tau_Nm": 5.481125354766846,
+        "other_joints_max_dev_rad": 0.016255851835012436,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.2804994583129883,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "left_arm_6": {
+        "range_cmd_rad": [
+          -2.164208173751831,
+          2.164208173751831
+        ],
+        "rms_err_rad": 0.054845985025167465,
+        "max_err_rad": 0.13284924626350403,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 2.13751482963562,
+        "reached_lo_rad": -2.137578248977661,
+        "max_tau_Nm": 5.407497882843018,
+        "other_joints_max_dev_rad": 0.01749378629028797,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.28049951791763306,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "head_0": {
+        "range_cmd_rad": [
+          -1.2566370964050293,
+          1.2566370964050293
+        ],
+        "rms_err_rad": 0.09041755646467209,
+        "max_err_rad": 0.15329520404338837,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 1.2102406024932861,
+        "reached_lo_rad": -1.2102105617523193,
+        "max_tau_Nm": 6.117500305175781,
+        "other_joints_max_dev_rad": 0.017506159842014313,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.28049948811531067,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      },
+      "head_1": {
+        "range_cmd_rad": [
+          -1.2566370964050293,
+          1.2566370964050293
+        ],
+        "rms_err_rad": 0.09181070327758789,
+        "max_err_rad": 0.14072325825691223,
+        "overshoot_hi_rad": 0.0,
+        "overshoot_lo_rad": 0.0,
+        "reached_hi_rad": 1.2279545068740845,
+        "reached_lo_rad": -1.2193423509597778,
+        "max_tau_Nm": 5.625380039215088,
+        "other_joints_max_dev_rad": 0.01733444631099701,
+        "max_tilt_deg": 0.0,
+        "min_link_origin_z_m": 0.28049951791763306,
+        "nan": false,
+        "flags": [
+          "max_err>0.1rad"
+        ]
+      }
+    },
+    "criteria": {
+      "no_nan": true,
+      "no_tip": false
+    },
+    "pass": false
+  },
+  "timestamp": "2026-10-16 21:01:28"
+}

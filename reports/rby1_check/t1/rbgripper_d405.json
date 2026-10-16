@@ -1,0 +1,4606 @@
+{
+  "file": "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/generated/rby1_v1_2_a_rbgripper_d405.usd",
+  "defaultPrim": "/RBY1",
+  "metersPerUnit": 1.0,
+  "upAxis": "Z",
+  "kilogramsPerUnit": 1.0,
+  "used_layers": [
+    "anon:0x62ec2951c040:rby1_v1_2_a_rbgripper_d405-session.usda",
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/generated/rby1_v1_2_a_rbgripper_d405.usd",
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/gripper/rb_gripper/rb_gripper_left.usd",
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/generated/cad/wrist_assembly.usd",
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/gripper/rb_gripper/rb_gripper_right.usd",
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/model_v_1_2_a.usd",
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/generated/wrist_bracket_d405.usd",
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/generated/d405_visual.usd",
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/generated/cad/head_bracket.usd"
+  ],
+  "applied_schemas": {
+    "PhysicsArticulationRootAPI": 1,
+    "PhysxArticulationAPI": 1,
+    "PhysicsRigidBodyAPI": 32,
+    "PhysicsMassAPI": 32,
+    "NodeDefAPI": 81,
+    "MaterialBindingAPI": 72,
+    "PhysicsCollisionAPI": 23,
+    "PhysxCollisionAPI": 2,
+    "PhysxJointAPI": 28,
+    "PhysxDrivePerformanceEnvelopeAPI:angular": 2,
+    "PhysicsJointStateAPI:angular": 22,
+    "PhysicsDriveAPI:angular": 14,
+    "PhysicsJointStateAPI:linear": 4,
+    "PhysicsDriveAPI:linear": 4
+  },
+  "prim_types": {
+    "Xform": 237,
+    "Scope": 42,
+    "Material": 81,
+    "Shader": 81,
+    "Mesh": 46,
+    "GeomSubset": 46,
+    "Cylinder": 6,
+    "PhysicsFixedJoint": 14,
+    "PhysicsRevoluteJoint": 14,
+    "Capsule": 17,
+    "Camera": 3,
+    "PhysicsPrismaticJoint": 4
+  },
+  "articulation_roots": [
+    {
+      "path": "/RBY1",
+      "type": "Xform",
+      "attrs": {
+        "isaac:changelog": null,
+        "isaac:description": null,
+        "isaac:license": null,
+        "isaac:namespace": null,
+        "isaac:robotType": null,
+        "isaac:source": null,
+        "isaac:version": null,
+        "physxArticulation:enabledSelfCollisions": false
+      }
+    }
+  ],
+  "joints": [
+    {
+      "name": "left_wheel",
+      "path": "/RBY1/joints/left_wheel",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/base"
+      ],
+      "body1": [
+        "/RBY1/wheel_l"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 100.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.2618493437767029,
+        "physics:localPos0": [
+          0.2280000001192093,
+          0.26499998569488525,
+          0.10000000149011612
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": null,
+        "physics:upperLimit": null,
+        "physxDrivePerformanceEnvelope:angular:maxActuatorVelocity": 900.0,
+        "physxJoint:maxJointVelocity": 1000.0
+      },
+      "schemas": [
+        "PhysxJointAPI",
+        "PhysxDrivePerformanceEnvelopeAPI:angular"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "right_wheel",
+      "path": "/RBY1/joints/right_wheel",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/base"
+      ],
+      "body1": [
+        "/RBY1/wheel_r"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 100.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.2618284225463867,
+        "physics:localPos0": [
+          0.2280000001192093,
+          -0.26499998569488525,
+          0.10000000149011612
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": null,
+        "physics:upperLimit": null,
+        "physxDrivePerformanceEnvelope:angular:maxActuatorVelocity": 900.0,
+        "physxJoint:maxJointVelocity": 1000.0
+      },
+      "schemas": [
+        "PhysxJointAPI",
+        "PhysxDrivePerformanceEnvelopeAPI:angular"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "torso_0",
+      "path": "/RBY1/joints/torso_0",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/base"
+      ],
+      "body1": [
+        "/RBY1/link_torso_0"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 841.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 6.1890764236450195,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.28049999475479126
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -15.0,
+        "physics:upperLimit": 15.0,
+        "physxJoint:maxJointVelocity": 120.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": -0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "torso_1",
+      "path": "/RBY1/joints/torso_1",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_torso_0"
+      ],
+      "body1": [
+        "/RBY1/link_torso_1"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 841.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 5.956972122192383,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -30.0,
+        "physics:upperLimit": 90.0,
+        "physxJoint:maxJointVelocity": 120.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": -0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "torso_2",
+      "path": "/RBY1/joints/torso_2",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_torso_1"
+      ],
+      "body1": [
+        "/RBY1/link_torso_2"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 841.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 18.12248992919922,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.3499999940395355
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -150.0,
+        "physics:upperLimit": 90.0,
+        "physxJoint:maxJointVelocity": 120.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": -0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "torso_3",
+      "path": "/RBY1/joints/torso_3",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_torso_2"
+      ],
+      "body1": [
+        "/RBY1/link_torso_3"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 369.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 17.33220863342285,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.3499999940395355
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -45.0,
+        "physics:upperLimit": 90.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": -0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "torso_4",
+      "path": "/RBY1/joints/torso_4",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_torso_3"
+      ],
+      "body1": [
+        "/RBY1/link_torso_4"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 369.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 5.704994201660156,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -30.0,
+        "physics:upperLimit": 30.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": -0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "torso_5",
+      "path": "/RBY1/joints/torso_5",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_torso_4"
+      ],
+      "body1": [
+        "/RBY1/link_torso_5"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 369.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Z",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 5.864696979522705,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.30942654609680176
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -135.0,
+        "physics:upperLimit": 135.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": -0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "head_base",
+      "path": "/RBY1/joints/head_base",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_torso_5"
+      ],
+      "body1": [
+        "/RBY1/link_head_0"
+      ],
+      "drives": {},
+      "attrs": {
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.15157750248908997,
+        "physics:localPos0": [
+          0.02199999988079071,
+          0.0,
+          0.12007345259189606
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "schemas": [],
+      "role": "fixed"
+    },
+    {
+      "name": "head_0",
+      "path": "/RBY1/joints/head_0",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_head_0"
+      ],
+      "body1": [
+        "/RBY1/link_head_1"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 70.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Z",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.03806589916348457,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.07999999821186066
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -90.0,
+        "physics:upperLimit": 90.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "head_1",
+      "path": "/RBY1/joints/head_1",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_head_1"
+      ],
+      "body1": [
+        "/RBY1/link_head_2"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 70.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.01053670421242714,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -90.0,
+        "physics:upperLimit": 90.0,
+        "physxJoint:maxJointVelocity": 179.9087371826172,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI"
+      ],
+      "role": "fixed"
+    },
+    {
+      "name": "left_arm_0",
+      "path": "/RBY1/joints/left_arm_0",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_torso_5"
+      ],
+      "body1": [
+        "/RBY1/link_left_arm_0"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 143.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 143.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 1.956325888633728,
+        "physics:localPos0": [
+          0.0,
+          0.2199999988079071,
+          0.08007345348596573
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          0.7071067690849304,
+          0.0,
+          -0.2418447732925415,
+          0.6644629836082458
+        ],
+        "physics:localRot1": [
+          0.7071067690849304,
+          0.0,
+          -0.2418447732925415,
+          0.6644629836082458
+        ],
+        "physics:lowerLimit": -180.0,
+        "physics:upperLimit": 180.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "left_arm_1",
+      "path": "/RBY1/joints/left_arm_1",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_left_arm_0"
+      ],
+      "body1": [
+        "/RBY1/link_left_arm_1"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 143.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 143.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 1.903975009918213,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": 0.0,
+        "physics:upperLimit": 180.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "left_arm_2",
+      "path": "/RBY1/joints/left_arm_2",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_left_arm_1"
+      ],
+      "body1": [
+        "/RBY1/link_left_arm_2"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 143.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 143.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Z",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 1.8976380825042725,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -180.0,
+        "physics:upperLimit": 180.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "left_arm_3",
+      "path": "/RBY1/joints/left_arm_3",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_left_arm_2"
+      ],
+      "body1": [
+        "/RBY1/link_left_arm_3"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 70.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 70.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 1.7840070724487305,
+        "physics:localPos0": [
+          0.03099999949336052,
+          0.0,
+          -0.2759999930858612
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -150.0,
+        "physics:upperLimit": 0.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "left_arm_4",
+      "path": "/RBY1/joints/left_arm_4",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_left_arm_3"
+      ],
+      "body1": [
+        "/RBY1/link_left_arm_4"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 70.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 70.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Z",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.4306669533252716,
+        "physics:localPos0": [
+          -0.03099999949336052,
+          0.0,
+          -0.25600001215934753
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -180.0,
+        "physics:upperLimit": 180.0,
+        "physxJoint:maxJointVelocity": 360.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "left_arm_5",
+      "path": "/RBY1/joints/left_arm_5",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_left_arm_4"
+      ],
+      "body1": [
+        "/RBY1/link_left_arm_5"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 70.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 70.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.03707246482372284,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -90.0,
+        "physics:upperLimit": 110.0,
+        "physxJoint:maxJointVelocity": 360.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "left_arm_6",
+      "path": "/RBY1/joints/left_arm_6",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_left_arm_5"
+      ],
+      "body1": [
+        "/RBY1/link_left_arm_6"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 140.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 140.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Z",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.03174939751625061,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -155.0,
+        "physics:upperLimit": 155.0,
+        "physxJoint:maxJointVelocity": 360.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "right_arm_0",
+      "path": "/RBY1/joints/right_arm_0",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_torso_5"
+      ],
+      "body1": [
+        "/RBY1/link_right_arm_0"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 143.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 143.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 1.9678475856781006,
+        "physics:localPos0": [
+          0.0,
+          -0.2199999988079071,
+          0.08007345348596573
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          0.7071067690849304,
+          0.0,
+          0.2418447732925415,
+          0.6644629836082458
+        ],
+        "physics:localRot1": [
+          0.7071067690849304,
+          0.0,
+          0.2418447732925415,
+          0.6644629836082458
+        ],
+        "physics:lowerLimit": -180.0,
+        "physics:upperLimit": 180.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "right_arm_1",
+      "path": "/RBY1/joints/right_arm_1",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_right_arm_0"
+      ],
+      "body1": [
+        "/RBY1/link_right_arm_1"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 143.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 143.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 1.904003381729126,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -180.0,
+        "physics:upperLimit": 0.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "right_arm_2",
+      "path": "/RBY1/joints/right_arm_2",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_right_arm_1"
+      ],
+      "body1": [
+        "/RBY1/link_right_arm_2"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 143.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 143.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Z",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 1.8976658582687378,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -180.0,
+        "physics:upperLimit": 180.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "right_arm_3",
+      "path": "/RBY1/joints/right_arm_3",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_right_arm_2"
+      ],
+      "body1": [
+        "/RBY1/link_right_arm_3"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 70.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 70.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 1.7839678525924683,
+        "physics:localPos0": [
+          0.03099999949336052,
+          0.0,
+          -0.2759999930858612
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -150.0,
+        "physics:upperLimit": 0.0,
+        "physxJoint:maxJointVelocity": 180.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "right_arm_4",
+      "path": "/RBY1/joints/right_arm_4",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_right_arm_3"
+      ],
+      "body1": [
+        "/RBY1/link_right_arm_4"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 70.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 70.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Z",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.4306849539279938,
+        "physics:localPos0": [
+          -0.03099999949336052,
+          0.0,
+          -0.25600001215934753
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -180.0,
+        "physics:upperLimit": 180.0,
+        "physxJoint:maxJointVelocity": 360.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "right_arm_5",
+      "path": "/RBY1/joints/right_arm_5",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_right_arm_4"
+      ],
+      "body1": [
+        "/RBY1/link_right_arm_5"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 70.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 70.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Y",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.03707268089056015,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -90.0,
+        "physics:upperLimit": 110.0,
+        "physxJoint:maxJointVelocity": 360.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "right_arm_6",
+      "path": "/RBY1/joints/right_arm_6",
+      "type": "PhysicsRevoluteJoint",
+      "body0": [
+        "/RBY1/link_right_arm_5"
+      ],
+      "body1": [
+        "/RBY1/link_right_arm_6"
+      ],
+      "drives": {
+        "angular": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 10.0,
+          "maxForce": 140.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:angular:physics:damping": 10.0,
+        "drive:angular:physics:maxForce": 140.0,
+        "drive:angular:physics:stiffness": 100.0,
+        "drive:angular:physics:targetPosition": 0.0,
+        "drive:angular:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "Z",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.03174951300024986,
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": -155.0,
+        "physics:upperLimit": 155.0,
+        "physxJoint:maxJointVelocity": 360.0,
+        "state:angular:physics:position": 0.0,
+        "state:angular:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:angular",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:angular"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "tool_left",
+      "path": "/RBY1/joints/tool_left",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_left_arm_6"
+      ],
+      "body1": [
+        "/RBY1/left_gripper/ee_left"
+      ],
+      "drives": {},
+      "attrs": {
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          -0.12610000371932983
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "schemas": [],
+      "role": "tool_mount"
+    },
+    {
+      "name": "tool_right",
+      "path": "/RBY1/joints/tool_right",
+      "type": "PhysicsFixedJoint",
+      "body0": [
+        "/RBY1/link_right_arm_6"
+      ],
+      "body1": [
+        "/RBY1/right_gripper/ee_right"
+      ],
+      "drives": {},
+      "attrs": {
+        "physics:localPos0": [
+          0.0,
+          0.0,
+          -0.12610000371932983
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "schemas": [],
+      "role": "tool_mount"
+    },
+    {
+      "name": "fixed_base",
+      "path": "/RBY1/joints/fixed_base",
+      "type": "PhysicsFixedJoint",
+      "body0": [],
+      "body1": [
+        "/RBY1/base"
+      ],
+      "drives": {},
+      "attrs": {},
+      "schemas": [],
+      "role": "fixed"
+    },
+    {
+      "name": "gripper_finger_l1",
+      "path": "/RBY1/left_gripper/joints/gripper_finger_l1",
+      "type": "PhysicsPrismaticJoint",
+      "body0": [
+        "/RBY1/left_gripper/ee_left"
+      ],
+      "body1": [
+        "/RBY1/left_gripper/ee_finger_l1"
+      ],
+      "drives": {
+        "linear": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 1.0,
+          "maxForce": 75.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:linear:physics:damping": 1.0,
+        "drive:linear:physics:maxForce": 75.0,
+        "drive:linear:physics:stiffness": 100.0,
+        "drive:linear:physics:targetPosition": 0.0,
+        "drive:linear:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.0004948936402797699,
+        "physics:localPos0": [
+          0.003000000026077032,
+          0.0,
+          -0.07500000298023224
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:localRot1": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:lowerLimit": -0.05000000074505806,
+        "physics:upperLimit": 0.0,
+        "physxJoint:maxJointVelocity": 0.03999999910593033,
+        "state:linear:physics:position": 0.0,
+        "state:linear:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:linear",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:linear"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "gripper_finger_l2",
+      "path": "/RBY1/left_gripper/joints/gripper_finger_l2",
+      "type": "PhysicsPrismaticJoint",
+      "body0": [
+        "/RBY1/left_gripper/ee_left"
+      ],
+      "body1": [
+        "/RBY1/left_gripper/ee_finger_l2"
+      ],
+      "drives": {
+        "linear": {
+          "type": "force",
+          "stiffness": 0.30934953689575195,
+          "damping": 0.00012373982463032007,
+          "maxForce": 1000.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:linear:physics:damping": 0.00012373982463032007,
+        "drive:linear:physics:maxForce": 1000.0,
+        "drive:linear:physics:stiffness": 0.30934953689575195,
+        "drive:linear:physics:targetPosition": 0.0,
+        "drive:linear:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.0004949592985212803,
+        "physics:localPos0": [
+          -0.003000000026077032,
+          0.0,
+          -0.07500000298023224
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          -4.371138828673793e-08,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": 0.0,
+        "physics:upperLimit": 0.05000000074505806,
+        "physxJoint:maxJointVelocity": 0.03999999910593033,
+        "state:linear:physics:position": 0.0,
+        "state:linear:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:linear",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:linear"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "gripper_finger_r1",
+      "path": "/RBY1/right_gripper/joints/gripper_finger_r1",
+      "type": "PhysicsPrismaticJoint",
+      "body0": [
+        "/RBY1/right_gripper/ee_right"
+      ],
+      "body1": [
+        "/RBY1/right_gripper/ee_finger_r1"
+      ],
+      "drives": {
+        "linear": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 1.0,
+          "maxForce": 75.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:linear:physics:damping": 1.0,
+        "drive:linear:physics:maxForce": 75.0,
+        "drive:linear:physics:stiffness": 100.0,
+        "drive:linear:physics:targetPosition": 0.0,
+        "drive:linear:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.000494893582072109,
+        "physics:localPos0": [
+          0.003000000026077032,
+          0.0,
+          -0.07500000298023224
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:localRot1": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:lowerLimit": -0.05000000074505806,
+        "physics:upperLimit": 0.0,
+        "physxJoint:maxJointVelocity": 0.03999999910593033,
+        "state:linear:physics:position": 0.0,
+        "state:linear:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:linear",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:linear"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "gripper_finger_r2",
+      "path": "/RBY1/right_gripper/joints/gripper_finger_r2",
+      "type": "PhysicsPrismaticJoint",
+      "body0": [
+        "/RBY1/right_gripper/ee_right"
+      ],
+      "body1": [
+        "/RBY1/right_gripper/ee_finger_r2"
+      ],
+      "drives": {
+        "linear": {
+          "type": "force",
+          "stiffness": 0.30934953689575195,
+          "damping": 0.00012373982463032007,
+          "maxForce": 1000.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:linear:physics:damping": 0.00012373982463032007,
+        "drive:linear:physics:maxForce": 1000.0,
+        "drive:linear:physics:stiffness": 0.30934953689575195,
+        "drive:linear:physics:targetPosition": 0.0,
+        "drive:linear:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.0004949592985212803,
+        "physics:localPos0": [
+          -0.003000000026077032,
+          0.0,
+          -0.07500000298023224
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          -4.371138828673793e-08,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": 0.0,
+        "physics:upperLimit": 0.05000000074505806,
+        "physxJoint:maxJointVelocity": 0.03999999910593033,
+        "state:linear:physics:position": 0.0,
+        "state:linear:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:linear",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:linear"
+      ],
+      "role": "dof"
+    }
+  ],
+  "links": [
+    {
+      "name": "base",
+      "path": "/RBY1/base",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.061579421162605286,
+          -0.0014227100182324648,
+          0.1351386159658432
+        ],
+        "physics:diagonalInertia": [
+          1.3626441955566406,
+          2.9942433834075928,
+          3.775250196456909
+        ],
+        "physics:mass": 60.08042526245117,
+        "physics:principalAxes": [
+          0.9992191791534424,
+          0.002544766990467906,
+          0.03861754387617111,
+          -0.007962130941450596
+        ]
+      },
+      "mass": 60.08042526245117,
+      "diag_inertia": [
+        1.3626441955566406,
+        2.9942433834075928,
+        3.775250196456909
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "wheel_l",
+      "path": "/RBY1/wheel_l",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0,
+          0.0007393800187855959,
+          0.0
+        ],
+        "physics:diagonalInertia": [
+          0.00426656985655427,
+          0.00811814982444048,
+          0.00426656985655427
+        ],
+        "physics:mass": 1.3778374195098877,
+        "physics:principalAxes": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "mass": 1.3778374195098877,
+      "diag_inertia": [
+        0.00426656985655427,
+        0.00811814982444048,
+        0.00426656985655427
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.2280000001192093,
+          0.26499998569488525,
+          0.10000000149011612,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "wheel_r",
+      "path": "/RBY1/wheel_r",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0,
+          -0.0007393800187855959,
+          0.0
+        ],
+        "physics:diagonalInertia": [
+          0.00426656985655427,
+          0.00811814982444048,
+          0.00426656985655427
+        ],
+        "physics:mass": 1.3778374195098877,
+        "physics:principalAxes": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "mass": 1.3778374195098877,
+      "diag_inertia": [
+        0.00426656985655427,
+        0.00811814982444048,
+        0.00426656985655427
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.2280000001192093,
+          -0.26499998569488525,
+          0.10000000149011612,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_torso_0",
+      "path": "/RBY1/link_torso_0",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.08848415315151215,
+          0.00021367000590544194,
+          4.599999954280065e-07
+        ],
+        "physics:diagonalInertia": [
+          0.01433680858463049,
+          0.009851722046732903,
+          0.018925249576568604
+        ],
+        "physics:mass": 2.242821216583252,
+        "physics:principalAxes": [
+          0.9942935109138489,
+          4.454471763892798e-06,
+          -1.2092084944015369e-05,
+          0.10667996853590012
+        ]
+      },
+      "mass": 2.242821216583252,
+      "diag_inertia": [
+        0.01433680858463049,
+        0.009851722046732903,
+        0.018925249576568604
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.28049999475479126,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_torso_1",
+      "path": "/RBY1/link_torso_1",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0072895498014986515,
+          -0.017285220324993134,
+          0.06911379843950272
+        ],
+        "physics:diagonalInertia": [
+          0.14942136406898499,
+          0.13937629759311676,
+          0.02750587835907936
+        ],
+        "physics:mass": 9.721627235412598,
+        "physics:principalAxes": [
+          0.9977676868438721,
+          -0.04538912698626518,
+          0.03821147605776787,
+          -0.03064832091331482
+        ]
+      },
+      "mass": 9.721627235412598,
+      "diag_inertia": [
+        0.14942136406898499,
+        0.13937629759311676,
+        0.02750587835907936
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.28049999475479126,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_torso_2",
+      "path": "/RBY1/link_torso_2",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.006538350135087967,
+          -0.017695359885692596,
+          0.05636582151055336
+        ],
+        "physics:diagonalInertia": [
+          0.12242017686367035,
+          0.11674772948026657,
+          0.02929152548313141
+        ],
+        "physics:mass": 9.2169189453125,
+        "physics:principalAxes": [
+          0.9968702793121338,
+          -0.052526019513607025,
+          0.04334816336631775,
+          -0.04014743119478226
+        ]
+      },
+      "mass": 9.2169189453125,
+      "diag_inertia": [
+        0.12242017686367035,
+        0.11674772948026657,
+        0.02929152548313141
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.6304999589920044,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_torso_3",
+      "path": "/RBY1/link_torso_3",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.005741559900343418,
+          -0.01725975051522255,
+          5.610000152955763e-05
+        ],
+        "physics:diagonalInertia": [
+          0.008326351642608643,
+          0.009465718641877174,
+          0.00955617893487215
+        ],
+        "physics:mass": 4.186791896820068,
+        "physics:principalAxes": [
+          0.977744996547699,
+          0.06860946863889694,
+          -0.012880253605544567,
+          -0.19784224033355713
+        ]
+      },
+      "mass": 4.186791896820068,
+      "diag_inertia": [
+        0.008326351642608643,
+        0.009465718641877174,
+        0.00955617893487215
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.9804999828338623,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_torso_4",
+      "path": "/RBY1/link_torso_4",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.0909709483385086,
+          5.0850001571234316e-05,
+          0.026019500568509102
+        ],
+        "physics:diagonalInertia": [
+          0.00942881591618061,
+          0.025508195161819458,
+          0.02555740810930729
+        ],
+        "physics:mass": 4.455662727355957,
+        "physics:principalAxes": [
+          0.944649875164032,
+          0.05702689290046692,
+          -0.3225366771221161,
+          0.01883663982152939
+        ]
+      },
+      "mass": 4.455662727355957,
+      "diag_inertia": [
+        0.00942881591618061,
+        0.025508195161819458,
+        0.02555740810930729
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.9804999828338623,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_torso_5",
+      "path": "/RBY1/link_torso_5",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.03419752046465874,
+          0.0007343100151047111,
+          -0.026594199240207672
+        ],
+        "physics:diagonalInertia": [
+          0.25283390283584595,
+          0.2313024252653122,
+          0.17534446716308594
+        ],
+        "physics:mass": 14.732839584350586,
+        "physics:principalAxes": [
+          0.9764879941940308,
+          -0.01179906353354454,
+          -0.2126135379076004,
+          0.033576760441064835
+        ]
+      },
+      "mass": 14.732839584350586,
+      "diag_inertia": [
+        0.25283390283584595,
+        0.2313024252653122,
+        0.17534446716308594
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.289926528930664,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_head_0",
+      "path": "/RBY1/link_head_0",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0002473299973644316,
+          0.0003330599865876138,
+          -0.010297300294041634
+        ],
+        "physics:diagonalInertia": [
+          0.0004631870542652905,
+          0.00043212066520936787,
+          0.0002744223165791482
+        ],
+        "physics:mass": 0.6573165059089661,
+        "physics:principalAxes": [
+          0.9991093873977661,
+          0.0006974578718654811,
+          -0.029741892591118813,
+          0.029924318194389343
+        ]
+      },
+      "mass": 0.6573165059089661,
+      "diag_inertia": [
+        0.0004631870542652905,
+        0.00043212066520936787,
+        0.0002744223165791482
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.02199999988079071,
+          0.0,
+          1.409999966621399,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_head_1",
+      "path": "/RBY1/link_head_1",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.0004164300044067204,
+          0.00593524007126689,
+          -0.002899159910157323
+        ],
+        "physics:diagonalInertia": [
+          0.0006622272194363177,
+          0.00035995428333990276,
+          0.0005933684296905994
+        ],
+        "physics:mass": 0.7047650218009949,
+        "physics:principalAxes": [
+          0.9995319247245789,
+          0.028047626838088036,
+          -0.008607206866145134,
+          -0.008666081354022026
+        ]
+      },
+      "mass": 0.7047650218009949,
+      "diag_inertia": [
+        0.0006622272194363177,
+        0.00035995428333990276,
+        0.0005933684296905994
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.02199999988079071,
+          0.0,
+          1.4900000095367432,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_head_2",
+      "path": "/RBY1/link_head_2",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.05315319821238518,
+          0.005475089885294437,
+          0.05913909152150154
+        ],
+        "physics:diagonalInertia": [
+          0.0006339835817925632,
+          0.0013628548476845026,
+          0.0017353317234665155
+        ],
+        "physics:mass": 0.9526273608207703,
+        "physics:principalAxes": [
+          0.9061540365219116,
+          0.02868829108774662,
+          -0.24768199026584625,
+          -0.34163668751716614
+        ]
+      },
+      "mass": 0.9526273608207703,
+      "diag_inertia": [
+        0.0006339835817925632,
+        0.0013628548476845026,
+        0.0017353317234665155
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.02199999988079071,
+          0.0,
+          1.4900000095367432,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_left_arm_0",
+      "path": "/RBY1/link_left_arm_0",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.00316661992110312,
+          -0.03437180817127228,
+          -3.000000106112566e-07
+        ],
+        "physics:diagonalInertia": [
+          0.002231294522061944,
+          0.004339118022471666,
+          0.004321537911891937
+        ],
+        "physics:mass": 1.2616424560546875,
+        "physics:principalAxes": [
+          0.995323657989502,
+          0.019102297723293304,
+          0.002474321983754635,
+          0.09465634822845459
+        ]
+      },
+      "mass": 1.2616424560546875,
+      "diag_inertia": [
+        0.002231294522061944,
+        0.004339118022471666,
+        0.004321537911891937
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2199999988079071,
+          1.3700000047683716,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_left_arm_1",
+      "path": "/RBY1/link_left_arm_1",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.003078550100326538,
+          0.0012474099639803171,
+          -0.012943239882588387
+        ],
+        "physics:diagonalInertia": [
+          0.0038978371303528547,
+          0.004476743284612894,
+          0.002864069538190961
+        ],
+        "physics:mass": 2.2728703022003174,
+        "physics:principalAxes": [
+          0.9979073405265808,
+          0.03125622123479843,
+          -0.05640855059027672,
+          0.004709072411060333
+        ]
+      },
+      "mass": 2.2728703022003174,
+      "diag_inertia": [
+        0.0038978371303528547,
+        0.004476743284612894,
+        0.002864069538190961
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2199999988079071,
+          1.3700000047683716,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_left_arm_2",
+      "path": "/RBY1/link_left_arm_2",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0011543399887159467,
+          -0.0019663500133901834,
+          -0.16192524135112762
+        ],
+        "physics:diagonalInertia": [
+          0.009844696149230003,
+          0.009280242025852203,
+          0.0032220191787928343
+        ],
+        "physics:mass": 2.4690942764282227,
+        "physics:principalAxes": [
+          0.9983161091804504,
+          -0.039050474762916565,
+          -0.038884878158569336,
+          0.018110327422618866
+        ]
+      },
+      "mass": 2.4690942764282227,
+      "diag_inertia": [
+        0.009844696149230003,
+        0.009280242025852203,
+        0.0032220191787928343
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2199999988079071,
+          1.3700000047683716,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_left_arm_3",
+      "path": "/RBY1/link_left_arm_3",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.016031349077820778,
+          0.006928910035640001,
+          -0.045498110353946686
+        ],
+        "physics:diagonalInertia": [
+          0.008672403171658516,
+          0.008493265137076378,
+          0.0018752337200567126
+        ],
+        "physics:mass": 2.2609949111938477,
+        "physics:principalAxes": [
+          0.9509451985359192,
+          -0.09325700998306274,
+          0.10034245252609253,
+          -0.2773764431476593
+        ]
+      },
+      "mass": 2.2609949111938477,
+      "diag_inertia": [
+        0.008672403171658516,
+        0.008493265137076378,
+        0.0018752337200567126
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.03099999949336052,
+          0.2199999988079071,
+          1.093999981880188,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_left_arm_4",
+      "path": "/RBY1/link_left_arm_4",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          1.1000000199601345e-07,
+          0.026960359886288643,
+          0.061821099370718
+        ],
+        "physics:diagonalInertia": [
+          0.0008246600045822561,
+          0.000885625253431499,
+          0.0002662947808858007
+        ],
+        "physics:mass": 0.4250870943069458,
+        "physics:principalAxes": [
+          0.9714365005493164,
+          0.2372996062040329,
+          0.0,
+          0.0
+        ]
+      },
+      "mass": 0.4250870943069458,
+      "diag_inertia": [
+        0.0008246600045822561,
+        0.000885625253431499,
+        0.0002662947808858007
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2199999988079071,
+          0.8379999399185181,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_left_arm_5",
+      "path": "/RBY1/link_left_arm_5",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.005926419980823994,
+          -0.0053780400194227695,
+          -0.02584712952375412
+        ],
+        "physics:diagonalInertia": [
+          0.0024664495140314102,
+          0.0027437873650342226,
+          0.0016149829607456923
+        ],
+        "physics:mass": 1.6050668954849243,
+        "physics:principalAxes": [
+          0.9852099418640137,
+          0.10221423953771591,
+          0.03741583973169327,
+          0.13233952224254608
+        ]
+      },
+      "mass": 1.6050668954849243,
+      "diag_inertia": [
+        0.0024664495140314102,
+        0.0027437873650342226,
+        0.0016149829607456923
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2199999988079071,
+          0.8379999399185181,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_left_arm_6",
+      "path": "/RBY1/link_left_arm_6",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.0002495099906809628,
+          0.00019561999943107367,
+          -0.10711313784122467
+        ],
+        "physics:diagonalInertia": [
+          0.0002957997203338891,
+          0.00030680050258524716,
+          0.0004894998273812234
+        ],
+        "physics:mass": 0.42751672863960266,
+        "physics:principalAxes": [
+          0.9963338971138,
+          0.006408809684216976,
+          0.0035845122765749693,
+          0.08523430675268173
+        ]
+      },
+      "mass": 0.42751672863960266,
+      "diag_inertia": [
+        0.0002957997203338891,
+        0.00030680050258524716,
+        0.0004894998273812234
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2199999988079071,
+          0.8379999399185181,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_right_arm_0",
+      "path": "/RBY1/link_right_arm_0",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.00316661992110312,
+          0.03437180817127228,
+          -3.000000106112566e-07
+        ],
+        "physics:diagonalInertia": [
+          0.002231294522061944,
+          0.004339118022471666,
+          0.004321537911891937
+        ],
+        "physics:mass": 1.2616424560546875,
+        "physics:principalAxes": [
+          0.995323657989502,
+          0.019102297723293304,
+          -0.002474321983754635,
+          -0.09465634822845459
+        ]
+      },
+      "mass": 1.2616424560546875,
+      "diag_inertia": [
+        0.002231294522061944,
+        0.004339118022471666,
+        0.004321537911891937
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.2199999988079071,
+          1.3700000047683716,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_right_arm_1",
+      "path": "/RBY1/link_right_arm_1",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.003078550100326538,
+          -0.0012474099639803171,
+          -0.012943239882588387
+        ],
+        "physics:diagonalInertia": [
+          0.0038967037107795477,
+          0.004477469250559807,
+          0.002864477224647999
+        ],
+        "physics:mass": 2.2728703022003174,
+        "physics:principalAxes": [
+          0.9977868795394897,
+          -0.03164367750287056,
+          -0.054759055376052856,
+          0.020531699061393738
+        ]
+      },
+      "mass": 2.2728703022003174,
+      "diag_inertia": [
+        0.0038967037107795477,
+        0.004477469250559807,
+        0.002864477224647999
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.2199999988079071,
+          1.3700000047683716,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_right_arm_2",
+      "path": "/RBY1/link_right_arm_2",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0011543399887159467,
+          0.0019663500133901834,
+          -0.16192524135112762
+        ],
+        "physics:diagonalInertia": [
+          0.009844696149230003,
+          0.009280242025852203,
+          0.0032220191787928343
+        ],
+        "physics:mass": 2.4690942764282227,
+        "physics:principalAxes": [
+          0.9983161091804504,
+          -0.039050474762916565,
+          -0.038884878158569336,
+          0.018110327422618866
+        ]
+      },
+      "mass": 2.4690942764282227,
+      "diag_inertia": [
+        0.009844696149230003,
+        0.009280242025852203,
+        0.0032220191787928343
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.2199999988079071,
+          1.3700000047683716,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_right_arm_3",
+      "path": "/RBY1/link_right_arm_3",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -0.016031349077820778,
+          -0.006928910035640001,
+          -0.045498110353946686
+        ],
+        "physics:diagonalInertia": [
+          0.008672403171658516,
+          0.008493265137076378,
+          0.0018752337200567126
+        ],
+        "physics:mass": 2.2609949111938477,
+        "physics:principalAxes": [
+          0.9509451985359192,
+          0.09325700998306274,
+          0.10034245252609253,
+          0.2773764431476593
+        ]
+      },
+      "mass": 2.2609949111938477,
+      "diag_inertia": [
+        0.008672403171658516,
+        0.008493265137076378,
+        0.0018752337200567126
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.03099999949336052,
+          -0.2199999988079071,
+          1.093999981880188,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_right_arm_4",
+      "path": "/RBY1/link_right_arm_4",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          -1.1000000199601345e-07,
+          -0.026960359886288643,
+          0.061821099370718
+        ],
+        "physics:diagonalInertia": [
+          0.0008246600045822561,
+          0.000885625253431499,
+          0.0002662947808858007
+        ],
+        "physics:mass": 0.4250870943069458,
+        "physics:principalAxes": [
+          0.9714365005493164,
+          -0.2372996062040329,
+          0.0,
+          0.0
+        ]
+      },
+      "mass": 0.4250870943069458,
+      "diag_inertia": [
+        0.0008246600045822561,
+        0.000885625253431499,
+        0.0002662947808858007
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.2199999988079071,
+          0.8379999399185181,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_right_arm_5",
+      "path": "/RBY1/link_right_arm_5",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.005926419980823994,
+          -0.0053780400194227695,
+          -0.02584712952375412
+        ],
+        "physics:diagonalInertia": [
+          0.0024664495140314102,
+          0.0027437873650342226,
+          0.0016149829607456923
+        ],
+        "physics:mass": 1.6050668954849243,
+        "physics:principalAxes": [
+          0.9852099418640137,
+          0.10221423953771591,
+          0.03741583973169327,
+          0.13233952224254608
+        ]
+      },
+      "mass": 1.6050668954849243,
+      "diag_inertia": [
+        0.0024664495140314102,
+        0.0027437873650342226,
+        0.0016149829607456923
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.2199999988079071,
+          0.8379999399185181,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "link_right_arm_6",
+      "path": "/RBY1/link_right_arm_6",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0002495099906809628,
+          -0.00019561999943107367,
+          -0.10711313784122467
+        ],
+        "physics:diagonalInertia": [
+          0.0002957997203338891,
+          0.00030680050258524716,
+          0.0004894998273812234
+        ],
+        "physics:mass": 0.42751672863960266,
+        "physics:principalAxes": [
+          0.9963338971138,
+          -0.006408809684216976,
+          -0.0035845122765749693,
+          0.08523430675268173
+        ]
+      },
+      "mass": 0.42751672863960266,
+      "diag_inertia": [
+        0.0002957997203338891,
+        0.00030680050258524716,
+        0.0004894998273812234
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.2199999988079071,
+          0.8379999399185181,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "ee_finger_l2",
+      "path": "/RBY1/left_gripper/ee_finger_l2",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0027834600768983364,
+          -3.2899999951041536e-06,
+          -0.025701120495796204
+        ],
+        "physics:diagonalInertia": [
+          1.232748672919115e-05,
+          1.0660000043571927e-05,
+          2.222512875960092e-06
+        ],
+        "physics:mass": 0.03326999023556709,
+        "physics:principalAxes": [
+          0.9997835755348206,
+          0.0,
+          0.020804304629564285,
+          0.0
+        ]
+      },
+      "mass": 0.03326999023556709,
+      "diag_inertia": [
+        1.232748672919115e-05,
+        1.0660000043571927e-05,
+        2.222512875960092e-06
+      ],
+      "world_tf": [
+        [
+          -0.9999999999999969,
+          -8.742277645101109e-08,
+          0.0,
+          0.0
+        ],
+        [
+          8.742277645101109e-08,
+          -0.9999999999999969,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          -0.003000000026077032,
+          0.2199999988079071,
+          0.652899980545044,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "ee_finger_l1",
+      "path": "/RBY1/left_gripper/ee_finger_l1",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0027834600768983364,
+          -3.2899999951041536e-06,
+          -0.025701120495796204
+        ],
+        "physics:diagonalInertia": [
+          1.232748672919115e-05,
+          1.0660000043571927e-05,
+          2.222512875960092e-06
+        ],
+        "physics:mass": 0.03326999023556709,
+        "physics:principalAxes": [
+          0.9997835755348206,
+          0.0,
+          0.020804304629564285,
+          0.0
+        ]
+      },
+      "mass": 0.03326999023556709,
+      "diag_inertia": [
+        1.232748672919115e-05,
+        1.0660000043571927e-05,
+        2.222512875960092e-06
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.003000000026077032,
+          0.2199999988079071,
+          0.652899980545044,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "ee_left",
+      "path": "/RBY1/left_gripper/ee_left",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0021270299330353737,
+          6.1499999901570845e-06,
+          -0.042871758341789246
+        ],
+        "physics:diagonalInertia": [
+          0.00031832748209126294,
+          0.0005976480897516012,
+          0.0005276043666526675
+        ],
+        "physics:mass": 0.4670499861240387,
+        "physics:principalAxes": [
+          0.9988888502120972,
+          -0.0060948641039431095,
+          -0.018442975357174873,
+          -0.04294139891862869
+        ]
+      },
+      "mass": 0.4670499861240387,
+      "diag_inertia": [
+        0.00031832748209126294,
+        0.0005976480897516012,
+        0.0005276043666526675
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2199999988079071,
+          0.727899968624115,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "ee_finger_r2",
+      "path": "/RBY1/right_gripper/ee_finger_r2",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0027834600768983364,
+          -3.2899999951041536e-06,
+          -0.025701120495796204
+        ],
+        "physics:diagonalInertia": [
+          1.232748672919115e-05,
+          1.0660000043571927e-05,
+          2.222512875960092e-06
+        ],
+        "physics:mass": 0.03326999023556709,
+        "physics:principalAxes": [
+          0.9997835755348206,
+          0.0,
+          0.020804304629564285,
+          0.0
+        ]
+      },
+      "mass": 0.03326999023556709,
+      "diag_inertia": [
+        1.232748672919115e-05,
+        1.0660000043571927e-05,
+        2.222512875960092e-06
+      ],
+      "world_tf": [
+        [
+          -0.9999999999999969,
+          -8.742277645101109e-08,
+          0.0,
+          0.0
+        ],
+        [
+          8.742277645101109e-08,
+          -0.9999999999999969,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          -0.003000000026077032,
+          -0.2199999988079071,
+          0.652899980545044,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "ee_finger_r1",
+      "path": "/RBY1/right_gripper/ee_finger_r1",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0027834600768983364,
+          -3.2899999951041536e-06,
+          -0.025701120495796204
+        ],
+        "physics:diagonalInertia": [
+          1.232748672919115e-05,
+          1.0660000043571927e-05,
+          2.222512875960092e-06
+        ],
+        "physics:mass": 0.03326999023556709,
+        "physics:principalAxes": [
+          0.9997835755348206,
+          0.0,
+          0.020804304629564285,
+          0.0
+        ]
+      },
+      "mass": 0.03326999023556709,
+      "diag_inertia": [
+        1.232748672919115e-05,
+        1.0660000043571927e-05,
+        2.222512875960092e-06
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.003000000026077032,
+          -0.2199999988079071,
+          0.652899980545044,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "ee_right",
+      "path": "/RBY1/right_gripper/ee_right",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0021270299330353737,
+          6.1499999901570845e-06,
+          -0.042871758341789246
+        ],
+        "physics:diagonalInertia": [
+          0.00031832748209126294,
+          0.0005976480897516012,
+          0.0005276043666526675
+        ],
+        "physics:mass": 0.4670499861240387,
+        "physics:principalAxes": [
+          0.9988888502120972,
+          -0.0060948641039431095,
+          -0.018442975357174873,
+          -0.04294139891862869
+        ]
+      },
+      "mass": 0.4670499861240387,
+      "diag_inertia": [
+        0.00031832748209126294,
+        0.0005976480897516012,
+        0.0005276043666526675
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.2199999988079071,
+          0.727899968624115,
+          1.0
+        ]
+      ],
+      "flags": []
+    }
+  ],
+  "colliders": [
+    {
+      "path": "/RBY1/base/collisions/mesh_0/cylinder",
+      "type": "Cylinder",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/base/collisions/mesh_1/cylinder",
+      "type": "Cylinder",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/base/collisions/mesh_2/cylinder",
+      "type": "Cylinder",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/base/collisions/mesh_3/cylinder",
+      "type": "Cylinder",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/wheel_l/collisions/mesh_0/cylinder",
+      "type": "Cylinder",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/wheel_r/collisions/mesh_0/cylinder",
+      "type": "Cylinder",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_torso_0/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_torso_1/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_torso_2/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_torso_4/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_torso_5/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_left_arm_0/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_left_arm_1/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_left_arm_2/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_left_arm_3/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_left_arm_4/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_left_arm_5/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_right_arm_0/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_right_arm_1/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_right_arm_2/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_right_arm_3/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_right_arm_4/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    },
+    {
+      "path": "/RBY1/link_right_arm_5/collisions/mesh_0/capsule",
+      "type": "Capsule",
+      "approximation": null,
+      "enabled": true,
+      "purpose": "default"
+    }
+  ],
+  "filtered_pairs": [],
+  "cameras": [
+    {
+      "path": "/RBY1/link_head_2/first_person_camera",
+      "focalLength_mm": 19.299999237060547,
+      "horizontalAperture_mm": 36.0,
+      "verticalAperture_mm": 27.0,
+      "clippingRange": [
+        0.009999999776482582,
+        20.0
+      ],
+      "projection": "perspective",
+      "intrinsics_640x480": {
+        "fx": 343.11109754774304,
+        "fy": 343.11109754774304,
+        "cx": 320.0,
+        "cy": 240.0,
+        "hfov_deg": 86.00781048741851
+      },
+      "world_tf": [
+        [
+          -2.2204460492503136e-16,
+          -1.0,
+          4.440892098500626e-16,
+          0.0
+        ],
+        [
+          -2.220446049250312e-16,
+          4.440892098500626e-16,
+          1.0,
+          0.0
+        ],
+        [
+          -1.0,
+          2.2204460492503126e-16,
+          -2.220446049250313e-16,
+          0.0
+        ],
+        [
+          0.07000000188079072,
+          -0.00033999649200000797,
+          1.547000009536743,
+          1.0
+        ]
+      ],
+      "attrs": {
+        "clippingRange": "(0.01, 20)",
+        "focalLength": "19.299999237060547",
+        "horizontalAperture": "36.0",
+        "verticalAperture": "27.0"
+      }
+    },
+    {
+      "path": "/RBY1/left_gripper/ee_left/left_hand_camera",
+      "focalLength_mm": 19.299999237060547,
+      "horizontalAperture_mm": 36.0,
+      "verticalAperture_mm": 27.0,
+      "clippingRange": [
+        0.009999999776482582,
+        20.0
+      ],
+      "projection": "perspective",
+      "intrinsics_640x480": {
+        "fx": 343.11109754774304,
+        "fy": 343.11109754774304,
+        "cx": 320.0,
+        "cy": 240.0,
+        "hfov_deg": 86.00781048741851
+      },
+      "world_tf": [
+        [
+          -1.0000000000000004,
+          -1.6597630654532705e-17,
+          -3.705081756393543e-18,
+          0.0
+        ],
+        [
+          -1.3005016497977073e-16,
+          -0.9335804264972022,
+          0.3583679495452998,
+          0.0
+        ],
+        [
+          2.659320211577964e-16,
+          0.35836794954529944,
+          0.9335804264972021,
+          0.0
+        ],
+        [
+          -5.829541665667065e-17,
+          0.28170665695311914,
+          0.6525162093450345,
+          1.0
+        ]
+      ],
+      "attrs": {
+        "clippingRange": "(0.01, 20)",
+        "focalLength": "19.299999237060547",
+        "horizontalAperture": "36.0",
+        "verticalAperture": "27.0"
+      }
+    },
+    {
+      "path": "/RBY1/right_gripper/ee_right/right_hand_camera",
+      "focalLength_mm": 19.299999237060547,
+      "horizontalAperture_mm": 36.0,
+      "verticalAperture_mm": 27.0,
+      "clippingRange": [
+        0.009999999776482582,
+        20.0
+      ],
+      "projection": "perspective",
+      "intrinsics_640x480": {
+        "fx": 343.11109754774304,
+        "fy": 343.11109754774304,
+        "cx": 320.0,
+        "cy": 240.0,
+        "hfov_deg": 86.00781048741851
+      },
+      "world_tf": [
+        [
+          -1.0000000000000004,
+          -2.473168246362612e-17,
+          4.75924979891587e-17,
+          0.0
+        ],
+        [
+          -1.3818421678886414e-16,
+          -0.9335804264972022,
+          -0.3583679495452998,
+          0.0
+        ],
+        [
+          -2.2204460492503128e-16,
+          -0.35836794954529944,
+          0.9335804264972021,
+          0.0
+        ],
+        [
+          6.279068939762524e-17,
+          -0.28170665695311914,
+          0.6525162093450345,
+          1.0
+        ]
+      ],
+      "attrs": {
+        "clippingRange": "(0.01, 20)",
+        "focalLength": "19.299999237060547",
+        "horizontalAperture": "36.0",
+        "verticalAperture": "27.0"
+      }
+    }
+  ],
+  "frames": {
+    "base": [
+      {
+        "path": "/RBY1/base",
+        "type": "Xform",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      {
+        "path": "/RBY1/base/visuals/base",
+        "type": "Xform",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      }
+    ],
+    "tool_left": [
+      {
+        "path": "/RBY1/joints/tool_left",
+        "type": "PhysicsFixedJoint",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      }
+    ],
+    "tool_right": [
+      {
+        "path": "/RBY1/joints/tool_right",
+        "type": "PhysicsFixedJoint",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      }
+    ],
+    "link_torso_5": [
+      {
+        "path": "/RBY1/link_torso_5",
+        "type": "Xform",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.289926528930664,
+            1.0
+          ]
+        ]
+      }
+    ],
+    "link_head_2": [
+      {
+        "path": "/RBY1/link_head_2",
+        "type": "Xform",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.02199999988079071,
+            0.0,
+            1.4900000095367432,
+            1.0
+          ]
+        ]
+      }
+    ],
+    "ee_left": [
+      {
+        "path": "/RBY1/left_gripper/ee_left",
+        "type": "Xform",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.2199999988079071,
+            0.727899968624115,
+            1.0
+          ]
+        ]
+      }
+    ],
+    "ee_right": [
+      {
+        "path": "/RBY1/right_gripper/ee_right",
+        "type": "Xform",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            -0.2199999988079071,
+            0.727899968624115,
+            1.0
+          ]
+        ]
+      }
+    ]
+  },
+  "issues": [],
+  "instances": 47,
+  "kit_warnings": [],
+  "timestamp": "2026-10-16 20:55:03"
+}

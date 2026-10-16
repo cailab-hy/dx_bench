@@ -1,0 +1,6 @@
+[submodule "submodules/IsaacLab-Arena"]
+	path = submodules/IsaacLab-Arena
+	url = git@github.com:isaac-sim/IsaacLab-Arena.git
+[submodule "submodules/rby1-sim-isaac"]
+	path = submodules/rby1-sim-isaac
+	url = git@github.com:cailab-hy/rby1-sim-isaac.git

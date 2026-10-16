@@ -1,0 +1,409 @@
+{
+  "file": "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/gripper/rb_gripper/rb_gripper_left.usd",
+  "defaultPrim": "/Gripper_Left",
+  "metersPerUnit": 1.0,
+  "upAxis": "Z",
+  "kilogramsPerUnit": 1.0,
+  "used_layers": [
+    "/home/cai/dx_bench/submodules/rby1-sim-isaac/assets/gripper/rb_gripper/rb_gripper_left.usd",
+    "anon:0x62ec2954aeb0:rb_gripper_left-session.usda"
+  ],
+  "applied_schemas": {
+    "PhysicsArticulationRootAPI": 1,
+    "PhysxArticulationAPI": 1,
+    "PhysicsJointStateAPI:linear": 2,
+    "PhysxJointAPI": 2,
+    "PhysicsDriveAPI:linear": 1,
+    "PhysxMimicJointAPI:rotX": 1,
+    "PhysicsRigidBodyAPI": 3,
+    "PhysicsMassAPI": 3,
+    "NodeDefAPI": 5,
+    "MaterialBindingAPI": 5
+  },
+  "prim_types": {
+    "<none>": 4,
+    "RenderProduct": 1,
+    "RenderSettings": 1,
+    "RenderVar": 1,
+    "Xform": 16,
+    "Scope": 4,
+    "PhysicsPrismaticJoint": 2,
+    "Material": 5,
+    "Shader": 5,
+    "Mesh": 3,
+    "GeomSubset": 4
+  },
+  "articulation_roots": [
+    {
+      "path": "/Gripper_Left",
+      "type": "Xform",
+      "attrs": {
+        "isaac:changelog": null,
+        "isaac:description": null,
+        "isaac:license": null,
+        "isaac:namespace": null,
+        "isaac:robotType": null,
+        "isaac:source": null,
+        "isaac:version": null,
+        "physxArticulation:enabledSelfCollisions": false
+      }
+    }
+  ],
+  "joints": [
+    {
+      "name": "gripper_finger_l1",
+      "path": "/Gripper_Left/joints/gripper_finger_l1",
+      "type": "PhysicsPrismaticJoint",
+      "body0": [
+        "/Gripper_Left/ee_left"
+      ],
+      "body1": [
+        "/Gripper_Left/ee_finger_l1"
+      ],
+      "drives": {
+        "linear": {
+          "type": "force",
+          "stiffness": 100.0,
+          "damping": 1.0,
+          "maxForce": 75.0,
+          "targetPosition": 0.0,
+          "targetVelocity": 0.0
+        }
+      },
+      "attrs": {
+        "drive:linear:physics:damping": 1.0,
+        "drive:linear:physics:maxForce": 75.0,
+        "drive:linear:physics:stiffness": 100.0,
+        "drive:linear:physics:targetPosition": 0.0,
+        "drive:linear:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.0004948936402797699,
+        "physics:localPos0": [
+          0.003000000026077032,
+          0.0,
+          -0.07500000298023224
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:localRot1": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:lowerLimit": -0.05000000074505806,
+        "physics:upperLimit": 0.0,
+        "physxJoint:maxJointVelocity": 0.03999999910593033,
+        "state:linear:physics:position": 0.0,
+        "state:linear:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:linear",
+        "PhysxJointAPI",
+        "PhysicsDriveAPI:linear"
+      ],
+      "role": "dof"
+    },
+    {
+      "name": "gripper_finger_l2",
+      "path": "/Gripper_Left/joints/gripper_finger_l2",
+      "type": "PhysicsPrismaticJoint",
+      "body0": [
+        "/Gripper_Left/ee_left"
+      ],
+      "body1": [
+        "/Gripper_Left/ee_finger_l2"
+      ],
+      "drives": {},
+      "attrs": {
+        "drive:linear:physics:damping": 0.00012373982463032007,
+        "drive:linear:physics:maxForce": 1000.0,
+        "drive:linear:physics:stiffness": 0.30934953689575195,
+        "drive:linear:physics:targetPosition": 0.0,
+        "drive:linear:physics:type": "force",
+        "isaac:nameOverride": null,
+        "isaac:physics:AccelerationLimit": null,
+        "isaac:physics:index": null,
+        "isaac:physics:JerkLimit": null,
+        "isaac:physics:Rot_X:DofOffset": null,
+        "isaac:physics:Rot_Y:DofOffset": null,
+        "isaac:physics:Rot_Z:DofOffset": null,
+        "isaac:physics:Tr_X:DofOffset": null,
+        "isaac:physics:Tr_Y:DofOffset": null,
+        "isaac:physics:Tr_Z:DofOffset": null,
+        "physics:axis": "X",
+        "physics:breakForce": null,
+        "physics:breakTorque": null,
+        "physics:JointEquivalentInertia": 0.0004949592985212803,
+        "physics:localPos0": [
+          -0.003000000026077032,
+          0.0,
+          -0.07500000298023224
+        ],
+        "physics:localPos1": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:localRot0": [
+          -4.371138828673793e-08,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "physics:localRot1": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physics:lowerLimit": 0.0,
+        "physics:upperLimit": 0.05000000074505806,
+        "physxJoint:maxJointVelocity": 0.03999999910593033,
+        "state:linear:physics:position": 0.0,
+        "state:linear:physics:velocity": 0.0
+      },
+      "schemas": [
+        "PhysicsJointStateAPI:linear",
+        "PhysxJointAPI",
+        "PhysxMimicJointAPI:rotX"
+      ],
+      "role": "dof"
+    }
+  ],
+  "links": [
+    {
+      "name": "ee_finger_l2",
+      "path": "/Gripper_Left/ee_finger_l2",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0027834600768983364,
+          -3.2899999951041536e-06,
+          -0.025701120495796204
+        ],
+        "physics:diagonalInertia": [
+          1.232748672919115e-05,
+          1.0660000043571927e-05,
+          2.222512875960092e-06
+        ],
+        "physics:mass": 0.03326999023556709,
+        "physics:principalAxes": [
+          0.9997835755348206,
+          0.0,
+          0.020804304629564285,
+          0.0
+        ]
+      },
+      "mass": 0.03326999023556709,
+      "diag_inertia": [
+        1.232748672919115e-05,
+        1.0660000043571927e-05,
+        2.222512875960092e-06
+      ],
+      "world_tf": [
+        [
+          -0.9999999999999969,
+          -8.742277645101109e-08,
+          0.0,
+          0.0
+        ],
+        [
+          8.742277645101109e-08,
+          -0.9999999999999969,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          -0.003000000026077032,
+          0.2199999988079071,
+          0.652899980545044,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "ee_finger_l1",
+      "path": "/Gripper_Left/ee_finger_l1",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0027834600768983364,
+          -3.2899999951041536e-06,
+          -0.025701120495796204
+        ],
+        "physics:diagonalInertia": [
+          1.232748672919115e-05,
+          1.0660000043571927e-05,
+          2.222512875960092e-06
+        ],
+        "physics:mass": 0.03326999023556709,
+        "physics:principalAxes": [
+          0.9997835755348206,
+          0.0,
+          0.020804304629564285,
+          0.0
+        ]
+      },
+      "mass": 0.03326999023556709,
+      "diag_inertia": [
+        1.232748672919115e-05,
+        1.0660000043571927e-05,
+        2.222512875960092e-06
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.003000000026077032,
+          0.2199999988079071,
+          0.652899980545044,
+          1.0
+        ]
+      ],
+      "flags": []
+    },
+    {
+      "name": "ee_left",
+      "path": "/Gripper_Left/ee_left",
+      "attrs": {
+        "isaac:nameOverride": null,
+        "physics:centerOfMass": [
+          0.0021270299330353737,
+          6.1499999901570845e-06,
+          -0.042871758341789246
+        ],
+        "physics:diagonalInertia": [
+          0.00031832748209126294,
+          0.0005976480897516012,
+          0.0005276043666526675
+        ],
+        "physics:mass": 0.4670499861240387,
+        "physics:principalAxes": [
+          0.9988888502120972,
+          -0.0060948641039431095,
+          -0.018442975357174873,
+          -0.04294139891862869
+        ]
+      },
+      "mass": 0.4670499861240387,
+      "diag_inertia": [
+        0.00031832748209126294,
+        0.0005976480897516012,
+        0.0005276043666526675
+      ],
+      "world_tf": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.2199999988079071,
+          0.727899968624115,
+          1.0
+        ]
+      ],
+      "flags": []
+    }
+  ],
+  "colliders": [],
+  "filtered_pairs": [],
+  "cameras": [],
+  "frames": {
+    "ee_left": [
+      {
+        "path": "/Gripper_Left/ee_left",
+        "type": "Xform",
+        "world_tf": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.2199999988079071,
+            0.727899968624115,
+            1.0
+          ]
+        ]
+      }
+    ]
+  },
+  "issues": [],
+  "instances": 3,
+  "kit_warnings": [],
+  "timestamp": "2026-10-16 20:55:04"
+}

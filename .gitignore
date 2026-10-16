@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+# third-party clones fetched by tools (e.g. rby1-sdk sparse clone)
+tools/rby1_check/_ext/
+# third-party clones (read-only references)
+_ext/
+# large generated data (datasets, checkpoints, videos) — see data/README.md
+data/
+outputs/
+*.ckpt
+*.safetensors

@@ -1,0 +1,201 @@
+{
+  "scene": "/home/cai/P2-DX_project/DX/USD/DX_Hub_Building_add_obj_v1/DX_Hub_Building_add_obj_v1_CareRoom_scene.usda",
+  "load": "open",
+  "spawn": [
+    -2.6,
+    17.7,
+    0.0
+  ],
+  "yaw_deg": 0.0,
+  "physics_device": "cuda:0",
+  "physics_scene_reused": [
+    "/World/PhysicsScene"
+  ],
+  "dt": 0.005,
+  "duration_s": 10.0,
+  "robot_aabb": [
+    [
+      -2.9346249103546143,
+      17.39000405892038,
+      0.0
+    ],
+    [
+      -2.2720349356532097,
+      18.009997466958506,
+      1.5680000105341898
+    ]
+  ],
+  "robot_visibility": "inherited",
+  "static_nearest_furniture": [
+    {
+      "link": "base",
+      "furniture": "CareDesk",
+      "gap_m": 0.5073750896453859,
+      "link_has_collider": true
+    },
+    {
+      "link": "link_torso_4",
+      "furniture": "CareDesk",
+      "gap_m": 0.635500190973282,
+      "link_has_collider": true
+    },
+    {
+      "link": "base",
+      "furniture": "TShirt",
+      "gap_m": 0.6445818018913272,
+      "link_has_collider": true
+    },
+    {
+      "link": "link_torso_5",
+      "furniture": "CareDesk",
+      "gap_m": 0.6550000889301302,
+      "link_has_collider": true
+    },
+    {
+      "link": "link_torso_0",
+      "furniture": "CareDesk",
+      "gap_m": 0.6920000894069673,
+      "link_has_collider": true
+    },
+    {
+      "link": "link_torso_5",
+      "furniture": "TShirt",
+      "gap_m": 0.7342097979784015,
+      "link_has_collider": true
+    },
+    {
+      "link": "link_left_arm_0",
+      "furniture": "CareDesk",
+      "gap_m": 0.7515001056790354,
+      "link_has_collider": true
+    },
+    {
+      "link": "link_torso_1",
+      "furniture": "CareDesk",
+      "gap_m": 0.770070104122162,
+      "link_has_collider": true
+    }
+  ],
+  "static_overlaps": [],
+  "links_without_collider": [
+    "link_torso_3",
+    "link_head_0",
+    "link_head_1",
+    "link_head_2",
+    "link_left_arm_6",
+    "link_right_arm_6",
+    "ee_left",
+    "ee_right"
+  ],
+  "base_disp_max_m": 7.68876816437114e-06,
+  "base_tilt_max_deg": 0.0,
+  "joint_err_max_rad": 0.2614428997039795,
+  "joint_err_final_rad": 0.03261396288871765,
+  "deformables_before": {
+    "pillow": {
+      "type": "volume",
+      "nodes": 351,
+      "finite": true,
+      "z_min": 0.544906735420227,
+      "z_max": 0.6834767460823059,
+      "centroid": [
+        1.9811190366744995,
+        20.64126968383789,
+        0.6172391176223755
+      ]
+    },
+    "blanket": {
+      "type": "surface",
+      "nodes": 1804,
+      "finite": true,
+      "z_min": 0.5349204540252686,
+      "z_max": 0.5769199728965759,
+      "centroid": [
+        1.9809951782226562,
+        19.755409240722656,
+        0.5692645311355591
+      ]
+    },
+    "tshirt": {
+      "type": "surface",
+      "nodes": 3444,
+      "finite": true,
+      "z_min": 0.7345050573348999,
+      "z_max": 0.7425207495689392,
+      "centroid": [
+        -3.857506036758423,
+        19.069583892822266,
+        0.738338053226471
+      ]
+    }
+  },
+  "deformables_after": {
+    "pillow": {
+      "type": "volume",
+      "nodes": 351,
+      "finite": true,
+      "z_min": 0.5484492778778076,
+      "z_max": 0.6894680857658386,
+      "centroid": [
+        1.9854130744934082,
+        20.64861297607422,
+        0.6203432679176331
+      ]
+    },
+    "blanket": {
+      "type": "surface",
+      "nodes": 1804,
+      "finite": true,
+      "z_min": 0.2968566119670868,
+      "z_max": 0.5592847466468811,
+      "centroid": [
+        1.981223225593567,
+        19.747905731201172,
+        0.49960777163505554
+      ]
+    },
+    "tshirt": {
+      "type": "surface",
+      "nodes": 3444,
+      "finite": true,
+      "z_min": 0.726999044418335,
+      "z_max": 0.7361765503883362,
+      "centroid": [
+        -3.857409715652466,
+        19.06956672668457,
+        0.7290832996368408
+      ]
+    }
+  },
+  "head_camera": {
+    "pos_w": [
+      -2.513308525085449,
+      17.7030029296875,
+      1.5304738283157349
+    ],
+    "bed_centre_visible": true,
+    "bed_corners_in_image": 8,
+    "bed_centre_px": [
+      144.89135897062863,
+      216.8685699137757
+    ],
+    "rgb_mean": 158.13255750868055
+  },
+  "images": {
+    "head_rgb": "/home/cai/dx_bench/reports/rby1_check/t4/head_rgb_open.png",
+    "head_depth": "/home/cai/dx_bench/reports/rby1_check/t4/head_depth_open.png",
+    "overview": "/home/cai/dx_bench/reports/rby1_check/t4/overview_open.png"
+  },
+  "kit_warning_count": 0,
+  "kit_warnings": [],
+  "wall_s": 31.922191381454468,
+  "criteria": {
+    "gpu_physics": true,
+    "no_static_overlap(collider links)": true,
+    "robot_stable(base<1cm, tilt<2deg)": true,
+    "deformables_finite": true,
+    "bed_in_head_camera": true
+  },
+  "pass": true,
+  "timestamp": "2026-10-16 20:53:45"
+}

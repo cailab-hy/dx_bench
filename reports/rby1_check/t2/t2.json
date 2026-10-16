@@ -1,0 +1,1405 @@
+{
+  "urdf": "/home/cai/dx_bench/tools/rby1_check/_ext/rby1-sdk/models/rby1a/urdf/model_v1.2.urdf",
+  "urdf_root": "base",
+  "rows": [
+    {
+      "joint": "right_wheel",
+      "urdf_type": "continuous",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": null,
+      "usd_lower": null,
+      "urdf_upper": null,
+      "usd_upper": null,
+      "urdf_effort": null,
+      "usd_maxForce": 100.0,
+      "urdf_velocity": 15.707963268,
+      "usd_maxVel": 17.453292519943297,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "left_wheel",
+      "urdf_type": "continuous",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": null,
+      "usd_lower": null,
+      "urdf_upper": null,
+      "usd_upper": null,
+      "urdf_effort": null,
+      "usd_maxForce": 100.0,
+      "urdf_velocity": 15.707963268,
+      "usd_maxVel": 17.453292519943297,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "torso_0",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -0.261799388,
+      "usd_lower": -0.2617993877991494,
+      "urdf_upper": 0.261799388,
+      "usd_upper": 0.2617993877991494,
+      "urdf_effort": 270.0,
+      "usd_maxForce": 841.0,
+      "urdf_velocity": 2.0943951,
+      "usd_maxVel": 2.0943951023931953,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "torso_1",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -0.523598776,
+      "usd_lower": -0.5235987755982988,
+      "urdf_upper": 1.570796327,
+      "usd_upper": 1.5707963267948966,
+      "urdf_effort": 270.0,
+      "usd_maxForce": 841.0,
+      "urdf_velocity": 2.0943951,
+      "usd_maxVel": 2.0943951023931953,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "torso_2",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -2.617993878,
+      "usd_lower": -2.6179938779914944,
+      "urdf_upper": 1.570796327,
+      "usd_upper": 1.5707963267948966,
+      "urdf_effort": 270.0,
+      "usd_maxForce": 841.0,
+      "urdf_velocity": 2.0943951,
+      "usd_maxVel": 2.0943951023931953,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "torso_3",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -0.785398163,
+      "usd_lower": -0.7853981633974483,
+      "urdf_upper": 1.570796327,
+      "usd_upper": 1.5707963267948966,
+      "urdf_effort": 120.0,
+      "usd_maxForce": 369.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "torso_4",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -0.523598776,
+      "usd_lower": -0.5235987755982988,
+      "urdf_upper": 0.523598776,
+      "usd_upper": 0.5235987755982988,
+      "urdf_effort": 120.0,
+      "usd_maxForce": 369.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "torso_5",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -2.35619449,
+      "usd_lower": -2.356194490192345,
+      "urdf_upper": 2.35619449,
+      "usd_upper": 2.356194490192345,
+      "urdf_effort": 120.0,
+      "usd_maxForce": 369.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "right_arm_0",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -3.141592654,
+      "usd_lower": -3.141592653589793,
+      "urdf_upper": 3.141592654,
+      "usd_upper": 3.141592653589793,
+      "urdf_effort": 70.0,
+      "usd_maxForce": 143.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "right_arm_1",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -3.141592654,
+      "usd_lower": -3.141592653589793,
+      "urdf_upper": 0.017453293,
+      "usd_upper": 0.0,
+      "urdf_effort": 70.0,
+      "usd_maxForce": 143.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "right_arm_2",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -3.141592654,
+      "usd_lower": -3.141592653589793,
+      "urdf_upper": 3.141592654,
+      "usd_upper": 3.141592653589793,
+      "urdf_effort": 70.0,
+      "usd_maxForce": 143.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "right_arm_3",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -2.617993878,
+      "usd_lower": -2.6179938779914944,
+      "urdf_upper": 0.017453293,
+      "usd_upper": 0.0,
+      "urdf_effort": 40.0,
+      "usd_maxForce": 70.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "right_arm_4",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -3.141592654,
+      "usd_lower": -3.141592653589793,
+      "urdf_upper": 3.141592654,
+      "usd_upper": 3.141592653589793,
+      "urdf_effort": 10.0,
+      "usd_maxForce": 70.0,
+      "urdf_velocity": 6.283185308,
+      "usd_maxVel": 6.283185307179586,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "right_arm_5",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -1.570796327,
+      "usd_lower": -1.5707963267948966,
+      "urdf_upper": 1.919862177,
+      "usd_upper": 1.9198621771937625,
+      "urdf_effort": 10.0,
+      "usd_maxForce": 70.0,
+      "urdf_velocity": 6.283185308,
+      "usd_maxVel": 6.283185307179586,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "right_arm_6",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -2.70526034,
+      "usd_lower": -2.705260340591211,
+      "urdf_upper": 2.70526034,
+      "usd_upper": 2.705260340591211,
+      "urdf_effort": 8.0,
+      "usd_maxForce": 140.0,
+      "urdf_velocity": 2.094395102,
+      "usd_maxVel": 6.283185307179586,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "left_arm_0",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -3.141592654,
+      "usd_lower": -3.141592653589793,
+      "urdf_upper": 3.141592654,
+      "usd_upper": 3.141592653589793,
+      "urdf_effort": 70.0,
+      "usd_maxForce": 143.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "left_arm_1",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -0.017453293,
+      "usd_lower": 0.0,
+      "urdf_upper": 3.141592654,
+      "usd_upper": 3.141592653589793,
+      "urdf_effort": 70.0,
+      "usd_maxForce": 143.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "left_arm_2",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -3.141592654,
+      "usd_lower": -3.141592653589793,
+      "urdf_upper": 3.141592654,
+      "usd_upper": 3.141592653589793,
+      "urdf_effort": 70.0,
+      "usd_maxForce": 143.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "left_arm_3",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -2.617993878,
+      "usd_lower": -2.6179938779914944,
+      "urdf_upper": 0.017453293,
+      "usd_upper": 0.0,
+      "urdf_effort": 40.0,
+      "usd_maxForce": 70.0,
+      "urdf_velocity": 3.141592654,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "left_arm_4",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -3.141592654,
+      "usd_lower": -3.141592653589793,
+      "urdf_upper": 3.141592654,
+      "usd_upper": 3.141592653589793,
+      "urdf_effort": 10.0,
+      "usd_maxForce": 70.0,
+      "urdf_velocity": 6.283185308,
+      "usd_maxVel": 6.283185307179586,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "left_arm_5",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -1.570796327,
+      "usd_lower": -1.5707963267948966,
+      "urdf_upper": 1.919862177,
+      "usd_upper": 1.9198621771937625,
+      "urdf_effort": 10.0,
+      "usd_maxForce": 70.0,
+      "urdf_velocity": 6.283185308,
+      "usd_maxVel": 6.283185307179586,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "left_arm_6",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -2.70526034,
+      "usd_lower": -2.705260340591211,
+      "urdf_upper": 2.70526034,
+      "usd_upper": 2.705260340591211,
+      "urdf_effort": 8.0,
+      "usd_maxForce": 140.0,
+      "urdf_velocity": 2.094395102,
+      "usd_maxVel": 6.283185307179586,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "head_0",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -1.57,
+      "usd_lower": -1.5707963267948966,
+      "urdf_upper": 1.57,
+      "usd_upper": 1.5707963267948966,
+      "urdf_effort": 1000.0,
+      "usd_maxForce": 70.0,
+      "urdf_velocity": 3.14,
+      "usd_maxVel": 3.141592653589793,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "head_1",
+      "urdf_type": "revolute",
+      "usd_type": "RevoluteJoint",
+      "urdf_lower": -1.57,
+      "usd_lower": -1.5707963267948966,
+      "urdf_upper": 1.57,
+      "usd_upper": 1.5707963267948966,
+      "urdf_effort": 1000.0,
+      "usd_maxForce": 70.0,
+      "urdf_velocity": 3.14,
+      "usd_maxVel": 3.139999816941817,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "gripper_finger_l1",
+      "urdf_type": "prismatic",
+      "usd_type": "PrismaticJoint",
+      "urdf_lower": -0.05,
+      "usd_lower": -0.05000000074505806,
+      "urdf_upper": 0.0,
+      "usd_upper": 0.0,
+      "urdf_effort": 1000.0,
+      "usd_maxForce": 75.0,
+      "urdf_velocity": 0.05,
+      "usd_maxVel": 0.03999999910593033,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "gripper_finger_l2",
+      "urdf_type": "prismatic",
+      "usd_type": "PrismaticJoint",
+      "urdf_lower": 0.0,
+      "usd_lower": 0.0,
+      "urdf_upper": 0.05,
+      "usd_upper": 0.05000000074505806,
+      "urdf_effort": 1000.0,
+      "usd_maxForce": 1000.0,
+      "urdf_velocity": 0.05,
+      "usd_maxVel": 0.03999999910593033,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "gripper_finger_r1",
+      "urdf_type": "prismatic",
+      "usd_type": "PrismaticJoint",
+      "urdf_lower": -0.05,
+      "usd_lower": -0.05000000074505806,
+      "urdf_upper": 0.0,
+      "usd_upper": 0.0,
+      "urdf_effort": 1000.0,
+      "usd_maxForce": 75.0,
+      "urdf_velocity": 0.05,
+      "usd_maxVel": 0.03999999910593033,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "gripper_finger_r2",
+      "urdf_type": "prismatic",
+      "usd_type": "PrismaticJoint",
+      "urdf_lower": 0.0,
+      "usd_lower": 0.0,
+      "urdf_upper": 0.05,
+      "usd_upper": 0.05000000074505806,
+      "urdf_effort": 1000.0,
+      "usd_maxForce": 1000.0,
+      "urdf_velocity": 0.05,
+      "usd_maxVel": 0.03999999910593033,
+      "urdf_mimic": null
+    },
+    {
+      "joint": "head_base",
+      "urdf_type": "fixed",
+      "usd_type": "FixedJoint",
+      "urdf_lower": null,
+      "usd_lower": null,
+      "urdf_upper": null,
+      "usd_upper": null,
+      "urdf_effort": null,
+      "usd_maxForce": null,
+      "urdf_velocity": null,
+      "usd_maxVel": null,
+      "urdf_mimic": null
+    }
+  ],
+  "diff": [
+    {
+      "joint": "right_wheel",
+      "item": "effort↔maxForce",
+      "urdf": null,
+      "usd": 100.0
+    },
+    {
+      "joint": "right_wheel",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 15.707963268,
+      "usd": 17.453292519943297
+    },
+    {
+      "joint": "left_wheel",
+      "item": "effort↔maxForce",
+      "urdf": null,
+      "usd": 100.0
+    },
+    {
+      "joint": "left_wheel",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 15.707963268,
+      "usd": 17.453292519943297
+    },
+    {
+      "joint": "torso_0",
+      "item": "effort↔maxForce",
+      "urdf": 270.0,
+      "usd": 841.0
+    },
+    {
+      "joint": "torso_1",
+      "item": "effort↔maxForce",
+      "urdf": 270.0,
+      "usd": 841.0
+    },
+    {
+      "joint": "torso_2",
+      "item": "effort↔maxForce",
+      "urdf": 270.0,
+      "usd": 841.0
+    },
+    {
+      "joint": "torso_3",
+      "item": "effort↔maxForce",
+      "urdf": 120.0,
+      "usd": 369.0
+    },
+    {
+      "joint": "torso_4",
+      "item": "effort↔maxForce",
+      "urdf": 120.0,
+      "usd": 369.0
+    },
+    {
+      "joint": "torso_5",
+      "item": "effort↔maxForce",
+      "urdf": 120.0,
+      "usd": 369.0
+    },
+    {
+      "joint": "right_arm_0",
+      "item": "effort↔maxForce",
+      "urdf": 70.0,
+      "usd": 143.0
+    },
+    {
+      "joint": "right_arm_1",
+      "item": "upper",
+      "urdf": 0.017453293,
+      "usd": 0.0
+    },
+    {
+      "joint": "right_arm_1",
+      "item": "effort↔maxForce",
+      "urdf": 70.0,
+      "usd": 143.0
+    },
+    {
+      "joint": "right_arm_2",
+      "item": "effort↔maxForce",
+      "urdf": 70.0,
+      "usd": 143.0
+    },
+    {
+      "joint": "right_arm_3",
+      "item": "upper",
+      "urdf": 0.017453293,
+      "usd": 0.0
+    },
+    {
+      "joint": "right_arm_3",
+      "item": "effort↔maxForce",
+      "urdf": 40.0,
+      "usd": 70.0
+    },
+    {
+      "joint": "right_arm_4",
+      "item": "effort↔maxForce",
+      "urdf": 10.0,
+      "usd": 70.0
+    },
+    {
+      "joint": "right_arm_5",
+      "item": "effort↔maxForce",
+      "urdf": 10.0,
+      "usd": 70.0
+    },
+    {
+      "joint": "right_arm_6",
+      "item": "effort↔maxForce",
+      "urdf": 8.0,
+      "usd": 140.0
+    },
+    {
+      "joint": "right_arm_6",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 2.094395102,
+      "usd": 6.283185307179586
+    },
+    {
+      "joint": "left_arm_0",
+      "item": "effort↔maxForce",
+      "urdf": 70.0,
+      "usd": 143.0
+    },
+    {
+      "joint": "left_arm_1",
+      "item": "lower",
+      "urdf": -0.017453293,
+      "usd": 0.0
+    },
+    {
+      "joint": "left_arm_1",
+      "item": "effort↔maxForce",
+      "urdf": 70.0,
+      "usd": 143.0
+    },
+    {
+      "joint": "left_arm_2",
+      "item": "effort↔maxForce",
+      "urdf": 70.0,
+      "usd": 143.0
+    },
+    {
+      "joint": "left_arm_3",
+      "item": "upper",
+      "urdf": 0.017453293,
+      "usd": 0.0
+    },
+    {
+      "joint": "left_arm_3",
+      "item": "effort↔maxForce",
+      "urdf": 40.0,
+      "usd": 70.0
+    },
+    {
+      "joint": "left_arm_4",
+      "item": "effort↔maxForce",
+      "urdf": 10.0,
+      "usd": 70.0
+    },
+    {
+      "joint": "left_arm_5",
+      "item": "effort↔maxForce",
+      "urdf": 10.0,
+      "usd": 70.0
+    },
+    {
+      "joint": "left_arm_6",
+      "item": "effort↔maxForce",
+      "urdf": 8.0,
+      "usd": 140.0
+    },
+    {
+      "joint": "left_arm_6",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 2.094395102,
+      "usd": 6.283185307179586
+    },
+    {
+      "joint": "head_0",
+      "item": "effort↔maxForce",
+      "urdf": 1000.0,
+      "usd": 70.0
+    },
+    {
+      "joint": "head_0",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 3.14,
+      "usd": 3.141592653589793
+    },
+    {
+      "joint": "head_1",
+      "item": "effort↔maxForce",
+      "urdf": 1000.0,
+      "usd": 70.0
+    },
+    {
+      "joint": "gripper_finger_l1",
+      "item": "effort↔maxForce",
+      "urdf": 1000.0,
+      "usd": 75.0
+    },
+    {
+      "joint": "gripper_finger_l1",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 0.05,
+      "usd": 0.03999999910593033
+    },
+    {
+      "joint": "gripper_finger_l2",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 0.05,
+      "usd": 0.03999999910593033
+    },
+    {
+      "joint": "gripper_finger_r1",
+      "item": "effort↔maxForce",
+      "urdf": 1000.0,
+      "usd": 75.0
+    },
+    {
+      "joint": "gripper_finger_r1",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 0.05,
+      "usd": 0.03999999910593033
+    },
+    {
+      "joint": "gripper_finger_r2",
+      "item": "velocity↔maxJointVelocity",
+      "urdf": 0.05,
+      "usd": 0.03999999910593033
+    }
+  ],
+  "kinematics": [
+    {
+      "joint": "right_wheel",
+      "pos_err_mm": 1.438300960041176e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.2280000001192093,
+        -0.26499998569488525,
+        0.10000000149011612
+      ],
+      "urdf_world_pos": [
+        0.228,
+        -0.265,
+        0.1
+      ]
+    },
+    {
+      "joint": "left_wheel",
+      "pos_err_mm": 1.438300960041176e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.2280000001192093,
+        0.26499998569488525,
+        0.10000000149011612
+      ],
+      "urdf_world_pos": [
+        0.228,
+        0.265,
+        0.1
+      ]
+    },
+    {
+      "joint": "torso_0",
+      "pos_err_mm": 5.245208767323817e-06,
+      "axis_dot": 1.0,
+      "usd_axis_token": "X",
+      "usd_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.0,
+        0.28049999475479126
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.0,
+        0.2805
+      ]
+    },
+    {
+      "joint": "torso_1",
+      "pos_err_mm": 5.245208767323817e-06,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.0,
+        0.28049999475479126
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.0,
+        0.2805
+      ]
+    },
+    {
+      "joint": "torso_2",
+      "pos_err_mm": 1.120567327816957e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.0,
+        0.6304999887943268
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.0,
+        0.6305000000000001
+      ]
+    },
+    {
+      "joint": "torso_3",
+      "pos_err_mm": 4.6968460121199485e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.0,
+        0.9804999530315399
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.0,
+        0.9805
+      ]
+    },
+    {
+      "joint": "torso_4",
+      "pos_err_mm": 1.7166137733504172e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "X",
+      "usd_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.0,
+        0.9804999828338623
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.0,
+        0.9805
+      ]
+    },
+    {
+      "joint": "torso_5",
+      "pos_err_mm": 1.9530336015094463e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Z",
+      "usd_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.0,
+        1.289926528930664
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.0,
+        1.289926548461
+      ]
+    },
+    {
+      "joint": "right_arm_0",
+      "pos_err_mm": 1.762373391537394e-05,
+      "axis_dot": 0.9999999981240408,
+      "usd_axis_token": "",
+      "usd_world_axis": [
+        3.1931238431148756e-08,
+        0.9396926092013742,
+        -0.3420201751539119
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.93969262,
+        -0.34202014
+      ],
+      "usd_world_pos": [
+        0.0,
+        -0.2199999988079071,
+        1.3699999824166298
+      ],
+      "urdf_world_pos": [
+        0.0,
+        -0.22,
+        1.37
+      ]
+    },
+    {
+      "joint": "right_arm_1",
+      "pos_err_mm": 4.9151248205972205e-06,
+      "axis_dot": 1.0,
+      "usd_axis_token": "X",
+      "usd_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        -0.2199999988079071,
+        1.3700000047683716
+      ],
+      "urdf_world_pos": [
+        0.0,
+        -0.22,
+        1.37
+      ]
+    },
+    {
+      "joint": "right_arm_2",
+      "pos_err_mm": 4.9151248205972205e-06,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Z",
+      "usd_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        -0.2199999988079071,
+        1.3700000047683716
+      ],
+      "urdf_world_pos": [
+        0.0,
+        -0.22,
+        1.37
+      ]
+    },
+    {
+      "joint": "right_arm_3",
+      "pos_err_mm": 1.1754097828898595e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.03099999949336052,
+        -0.2199999988079071,
+        1.0940000116825104
+      ],
+      "urdf_world_pos": [
+        0.031,
+        -0.22,
+        1.094
+      ]
+    },
+    {
+      "joint": "right_arm_4",
+      "pos_err_mm": 3.030261693341616e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Z",
+      "usd_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        -0.2199999988079071,
+        0.8379999697208405
+      ],
+      "urdf_world_pos": [
+        0.0,
+        -0.22,
+        0.8380000000000001
+      ]
+    },
+    {
+      "joint": "right_arm_5",
+      "pos_err_mm": 6.009330716646256e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        -0.2199999988079071,
+        0.8379999399185181
+      ],
+      "urdf_world_pos": [
+        0.0,
+        -0.22,
+        0.8380000000000001
+      ]
+    },
+    {
+      "joint": "right_arm_6",
+      "pos_err_mm": 6.009330716646256e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Z",
+      "usd_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        -0.2199999988079071,
+        0.8379999399185181
+      ],
+      "urdf_world_pos": [
+        0.0,
+        -0.22,
+        0.8380000000000001
+      ]
+    },
+    {
+      "joint": "left_arm_0",
+      "pos_err_mm": 1.8083704878126777e-05,
+      "axis_dot": 0.9999999981240408,
+      "usd_axis_token": "",
+      "usd_world_axis": [
+        3.1931238431148756e-08,
+        0.9396926092013742,
+        0.3420201751539119
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.93969262,
+        0.34202014
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.2199999988079071,
+        1.3699999824166298
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.22,
+        1.370000000461
+      ]
+    },
+    {
+      "joint": "left_arm_1",
+      "pos_err_mm": 4.469288010500735e-06,
+      "axis_dot": 1.0,
+      "usd_axis_token": "X",
+      "usd_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.2199999988079071,
+        1.3700000047683716
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.22,
+        1.370000000461
+      ]
+    },
+    {
+      "joint": "left_arm_2",
+      "pos_err_mm": 4.469288010500735e-06,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Z",
+      "usd_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.2199999988079071,
+        1.3700000047683716
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.22,
+        1.370000000461
+      ]
+    },
+    {
+      "joint": "left_arm_3",
+      "pos_err_mm": 1.1296019848406998e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.03099999949336052,
+        0.2199999988079071,
+        1.0940000116825104
+      ],
+      "urdf_world_pos": [
+        0.031,
+        0.22,
+        1.094000000461
+      ]
+    },
+    {
+      "joint": "left_arm_4",
+      "pos_err_mm": 3.0763265323124924e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Z",
+      "usd_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.2199999988079071,
+        0.8379999697208405
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.22,
+        0.838000000461
+      ]
+    },
+    {
+      "joint": "left_arm_5",
+      "pos_err_mm": 6.055421704641618e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.2199999988079071,
+        0.8379999399185181
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.22,
+        0.838000000461
+      ]
+    },
+    {
+      "joint": "left_arm_6",
+      "pos_err_mm": 6.055421704641618e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Z",
+      "usd_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.0,
+        0.2199999988079071,
+        0.8379999399185181
+      ],
+      "urdf_world_pos": [
+        0.0,
+        0.22,
+        0.838000000461
+      ]
+    },
+    {
+      "joint": "head_0",
+      "pos_err_mm": 3.515294262578426e-05,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Z",
+      "usd_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.02199999988079071,
+        0.0,
+        1.4899999648332596
+      ],
+      "urdf_world_pos": [
+        0.022,
+        0.0,
+        1.489999999986
+      ]
+    },
+    {
+      "joint": "head_1",
+      "pos_err_mm": 9.551487022214204e-06,
+      "axis_dot": 1.0,
+      "usd_axis_token": "Y",
+      "usd_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.02199999988079071,
+        0.0,
+        1.4900000095367432
+      ],
+      "urdf_world_pos": [
+        0.022,
+        0.0,
+        1.489999999986
+      ]
+    },
+    {
+      "joint": "gripper_finger_l1",
+      "pos_err_mm": 15.99996518288276,
+      "axis_dot": 1.0,
+      "usd_axis_token": "X",
+      "usd_world_axis": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.003000000026077032,
+        0.2199999988079071,
+        0.6528999656438828
+      ],
+      "urdf_world_pos": [
+        0.003,
+        0.22,
+        0.636900000461
+      ]
+    },
+    {
+      "joint": "gripper_finger_l2",
+      "pos_err_mm": 15.99996518288276,
+      "axis_dot": 0.9999999999999964,
+      "usd_axis_token": "X",
+      "usd_world_axis": [
+        -0.9999999999999964,
+        -8.74227765734757e-08,
+        0.0
+      ],
+      "urdf_world_axis": [
+        -1.0,
+        8.979318433952318e-11,
+        0.0
+      ],
+      "usd_world_pos": [
+        -0.003000000026077032,
+        0.2199999988079071,
+        0.6528999656438828
+      ],
+      "urdf_world_pos": [
+        -0.003,
+        0.22,
+        0.636900000461
+      ]
+    },
+    {
+      "joint": "gripper_finger_r1",
+      "pos_err_mm": 15.999965643882664,
+      "axis_dot": 1.0,
+      "usd_axis_token": "X",
+      "usd_world_axis": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "usd_world_pos": [
+        0.003000000026077032,
+        -0.2199999988079071,
+        0.6528999656438828
+      ],
+      "urdf_world_pos": [
+        0.003,
+        -0.22,
+        0.6369000000000001
+      ]
+    },
+    {
+      "joint": "gripper_finger_r2",
+      "pos_err_mm": 15.999965643882664,
+      "axis_dot": 0.9999999999999964,
+      "usd_axis_token": "X",
+      "usd_world_axis": [
+        -0.9999999999999964,
+        -8.74227765734757e-08,
+        0.0
+      ],
+      "urdf_world_axis": [
+        -1.0,
+        8.979318433952318e-11,
+        0.0
+      ],
+      "usd_world_pos": [
+        -0.003000000026077032,
+        -0.2199999988079071,
+        0.6528999656438828
+      ],
+      "urdf_world_pos": [
+        -0.003,
+        -0.22,
+        0.6369000000000001
+      ]
+    },
+    {
+      "joint": "head_base",
+      "pos_err_mm": 1.846382472175498e-05,
+      "axis_dot": 0.0,
+      "usd_axis_token": null,
+      "usd_world_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "urdf_world_axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "usd_world_pos": [
+        0.02199999988079071,
+        0.0,
+        1.4099999815225601
+      ],
+      "urdf_world_pos": [
+        0.022,
+        0.0,
+        1.409999999986
+      ]
+    }
+  ],
+  "timestamp": "2026-10-16 18:20:25"
+}
