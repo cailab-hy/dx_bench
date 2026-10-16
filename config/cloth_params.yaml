@@ -1,0 +1,48 @@
+# Cloth simulation parameters chosen in stage 1 (tools/cloth_spike, reports/cloth_spike/REPORT.md).
+# PhysX surface deformables (Isaac Sim 6.1 / Isaac Lab 3.0). Used by dxbench/assets/objects.py and tasks/bed_tasks.py.
+
+physics:
+  hz_eval: 480            # evaluation, oracle demos, benchmark (duvet drift 1.0 cm; 360 Hz = 2.1 cm fails the 2 cm bar)
+  hz_teleop_small: 360    # teleop allowed for BED-02/03 (shirt / towel): sleeve 1.5 cm, floor 1.0 cm, RTF ~0.5 w/o cameras
+  hz_teleop_duvet: 480    # BED-01 duvet: 360 Hz drift 2.1 cm -> keep 480 (RTF ~0.36, slow-motion teleop)
+  control_hz: 15          # decimation = hz / 15
+  gpu_buffers: {rigid_contact: 8388608, rigid_patch: 2097152, soft_body_contacts: 2097152, heap: 134217728, found_lost_pairs: 4194304}  # rby1_envs.physics_callback
+
+solver:
+  position_iterations: 16       # 48 iterations: no drift improvement at 240 Hz (vsweep), 2.5x slower
+  self_collision: true
+
+materials:
+  garment:                       # DX TShirt asset (TShirtPhysics) values, kept for all shirt variants / towels / socks
+    density: 120.0               # kg/m^3 of the surface (with thickness)
+    youngs_modulus: 1.0e6
+    poissons_ratio: 0.25
+    surface_thickness: 0.0015
+    static_friction: 0.72
+    dynamic_friction: 0.6
+    bend_damping: 0.1
+    elasticity_damping: 0.1
+    contact_offset: 0.008
+    rest_offset: 0.002
+  duvet:                         # 1.5 x 1.5 m spike sheet / BED-01 duvet
+    density: 100.0
+    youngs_modulus: 1.0e6
+    poissons_ratio: 0.3
+    surface_thickness: 0.002
+    static_friction: 0.6
+    dynamic_friction: 0.51
+    bend_damping: 0.1
+    elasticity_damping: 0.1
+    contact_offset: 0.012
+    rest_offset: 0.005
+    node_spacing_m: 0.023        # MeshRectangleCfg edge_refinement -> 4.7 / 2.3 / 1.2 cm; 2.3 cm = 4225 nodes
+
+grasp:
+  mode: assist                   # friction grasp cannot hold flat cloth (drift 42-50 cm) -> D-5, sim-real difference
+  assist:
+    trigger: "gripper command < 0.5 (closing)"
+    radius_m: 0.05               # nodes within 5 cm of the TCP at closing are pinned
+    pin_mode: velocity           # node velocity = gain * (target - pos) / dt + TCP velocity (position writes blow up)
+    gain: 1.0
+    filter_finger_cloth_collisions: true   # FilteredPairs fingers <-> cloth, otherwise fingers push the pinned nodes
+  release: "gripper command >= 0.5 -> pins removed, cloth falls freely"

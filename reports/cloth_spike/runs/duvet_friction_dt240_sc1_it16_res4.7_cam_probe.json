@@ -1,0 +1,78 @@
+{
+  "run": "duvet_friction_dt240_sc1_it16_res4.7_cam_probe",
+  "args": {
+    "test": "duvet",
+    "grip": "friction",
+    "dt": 240,
+    "duration": 10.0,
+    "cameras": true,
+    "self_collision": 1,
+    "res_cm": 4.7,
+    "torso": null,
+    "thickness": null,
+    "friction": null,
+    "cloth_iters": 16,
+    "assist_r": 0.03,
+    "pin_gain": 0.5,
+    "tag": "probe",
+    "xr": false,
+    "device": "cuda:0",
+    "visualizer": [],
+    "cpu": false,
+    "verbose": false,
+    "info": false,
+    "deterministic": false,
+    "kit_args": "",
+    "anim_recording_enabled": false,
+    "anim_recording_start_time": 0,
+    "anim_recording_stop_time": 10,
+    "headless": true,
+    "hide_ui": true,
+    "create_new_stage": false,
+    "physics_gpu": 0
+  },
+  "info": {
+    "num_nodes": 1089,
+    "grasp_point": [
+      0.5504537510871887,
+      -0.42040220022201535,
+      0.567999966621399
+    ],
+    "ik_err_max_m": 1.988013718801085e-05,
+    "ik_err_max_rad": 0.0,
+    "tcp_at_grasp": [
+      0.5510514974594116,
+      -0.42017051577568054,
+      0.5771222114562988
+    ],
+    "tcp_grasp_err_m": 0.009144752286374569,
+    "finger_gap_m": 0.012368055991828442,
+    "grasped_nodes": 1,
+    "nearest_node_m": 0.04022561013698578,
+    "drift_end_mean_m": 0.5107488632202148,
+    "drift_end_median_m": 0.5107488632202148,
+    "drift_max_m": 0.5107488632202148,
+    "drift_mean_m": 0.5107488632202148,
+    "tcp_travel_m": 0.5004211068153381,
+    "target_nodes_travel_m": 0.008878427557647228,
+    "finite": true,
+    "max_node_speed_after_manip": 0.0,
+    "max_extent_m": 0.0,
+    "manip_time_s": 12.099999999999634,
+    "sim_time_s": 12.099999999999634,
+    "step_wall_s": 17.113672621060687,
+    "rtf": 0.7070370146679649,
+    "snapshots": [
+      "/home/cai/dx_bench/reports/cloth_spike/images/duvet_friction_dt240_sc1_it16_res4.7_cam_probe_grasp.png",
+      "/home/cai/dx_bench/reports/cloth_spike/images/duvet_friction_dt240_sc1_it16_res4.7_cam_probe_carry.png",
+      "/home/cai/dx_bench/reports/cloth_spike/images/duvet_friction_dt240_sc1_it16_res4.7_cam_probe_end.png"
+    ]
+  },
+  "criteria": {
+    "grasp_hold(mean drift<=2cm)": false,
+    "stable_60s": true,
+    "rtf>=0.5": true
+  },
+  "wall_total_s": 23.2387752532959,
+  "pass": false
+}

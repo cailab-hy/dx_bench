@@ -9,3 +9,5 @@ data/
 outputs/
 *.ckpt
 *.safetensors
+# stray mesh dump written to the cwd by a Kit/PhysX extension during runs
+__tracked_surface.stl

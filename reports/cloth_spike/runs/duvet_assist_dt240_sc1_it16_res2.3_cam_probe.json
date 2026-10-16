@@ -1,0 +1,80 @@
+{
+  "run": "duvet_assist_dt240_sc1_it16_res2.3_cam_probe",
+  "args": {
+    "test": "duvet",
+    "grip": "assist",
+    "dt": 240,
+    "duration": 10.0,
+    "cameras": true,
+    "self_collision": 1,
+    "res_cm": 2.3,
+    "torso": null,
+    "thickness": null,
+    "friction": null,
+    "cloth_iters": 16,
+    "assist_r": 0.04,
+    "pin_mode": "position",
+    "pin_gain": 0.5,
+    "tag": "probe",
+    "xr": false,
+    "device": "cuda:0",
+    "visualizer": [],
+    "cpu": false,
+    "verbose": false,
+    "info": false,
+    "deterministic": false,
+    "kit_args": "",
+    "anim_recording_enabled": false,
+    "anim_recording_start_time": 0,
+    "anim_recording_stop_time": 10,
+    "headless": true,
+    "hide_ui": true,
+    "create_new_stage": false,
+    "physics_gpu": 0
+  },
+  "info": {
+    "num_nodes": 4225,
+    "grasp_point": [
+      0.5376665878295899,
+      -0.4201000940799713,
+      0.567999966621399
+    ],
+    "ik_err_max_m": 2.3758526367601007e-05,
+    "ik_err_max_rad": 0.0,
+    "tcp_at_grasp": [
+      0.5381901860237122,
+      -0.42129024863243103,
+      0.5770620107650757
+    ],
+    "tcp_grasp_err_m": 0.009154858998954296,
+    "finger_gap_m": 0.001431806362234056,
+    "grasped_nodes": 3,
+    "nearest_node_m": 0.061456844210624695,
+    "pinned_nodes": 3,
+    "drift_end_mean_m": 0.6393120288848877,
+    "drift_end_median_m": 0.6314818263053894,
+    "drift_max_m": 0.6733815670013428,
+    "drift_mean_m": 0.6529834866523743,
+    "tcp_travel_m": 0.5001676678657532,
+    "target_nodes_travel_m": 0.355711430311203,
+    "finite": true,
+    "max_node_speed_after_manip": 0.0,
+    "max_extent_m": 0.0,
+    "manip_time_s": 12.099999999999634,
+    "sim_time_s": 12.099999999999634,
+    "step_wall_s": 18.283165662978718,
+    "rtf": 0.6618109917639003,
+    "snapshots": [
+      "/home/cai/dx_bench/reports/cloth_spike/images/duvet_assist_dt240_sc1_it16_res2.3_cam_probe_grasp.png",
+      "/home/cai/dx_bench/reports/cloth_spike/images/duvet_assist_dt240_sc1_it16_res2.3_cam_probe_carry.png",
+      "/home/cai/dx_bench/reports/cloth_spike/images/duvet_assist_dt240_sc1_it16_res2.3_cam_probe_end.png"
+    ]
+  },
+  "criteria": {
+    "grasp_hold(mean drift<=2cm)": false,
+    "stable_60s": true,
+    "rtf>=0.5": true
+  },
+  "wall_total_s": 24.475629091262817,
+  "pass": false
+}

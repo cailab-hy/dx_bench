@@ -1,0 +1,83 @@
+{
+  "run": "floor_assist_dt480_sc1_it16_cam_m",
+  "args": {
+    "test": "floor",
+    "grip": "assist",
+    "dt": 480,
+    "duration": 15.0,
+    "cameras": true,
+    "self_collision": 1,
+    "res_cm": 2.3,
+    "torso": null,
+    "thickness": null,
+    "friction": null,
+    "cloth_iters": 16,
+    "assist_r": 0.05,
+    "pin_mode": "velocity",
+    "assist_filter": 1,
+    "pin_gain": 1.0,
+    "tag": "m",
+    "xr": false,
+    "device": "cuda:0",
+    "visualizer": [],
+    "cpu": false,
+    "verbose": false,
+    "info": false,
+    "deterministic": false,
+    "kit_args": "",
+    "anim_recording_enabled": false,
+    "anim_recording_start_time": 0,
+    "anim_recording_stop_time": 10,
+    "headless": true,
+    "hide_ui": true,
+    "create_new_stage": false,
+    "physics_gpu": 0
+  },
+  "info": {
+    "num_nodes": 3444,
+    "grasp_point": [
+      0.550208330154419,
+      -0.15050840377807617,
+      0.042698345325887205
+    ],
+    "ik_err_max_m": 0.02624983713030815,
+    "ik_err_max_rad": 0.016829972005126058,
+    "tcp_at_grasp": [
+      0.5298588275909424,
+      -0.15420740842819214,
+      0.04847073554992676
+    ],
+    "tcp_grasp_err_m": 0.021473364904522896,
+    "finger_gap_m": 1.4246855073452025e-07,
+    "grasped_nodes": 26,
+    "nearest_node_m": 0.04770778864622116,
+    "pinned_nodes": 26,
+    "drift_end_mean_m": 0.00632509496062994,
+    "drift_end_median_m": 0.004032790195196867,
+    "drift_max_m": 0.01728895679116249,
+    "drift_mean_m": 0.0066093560308218,
+    "tcp_travel_m": 0.40748557448387146,
+    "target_nodes_travel_m": 0.40908172726631165,
+    "lift_m": 0.38847947120666504,
+    "tcp_z_end": 0.4272756576538086,
+    "finite": true,
+    "max_node_speed_after_manip": 1.5514510869979858,
+    "max_extent_m": 0.6100810170173645,
+    "manip_time_s": 10.599999999999559,
+    "sim_time_s": 15.099999999999303,
+    "step_wall_s": 111.56429605994344,
+    "rtf": 0.13534796107068234,
+    "snapshots": [
+      "/home/cai/dx_bench/reports/cloth_spike/images/floor_assist_dt480_sc1_it16_cam_m_grasp.png",
+      "/home/cai/dx_bench/reports/cloth_spike/images/floor_assist_dt480_sc1_it16_cam_m_carry.png",
+      "/home/cai/dx_bench/reports/cloth_spike/images/floor_assist_dt480_sc1_it16_cam_m_end.png"
+    ]
+  },
+  "criteria": {
+    "grasp_hold(mean drift<=2cm)": true,
+    "stable_60s": true,
+    "rtf>=0.5": false
+  },
+  "wall_total_s": 120.27098488807678,
+  "pass": true
+}
