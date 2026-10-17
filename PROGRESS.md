@@ -1,7 +1,7 @@
 # DX bench — 진행 상황
 
 > 주말 무인 실행(2026-10-16 ~). 단계별 상태는 아래 표, 결정은 `DECISIONS.md`, 사람이 할 일은 `HUMAN_TODO.md`.
-> 마지막 갱신: 2026-10-17 14:35 (4단계 완료, 5단계 ACT 학습·play 진행 중)
+> 마지막 갱신: 2026-10-17 17:20 (5단계 완료, 6단계 재생 기준선·100k ACT 진행 중)
 
 ## 상태 요약
 
@@ -12,7 +12,7 @@
 | 2 RB-Y1 embodiment (8 h) | **완료** (2831401) | 회귀 테스트 + 침대가 보이는 머리 카메라 | — | `dxbench/embodiments/` |
 | 3 침실 씬·task 3개 (12 h) | **완료** (BED-03 Easy oracle 8/10) | 빌드, 판정 pytest, BED-03 Easy oracle ≥ 8/10 | — | `dxbench/tasks/` |
 | 4 원격조작·기록·변환 (10 h) | **완료** | 키보드·VR(scripted)·변환·검증·재생 끝까지 | oracle 데모 24개(34,891프레임) dx24·rby1 변환 bit-exact, 재생 검증 통과(과제 성공 재현) | `dxbench/teleop/`, `dxbench_policy/convert/`, `reports/stage4/REPORT.md` |
-| 5 VLA 추론 (8 h) | 코드 작성 | ACT로 BED-03 Easy 10회 play, 영상+지표 | — | `dxbench_policy/`, `dxbench/policies/` |
+| 5 VLA 추론 (8 h) | **완료** | ACT로 BED-03 Easy 10회 play, 영상+지표 | ACT(20k) 10회 오류 0, 성공 0/10. SmolVLA 실데이터 왕복 OK. 100k ACT 추가 실험 대기 | `dxbench_policy/serve/`, `dxbench/policies/rby1_lerobot_remote.py`, `reports/stage5/REPORT.md` |
 | 6 벤치마크 (6 h) | 코드 작성 | 명령 하나로 평가 → 보고서 | — | `benchmarks/dx_bed_v0/`, `docs/BENCHMARK.md` |
 
 ## 전체 계획
@@ -46,6 +46,12 @@
   - 정책 쪽: A*, 축 중심 회전, 자세별 도달, 홈 복귀(D-24).
   - 평가 버그: 성공 종료 후 리셋된 장면을 다시 평가하던 문제를 종료 항으로 판정하도록 고침.
 - BED-02 Easy oracle(오른팔 단독)은 접기 실패(점수 0.3). BED-01 oracle 미착수 → HUMAN_TODO 8.
+
+### 5단계 (완료)
+- 서버(hold / replay / lerobot) ⇄ `rby1_lerobot_remote` 클라이언트. zero → replay(과제 성공 재현) → ACT → 폐루프 순서 모두 통과.
+- **ACT 20k step**(17분) → BED-03 Easy 10회: 오류 0, mp4 30개, **성공 0/10**(전복 1). 학습 프레임 개루프 오차 = "자세 유지" 수준 → 학습 부족(D-27).
+- SmolVLA: 실제 데모로 2 step 미세조정 → 서버 왕복 (50, 24) 청크 205 ms.
+- BED-02 양팔 oracle을 GPU 여유 시간에 5번 고쳐 점수 0.3 → 0.55(접기는 놓으면 펴짐, 반 접기 도달 불가 → HUMAN_TODO 8).
 
 ### 4단계 (완료)
 - **데모 24개**(학습 장면 21개, 끝까지 돈 실행의 96 % 성공), LeRobot v3 dx24(240 × 320) + rby1(480 × 640), 두 형식 모두 검증 통과.

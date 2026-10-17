@@ -1,0 +1,11 @@
+# "zero" baseline (D-14): hold the current posture. It never moves, so 20 s (300 steps) per scene is enough.
+name: hold_bed03
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8781}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-03: [easy]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend hold --port 8781
+max_steps: 300
+timeout_s: 3600
+parallel: 3

@@ -10,7 +10,7 @@
 | 천 초기 상태 | `tasks/make_cloth_states.py` + `tools/make_states.sh`. "떨어뜨려 안정" 후 정점 `.npz`, 매 리셋에 로드(평가 결정성) |
 | 판정 | `tasks/predicates.py`(numpy) + `tasks/bed_tasks.py`(Arena `TaskBase`). 단계 플래그, 부분 점수, 실패 조건, 언어 지시(영·한) |
 | 테스트 | `dxbench/tests/test_predicates.py` 14개(정답/오답 상태), `tools/task_check.py`(시뮬 안 강제 정답 상태) |
-| oracle | `policies/oracle_bed03.py`(BED-03), `policies/oracle_bed02.py`(BED-02 Easy, 미완) |
+| oracle | `policies/oracle_bed03.py`(BED-03), `policies/oracle_bed02.py`(BED-02 Easy 양팔, 점수 0.55, 접기 미완) |
 | 실행 | `scripts/run_episode.py`(결과 JSON, mp4, 원본 기록), `tools/run_oracle.sh`, `dxbench.bench.run_benchmark` |
 
 ## BED-03 oracle 개발 중 고친 시뮬·정책 문제
@@ -52,4 +52,17 @@
 - BED-02 Easy oracle(오른팔 단독 접기): 점수 0.3(flatten만), 접기 실패.
   - 원인: 오른팔은 책상 높이에서 왼쪽 절반(y > 0)에 닿지 않는다(`reports/rby1_check/t5/reach_desk_*.json`).
   - 양팔 접기가 필요하다 → HUMAN_TODO 8.
+- **양팔 oracle(4단계 중 추가 시도, `oracle_bed02.py`): 점수 0.55**(flatten + 쌓는 자리), 접기 0/3. `bed02_easy_000`, 5회 반복:
+
+  | 시도 | 바꾼 것 | 결과 |
+  |---|---|---|
+  | v1 | 양팔(오른쪽·왼쪽 접기, 반 접기, 쌓기), 10 cm 들고 수평 이동 | 접는 대신 수건 전체가 끌려감 |
+  | v2 | 접기 궤적을 호(높이 = 접는 거리의 ½)로 | 잡을 점에 못 닿음(오차 6–8 cm): crouch는 책상 높이 가운데선 x 0.6, z 0.8–0.9에 안 닿음 |
+  | v3 | 몸통 lean | 잡기 성공(9 mm). 호가 3 cm 오차 게이트에 막혀 진행 안 함(잡힌 천이 책상에 끌려 3 cm 정상 오차) |
+  | v4 | 호를 시간 기준으로 진행 | 옮기는 동안은 접힘(면적 감소), 놓으면 다시 펴짐 |
+  | v5 | 놓을 때 제자리에서 손을 먼저 벌린 뒤 올림 | 같음. 오른쪽·왼쪽 잡기 모두 도달(1 cm), 쌓기 성공. 반 접기는 먼 쪽 끝(앞 0.78 m)에 오른팔이 안 닿음(오차 13–28 cm) |
+
+  - 남은 문제:
+    1. 놓은 뒤 접힌 쪽이 되돌아감 — 수건 굽힘 강성(E 1e6, 두께 1.5 mm, BED-03과 공용 파라미터)이나 보조 잡기 해제 순간의 속도로 보임. 수건 전용 재질을 시험해야 함.
+    2. 반 접기는 먼 쪽 끝을 잡아야 해서 책상 앞에서 닿지 않음 → 몸을 더 숙이거나(deep은 책상 높이 아님) 수건을 먼저 당겨 오거나, 가까운 쪽을 들어 먼 쪽으로 접는 순서로 바꿔야 함.
 - BED-01 oracle은 만들지 않았다. 장면·판정·초기 상태는 준비돼 있다.

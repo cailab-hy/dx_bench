@@ -1,0 +1,32 @@
+{
+ "backend": "LeRobotBackend",
+ "fmt": "dx24",
+ "action_dim": 24,
+ "requests": 5,
+ "chunk_shapes": [
+  [
+   50,
+   24
+  ],
+  [
+   50,
+   24
+  ],
+  [
+   50,
+   24
+  ],
+  [
+   50,
+   24
+  ],
+  [
+   50,
+   24
+  ]
+ ],
+ "finite": true,
+ "latency_ms_first": 780.2,
+ "latency_ms_mean_rest": 205.4,
+ "ok": true
+}

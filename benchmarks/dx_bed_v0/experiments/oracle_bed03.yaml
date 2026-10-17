@@ -1,0 +1,9 @@
+name: oracle_bed03
+policy: dxbench.policies.oracle_bed03.Bed03OraclePolicy
+policy_kw: {}
+env_args: [--embodiment, rby1_ik]
+tasks: {BED-03: [easy]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+video: false
+timeout_s: 7200
+parallel: 4

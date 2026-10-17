@@ -37,7 +37,7 @@ import json; s=json.load(open('$DS/meta/dx_sources.json'))[0]; print('data/scene
 tools/replay_check.sh $DS 0 $RAW "$SCENE" ep0 8771 | tail -1 | tee reports/stage4/replay_check_ep0.txt
 echo "[stage45] train ACT $(date)"
 DATA=$DS OUT=outputs/train/act_bed03 STEPS=$STEPS BS=${BS:-16} dxbench_policy/train_act.sh > outputs/logs/train_act.log 2>&1
-grep -E "step:[0-9]+[kK]? |End of training" outputs/logs/train_act.log | tail -5 | tee reports/stage5/train_act_tail.txt
+tr "\r" "\n" < outputs/logs/train_act.log | grep "ot_train.py:641 step:" | awk "NR%20==1" | sed -E "s/.*(step:[^ ]+).*(epch:[^ ]+) (loss:[^ ]+).*(l1_loss:[^ ]+).*/\1 \2 \3 \4/" | tee reports/stage5/train_act_tail.txt
 echo "[stage45] closed-loop plays $(date)"
 ~/miniforge3/envs/dx_arena/bin/python -m dxbench.bench.run_benchmark benchmarks/dx_bed_v0/experiments/act_bed03.yaml \
   | tee outputs/logs/bench_act.log | grep "^\[bench\]"

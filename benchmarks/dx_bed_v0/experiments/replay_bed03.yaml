@@ -1,0 +1,11 @@
+# open-loop baseline: the actions of oracle demo 0 (a training scene) replayed on every evaluation scene
+name: replay_bed03
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8782}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-03: [easy]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend replay --dataset data/lerobot/bed03_oracle_dx24 --episode 0 --port 8782
+timeout_s: 7200
+parallel: 3
+max_steps: 1800   # same cap as act_bed03 (D-23)

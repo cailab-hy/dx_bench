@@ -20,7 +20,7 @@ The predicates are pure numpy and are tested in `dxbench/tests/test_predicates.p
 |---|---|---|---|
 | BED-01 | Duvet folded at the foot of the bed; pillow at the head | Duvet crumpled on the bed; pillow displaced | Half the duvet on the floor; pillow on the floor |
 | BED-02 | Small towel flat on the desk | One T-shirt crumpled on the desk | Pile of 3 shirts and 2 towels |
-| BED-03 | Basket + 2 garments clustered within 1.4 m | 3 garments on the floor + 1 shirt on the bed | 4 on the floor + shirt and towel on the bed + distractors (doll, book, folded towel) |
+| BED-03 | Basket + 2 garments on the open floor, each within 2.0 m of the basket | 3 garments on the floor + 1 shirt on the bed | 4 on the floor + shirt and towel on the bed + distractors (doll, book, folded towel) |
 
 ## Splits
 
@@ -50,7 +50,8 @@ The predicates are pure numpy and are tested in `dxbench/tests/test_predicates.p
 | errors | Episodes without a result (crash / timeout) |
 | sim s / wall s | Episode length and wall time |
 
-Episode limits (sim time): BED-01 240 s, BED-02 240 s, BED-03 180 s.
+Episode limits (sim time): BED-01 240 s, BED-02 240 s, BED-03 180 s. Learned-policy and replay experiments are capped
+at 1800 steps (120 s) to bound compute (DECISIONS D-23); oracle demos need 1340–1851 steps on BED-03 Easy.
 
 ## Running
 
@@ -68,6 +69,20 @@ Each experiment writes `outputs/bench/<name>/`:
 - `<scene>/result.json` (one per episode)
 - `summary.json`
 - `REPORT.md`
+
+## Experiment config
+
+`benchmarks/dx_bed_v0/experiments/*.yaml` (the runner docstring in `dxbench/bench/run_benchmark.py` lists every key):
+
+| YAML | Policy | Embodiment | Cap | Notes |
+|---|---|---|---|---|
+| `oracle_bed03.yaml` | `Bed03OraclePolicy` (privileged: reads cloth nodes) | `rby1_ik` | task limit | upper reference |
+| `hold_bed03.yaml` | server `--backend hold` (holds the current posture) | `rby1_joint` | 300 steps | zero baseline |
+| `replay_bed03.yaml` | server `--backend replay` of training demo 0 (open loop) | `rby1_joint` | 1800 | blind baseline: shows how much scene variation matters |
+| `act_bed03.yaml` | server `--backend lerobot` ACT trained on the 24 oracle demos | `rby1_joint` | 1800 | first learned policy, mp4s on |
+
+The runner re-runs scenes whose result is missing or an error (`--rerun` forces all), starts scenes `parallel` at a time
+with staggered starts, and retries Kit start-up crashes up to three times.
 
 ## Results
 

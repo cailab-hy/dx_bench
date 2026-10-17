@@ -1,0 +1,12 @@
+# ACT trained on the BED-03 easy oracle demos (dx24), served from dx_policy
+name: act_bed03
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8783, open_loop_horizon: 8}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-03: [easy]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend lerobot --checkpoint outputs/train/act_bed03/checkpoints/last/pretrained_model --chunk 8 --port 8783
+video: true   # ACT needs the camera images (also writes the mp4s)
+timeout_s: 7200
+parallel: 3
+max_steps: 1800   # 120 s sim cap (compute; oracle demos took 1340-1567 steps for two garments) - DECISIONS D-23

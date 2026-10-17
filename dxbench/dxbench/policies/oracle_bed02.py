@@ -3,7 +3,7 @@
 Robot starts in front of the desk (facing -x); the towel lies 25 cm in from the desk front, long side along the
 robot's lateral axis. With the gripper pointing down each arm only reaches its own half of the desk at desk height
 (reports/rby1_check/t5/reach_desk_*.json), so:
-1. drive to the desk front (base front 5 cm from the edge, towel centred), torso crouch,
+1. drive to the desk front (base front 5 cm from the edge, towel centred), torso lean,
 2. "fold the right side": right hand pinches the right short edge, carries it just past the centre line, releases,
 3. "fold the left side": left hand does the same with the left short edge,
 4. "fold in half": right hand pinches the far long edge (right half) and lays it onto the near edge,
@@ -34,7 +34,7 @@ class Bed02OraclePolicyCfg(PolicyCfg):
     lift_dz: float = 0.10
     max_v: float = 0.25
     max_w: float = 0.6
-    work_preset_steps: int = 2    # crouch
+    work_preset_steps: int = 1    # lean: crouch cannot reach z 0.8-0.9 near the centre line at x 0.6 (reach_desk_0.0.json)
     device: str = "cuda:0"
 
 
@@ -58,6 +58,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         self.moves: list[str] = []
         self.mv = None
         self.plan_log: list[dict] = []
+        self.last_err = None
+        self.arc_s = 0.0
 
     def _set(self, phase, subtask=None):
         self.phase, self.t_phase = phase, 0
@@ -76,7 +78,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         if ang > 1e-4:
             ax = np.array([Re[2, 1] - Re[1, 2], Re[0, 2] - Re[2, 0], Re[1, 0] - Re[0, 1]]) / (2 * math.sin(ang))
             dr = np.clip(ax * ang * kp, -0.08, 0.08)
-        return np.r_[dp, dr], float(np.linalg.norm(d))
+        self.last_err = float(np.linalg.norm(d))
+        return np.r_[dp, dr], self.last_err
 
     def _towel(self, U):
         n = (_T(U.scene[self.target].data.nodal_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
@@ -175,28 +178,41 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 grip = 0.0
                 if self.t_phase > 10:
                     self._set("lift")
-            elif self.phase == "lift":
+            elif self.phase == "lift":  # short vertical lift so the pinched edge leaves the desk
                 grip = 0.0
-                cmd, err = self._servo(observation, h._to_base(U, pick + [0, 0, dz]), side)
-                if err < 0.02 or self.t_phase > 45:
+                cmd, err = self._servo(observation, h._to_base(U, pick + [0, 0, 0.03]), side)
+                if err < 0.015 or self.t_phase > 30:
+                    self.arc_s = 0.0
                     self._set("carry")
-            elif self.phase == "carry":
+            elif self.phase == "carry":  # fold arc: the edge rises to ~half the fold distance and comes down past the line
                 grip = 0.0
-                cmd, err = self._servo(observation, h._to_base(U, put + [0, 0, dz]), side, max_dp=0.015)
-                if err < 0.015 or self.t_phase > 120:
+                D = float(np.linalg.norm(put[:2] - pick[:2]))
+                hgt = max(dz, 0.5 * D + 0.03)
+                # ~1.2 cm of path per step; half speed while the hand lags > 5 cm behind the waypoint (the pinned cloth
+                # drags on the desk, which leaves a steady ~3 cm servo error)
+                rate = 0.012 if (self.last_err is None or self.last_err < 0.05) else 0.006
+                self.arc_s = min(1.0, self.arc_s + rate / max(D + 2 * hgt, 0.05))
+                s_ = self.arc_s
+                wp = pick + (put - pick) * s_
+                wp[2] = pick[2] + 0.03 + (put[2] - pick[2] - 0.03) * s_ + hgt * math.sin(math.pi * s_)
+                cmd, err = self._servo(observation, h._to_base(U, wp), side, max_dp=0.02)
+                if (s_ >= 1.0 and err < 0.04) or self.t_phase > 240:
                     self._set("lower")
             elif self.phase == "lower":
                 grip = 0.0
                 cmd, err = self._servo(observation, h._to_base(U, put), side, max_dp=0.01)
-                if err < 0.01 or self.t_phase > 45:
+                if err < 0.01 or self.t_phase > 30:
                     self._set("release")
-            elif self.phase == "release":
-                cmd, _ = self._servo(observation, h._to_base(U, put + [0, 0, 0.08]), side, max_dp=0.01)
-                if self.t_phase > 25:
+            elif self.phase == "release":  # open in place first (pins drop when the fingers open), then rise
+                up = 0.0 if self.t_phase <= 8 else 0.08
+                cmd, _ = self._servo(observation, h._to_base(U, put + [0, 0, up]), side, max_dp=0.01)
+                if self.t_phase > 30:
                     U.action_manager.get_term(f"{side}_arm").request_home()  # clear the workspace for the other arm
                     self._set("rehome")
             if cmd is not None:
                 a[off:off + 6] = cmd
+                st = self.plan_log[-1].setdefault("min_err", {})
+                st[self.phase] = round(min(st.get(self.phase, 9.0), self.last_err), 4)
             a[gi] = grip
         elif self.phase == "rehome":
             arm = U.action_manager.get_term(f"{self.mv['side']}_arm")
