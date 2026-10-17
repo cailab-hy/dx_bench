@@ -86,4 +86,14 @@ with staggered starts, and retries Kit start-up crashes up to three times.
 
 ## Results
 
-See "Sample results" in `benchmarks/dx_bed_v0/RESULTS.md` (generated from the `outputs/bench/*/summary.json` files).
+`benchmarks/dx_bed_v0/RESULTS.md` holds the current table (regenerate with `python -m dxbench.bench.make_results`).
+Sample results on BED-03 Easy (10 evaluation scenes, 2026-10-17):
+
+| Experiment | Success | Score mean | Notes |
+|---|---|---|---|
+| `oracle_bed03` | 8/10 | 0.90 | Upper reference; both failures are the second garment |
+| `hold_bed03` | 0/10 | 0.00 | Zero baseline |
+| `replay_bed03` | 0/10 | 0.00 | One training demo replayed open loop; knocks the basket over once. Scenes differ enough that blind replay fails |
+| `act_bed03` | 0/10 | 0.00 | ACT, 20k steps on 24 oracle demos; drives past the garments. Undertrained (`reports/stage5/REPORT.md`) |
+
+Only BED-03 has an oracle so far; BED-01 / BED-02 scenes, predicates and cloth states are ready (HUMAN_TODO 8).
