@@ -45,158 +45,70 @@
       "ok": false
     },
     {
-      "preset": "crouch",
-      "ahead_target_m": 0.25,
-      "phase_tilt": {
-        "after_preset": 0.0008893715445952205,
-        "com_after_preset": 0.11135134100914001,
-        "after_pre": 0.0009177788720278136,
-        "com_after_pre": 0.11247560381889343,
-        "after_servo": 0.0009033441623100607,
-        "com_after_servo": 0.1126682460308075
-      },
-      "servo_err": [
-        0.3322701156139374,
-        0.006253061200593669
-      ],
-      "fingertip_z_m": 0.345308262348175,
-      "ahead_of_base_front_m": 0.23881714820861816,
-      "tilt_deg": 0.000905273875539278,
-      "com_x_m": 0.11285863071680069,
-      "com_margin_to_front_axle_m": 0.11514136928319932,
-      "ok": false
-    },
-    {
-      "preset": "crouch",
-      "ahead_target_m": 0.3,
-      "phase_tilt": {
-        "after_preset": 0.0008979064821611245,
-        "com_after_preset": 0.1113530695438385,
-        "after_pre": 0.0009024060303229811,
-        "com_after_pre": 0.11423883587121964,
-        "after_servo": 0.0008932100564705784,
-        "com_after_servo": 0.11442987620830536
-      },
-      "servo_err": [
-        0.3555048704147339,
-        0.007225918350892029
-      ],
-      "fingertip_z_m": 0.3683585705757141,
-      "ahead_of_base_front_m": 0.28325777530670165,
-      "tilt_deg": 0.0008986120737011591,
-      "com_x_m": 0.11459797620773315,
-      "com_margin_to_front_axle_m": 0.11340202379226685,
-      "ok": false
-    },
-    {
       "preset": "deep",
       "ahead_target_m": 0.15,
       "phase_tilt": {
-        "after_preset": 0.0010650158082699719,
-        "com_after_preset": 0.13262586295604706,
-        "after_pre": 0.0010981998516189165,
-        "com_after_pre": 0.12646415829658508,
-        "after_servo": 0.0011187468183969551,
-        "com_after_servo": 0.13058441877365112
+        "after_preset": 0.0010585099301405464,
+        "com_after_preset": 0.13262426853179932,
+        "after_pre": 0.0010762195262279798,
+        "com_after_pre": 0.12646199762821198,
+        "after_servo": 0.0010990683560940682,
+        "com_after_servo": 0.13058161735534668
       },
       "servo_err": [
-        0.0027308030985295773,
+        0.0027327348943799734,
         0.004200357222085218
       ],
-      "fingertip_z_m": 0.013389642775058747,
-      "ahead_of_base_front_m": 0.16752930760383605,
-      "tilt_deg": 0.0011046702677032427,
-      "com_x_m": 0.13116587698459625,
-      "com_margin_to_front_axle_m": 0.09683412301540376,
+      "fingertip_z_m": 0.013390164315700531,
+      "ahead_of_base_front_m": 0.16753711581230163,
+      "tilt_deg": 0.001101116475746186,
+      "com_x_m": 0.13116337358951569,
+      "com_margin_to_front_axle_m": 0.09683662641048432,
       "ok": true
     },
     {
       "preset": "deep",
       "ahead_target_m": 0.2,
       "phase_tilt": {
-        "after_preset": 0.0010670227212540117,
-        "com_after_preset": 0.13262596726417542,
-        "after_pre": 0.0011046376040734288,
-        "com_after_pre": 0.12863236665725708,
-        "after_servo": 0.0010810999608974197,
-        "com_after_servo": 0.13326668739318848
+        "after_preset": 0.001068615988226792,
+        "com_after_preset": 0.13262434303760529,
+        "after_pre": 0.0011033325782647796,
+        "com_after_pre": 0.12863056361675262,
+        "after_servo": 0.0011054954463063742,
+        "com_after_servo": 0.1332646906375885
       },
       "servo_err": [
-        0.00272350269369781,
+        0.0027236349415034056,
         0.004200357222085218
       ],
-      "fingertip_z_m": 0.014323476195335388,
-      "ahead_of_base_front_m": 0.21731495141983032,
-      "tilt_deg": 0.0011039207406292383,
-      "com_x_m": 0.1338348090648651,
-      "com_margin_to_front_axle_m": 0.0941651909351349,
+      "fingertip_z_m": 0.014324534177780152,
+      "ahead_of_base_front_m": 0.21732091188430785,
+      "tilt_deg": 0.001108226476209557,
+      "com_x_m": 0.1338331252336502,
+      "com_margin_to_front_axle_m": 0.0941668747663498,
       "ok": true
-    },
-    {
-      "preset": "deep",
-      "ahead_target_m": 0.25,
-      "phase_tilt": {
-        "after_preset": 0.001083888761818425,
-        "com_after_preset": 0.1326255053281784,
-        "after_pre": 0.0010792023101749895,
-        "com_after_pre": 0.1309404820203781,
-        "after_servo": 0.0011227113709520967,
-        "com_after_servo": 0.13550226390361786
-      },
-      "servo_err": [
-        0.01033236924558878,
-        0.004833742467879081
-      ],
-      "fingertip_z_m": 0.02499731206893921,
-      "ahead_of_base_front_m": 0.26399081230163574,
-      "tilt_deg": 0.0011140892277398417,
-      "com_x_m": 0.1360500156879425,
-      "com_margin_to_front_axle_m": 0.0919499843120575,
-      "ok": false
-    },
-    {
-      "preset": "deep",
-      "ahead_target_m": 0.3,
-      "phase_tilt": {
-        "after_preset": 0.0010813905227201168,
-        "com_after_preset": 0.13262584805488586,
-        "after_pre": 0.0010933557452837916,
-        "com_after_pre": 0.13336123526096344,
-        "after_servo": 0.0011203530611042802,
-        "com_after_servo": 0.13718315958976746
-      },
-      "servo_err": [
-        0.025432059541344643,
-        0.0061956044113953635
-      ],
-      "fingertip_z_m": 0.039893608033657074,
-      "ahead_of_base_front_m": 0.3070378232002258,
-      "tilt_deg": 0.0011116598440111367,
-      "com_x_m": 0.13771076500415802,
-      "com_margin_to_front_axle_m": 0.09028923499584199,
-      "ok": false
     }
   ],
   "best": {
     "preset": "deep",
     "ahead_target_m": 0.15,
     "phase_tilt": {
-      "after_preset": 0.0010650158082699719,
-      "com_after_preset": 0.13262586295604706,
-      "after_pre": 0.0010981998516189165,
-      "com_after_pre": 0.12646415829658508,
-      "after_servo": 0.0011187468183969551,
-      "com_after_servo": 0.13058441877365112
+      "after_preset": 0.0010585099301405464,
+      "com_after_preset": 0.13262426853179932,
+      "after_pre": 0.0010762195262279798,
+      "com_after_pre": 0.12646199762821198,
+      "after_servo": 0.0010990683560940682,
+      "com_after_servo": 0.13058161735534668
     },
     "servo_err": [
-      0.0027308030985295773,
+      0.0027327348943799734,
       0.004200357222085218
     ],
-    "fingertip_z_m": 0.013389642775058747,
-    "ahead_of_base_front_m": 0.16752930760383605,
-    "tilt_deg": 0.0011046702677032427,
-    "com_x_m": 0.13116587698459625,
-    "com_margin_to_front_axle_m": 0.09683412301540376,
+    "fingertip_z_m": 0.013390164315700531,
+    "ahead_of_base_front_m": 0.16753711581230163,
+    "tilt_deg": 0.001101116475746186,
+    "com_x_m": 0.13116337358951569,
+    "com_margin_to_front_axle_m": 0.09683662641048432,
     "ok": true
   },
   "criteria": {
@@ -207,7 +119,7 @@
   "pass": true,
   "test": "floor",
   "embodiment": "rby1_ik",
-  "wall_s": 439.82048892974854,
+  "wall_s": 1216.7137978076935,
   "physics_dt": 0.004166666666666667,
   "step_dt": 0.06666666666666667
 }

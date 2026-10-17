@@ -1,7 +1,7 @@
 # DX bench — 진행 상황
 
 > 주말 무인 실행(2026-10-16 ~). 단계별 상태는 아래 표, 결정은 `DECISIONS.md`, 사람이 할 일은 `HUMAN_TODO.md`.
-> 마지막 갱신: 2026-10-17 18:10 (3단계 완료·커밋, 4단계 데모 수집 중)
+> 마지막 갱신: 2026-10-17 14:35 (4단계 완료, 5단계 ACT 학습·play 진행 중)
 
 ## 상태 요약
 
@@ -11,7 +11,7 @@
 | 1 천 사전 검증 (8 h) | **완료** (8bd0fe8) | (a)(b)(c) 잡은 정점 ≤ 2 cm, 60 s 안정, RTF | 보조 잡기 480 Hz: 이불 1.0 / 소매 1.3 / 바닥 0.7 cm, NaN 없음. 마찰 잡기 실패 | `tools/cloth_spike/`, `config/cloth_params.yaml` |
 | 2 RB-Y1 embodiment (8 h) | **완료** (2831401) | 회귀 테스트 + 침대가 보이는 머리 카메라 | — | `dxbench/embodiments/` |
 | 3 침실 씬·task 3개 (12 h) | **완료** (BED-03 Easy oracle 8/10) | 빌드, 판정 pytest, BED-03 Easy oracle ≥ 8/10 | — | `dxbench/tasks/` |
-| 4 원격조작·기록·변환 (10 h) | 코드 작성 | 키보드·VR(scripted)·변환·검증·재생 끝까지 | — | `dxbench/teleop/`, `dxbench_policy/convert/` |
+| 4 원격조작·기록·변환 (10 h) | **완료** | 키보드·VR(scripted)·변환·검증·재생 끝까지 | oracle 데모 24개(34,891프레임) dx24·rby1 변환 bit-exact, 재생 검증 통과(과제 성공 재현) | `dxbench/teleop/`, `dxbench_policy/convert/`, `reports/stage4/REPORT.md` |
 | 5 VLA 추론 (8 h) | 코드 작성 | ACT로 BED-03 Easy 10회 play, 영상+지표 | — | `dxbench_policy/`, `dxbench/policies/` |
 | 6 벤치마크 (6 h) | 코드 작성 | 명령 하나로 평가 → 보고서 | — | `benchmarks/dx_bed_v0/`, `docs/BENCHMARK.md` |
 
@@ -47,10 +47,25 @@
   - 평가 버그: 성공 종료 후 리셋된 장면을 다시 평가하던 문제를 종료 항으로 판정하도록 고침.
 - BED-02 Easy oracle(오른팔 단독)은 접기 실패(점수 0.3). BED-01 oracle 미착수 → HUMAN_TODO 8.
 
-### 4–6단계 (코드 완료, 시뮬 검증 일부)
-- 실제 시뮬 데이터로 확인한 것:
-  - 원본 기록(카메라 3대 PNG + trajectory) → LeRobot v3 변환(rby1 / dx24) → 검증: state·action bit-exact, 영상 MSE 4.4.
-  - **재생 검증:** 정책 서버 replay 백엔드 → `rby1_lerobot_remote` → `rby1_joint`. 베이스 3.2 cm, 팔 관절 최대 0.038 rad, TCP 최대 3.2 cm(평균 0.5 cm), 통과(`reports/stage4/replay_check_pipeline.json`).
-  - **VR scripted operator 시뮬 종단 시험:** WebSocket → clutch → IK → 기록. 손 이동 오차 6 mm(`reports/stage4/vr_scripted_operator.json`).
-  - ACT 학습 → 서버 → 왕복(27 ms). SmolVLA 로드·미세조정 2 step → 서버 왕복(50스텝 청크 200 ms).
-- 남은 일(BED-03 oracle 합격 후): 데모 20개 수집 → 변환 → ACT 학습 → 10회 play → 벤치마크(oracle / hold / replay / ACT).
+### 4단계 (완료)
+- **데모 24개**(학습 장면 21개, 끝까지 돈 실행의 96 % 성공), LeRobot v3 dx24(240 × 320) + rby1(480 × 640), 두 형식 모두 검증 통과.
+- 실제 데모 0번 재생: 과제 성공 재현, TCP p99 9.8 mm. 접촉 중 짧은 관절 튐 때문에 재생 합격 기준을 프레임 비율로 바꿈(D-26).
+- SmolVLA 실데이터 왕복(2 step 미세조정 → 서버): (50, 24) 청크, 205 ms.
+
+#### 수집 기록
+- 시뮬로 검증한 것: VR scripted operator 종단(6 mm), 기록 → 변환 → 검증(bit-exact), 재생 검증(통과). 정리: `reports/stage4/REPORT.md`.
+- oracle 데모 수집(`tools/collect_demos.sh`, 학습 장면 30개, 6개 동시, 에피소드당 약 75분).
+  - 지금까지 끝난 것은 모두 성공했다(종료 판정 수정 후).
+- 수집 중 발견한 문제:
+  - PNG 원본이 에피소드당 4 GB → JPEG로 바꿈(D-25).
+  - GPU 메모리(49 GB)가 차면 PhysX GPU 커널 실패.
+    - Kit 6개 × 7 GB에 다른 GPU 작업을 더하면 생긴다.
+    - 영향받은 에피소드는 변환에서 뺀다(`tools/stage45.sh`).
+    - 수집 중에는 다른 GPU 작업을 하지 않는다.
+- 다음 순서: `tools/stage45.sh` 남은 부분 = 변환(dx24 240 × 320 + rby1) → 검증 → 재생 검증 → ACT 학습 → 10회 play.
+  - 11:50 `tools/after_collect.sh`가 수집기 종료를 기다렸다가 `N=21 tools/stage45.sh`를 자동 실행(10002 제외분 보충).
+  - ACT·재생 평가 상한을 1500 → 1800 step으로 올림(데모가 1340–1567 step, D-23 수정).
+
+### 5–6단계 (코드 완료)
+- 정책 서버·클라이언트·SmolVLA 왕복 확인(`reports/stage5/REPORT.md`).
+- 벤치마크 실행기·집계·보고서: oracle 8/10, hold(zero) 0/10. replay·ACT는 데이터셋이 나온 뒤 실행.

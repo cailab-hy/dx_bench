@@ -1,14 +1,15 @@
-"""Scripted oracle for BED-02 Easy (fold a towel on the desk) on `rby1_ik` - privileged (reads the cloth nodes).
+"""Scripted oracle for BED-02 Easy (fold a towel on the desk) on `rby1_ik`, both arms - privileged (reads nodes).
 
-Robot starts in front of the desk (facing -x). Steps:
-1. drive to the desk front (base front 5 cm from the edge), torso crouch (reaches 0.5-0.8 m ahead at desk height),
-2. fold 1 (long axis in half): pinch the right short edge (assisted grasp), lift, carry over the left end, lower,
-   release,
-3. fold 2 (short axis in half): pinch the far long edge of the folded towel, carry it onto the near edge, release,
-4. move the folded towel to the stack spot (task.stack_xy): pinch its centre, carry, release,
-5. retract, torso upright.
-The towel frame comes from a PCA of its nodes; "right" / "far" are in the base frame. `policy.subtask` follows
-the BED-02 subtask labels for recording.
+Robot starts in front of the desk (facing -x); the towel lies 25 cm in from the desk front, long side along the
+robot's lateral axis. With the gripper pointing down each arm only reaches its own half of the desk at desk height
+(reports/rby1_check/t5/reach_desk_*.json), so:
+1. drive to the desk front (base front 5 cm from the edge, towel centred), torso crouch,
+2. "fold the right side": right hand pinches the right short edge, carries it just past the centre line, releases,
+3. "fold the left side": left hand does the same with the left short edge,
+4. "fold in half": right hand pinches the far long edge (right half) and lays it onto the near edge,
+5. "place on the stack": left hand carries the folded towel to the stack spot (desk front, left of centre),
+6. arms home, torso upright.
+The towel frame comes from a PCA of its nodes. `policy.subtask` follows the BED-02 subtask labels.
 """
 from __future__ import annotations
 
@@ -44,7 +45,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
     def __init__(self, config: Bed02OraclePolicyCfg):
         super().__init__(config)
         self.cfg = config
-        self._h = Bed03OraclePolicy.__new__(Bed03OraclePolicy)  # reuse the geometry / servo / nav helpers
+        self._h = Bed03OraclePolicy.__new__(Bed03OraclePolicy)  # reuse the geometry / nav helpers
         self._h.cfg = config
         self.reset()
 
@@ -52,10 +53,10 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         self.phase = "init"
         self.t_phase = 0
         self.subtask = "pick up a shirt"
-        self.plan: list[dict] = []
-        self.step_i = 0
         self.goal = None
         self.target = None
+        self.moves: list[str] = []
+        self.mv = None
         self.plan_log: list[dict] = []
 
     def _set(self, phase, subtask=None):
@@ -63,55 +64,52 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         if subtask:
             self.subtask = subtask
 
-    # ------------------------------------------------------------------ geometry
+    # ------------------------------------------------------------------ helpers
+    def _servo(self, obs, target_b, side, kp=0.6, max_dp=0.025):
+        """Relative IK step of one arm towards a base-frame TCP position, gripper pointing down."""
+        tcp = obs["policy"][f"tcp_{side}"][0].cpu().numpy()
+        d = np.asarray(target_b) - tcp[:3]
+        dp = np.clip(kp * d, -max_dp, max_dp)
+        Re = np.eye(3) @ self._h._qmat(tcp[3:]).T
+        ang = math.acos(np.clip((np.trace(Re) - 1) / 2, -1, 1))
+        dr = np.zeros(3)
+        if ang > 1e-4:
+            ax = np.array([Re[2, 1] - Re[1, 2], Re[0, 2] - Re[2, 0], Re[1, 0] - Re[0, 1]]) / (2 * math.sin(ang))
+            dr = np.clip(ax * ang * kp, -0.08, 0.08)
+        return np.r_[dp, dr], float(np.linalg.norm(d))
+
     def _towel(self, U):
         n = (_T(U.scene[self.target].data.nodal_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
         c = n.mean(axis=0)
         xy = n[:, :2] - c[:2]
-        w, V = np.linalg.eigh(xy.T @ xy)
-        u = V[:, 1]  # long axis
-        v = V[:, 0]
-        pu, pv = xy @ u, xy @ v
-        return n, c, u, v, (float(pu.min()), float(pu.max())), (float(pv.min()), float(pv.max()))
-
-    def _plan_folds(self, U, table_z):
-        """Waypoints (world xyz) of one pinch-carry-release move per fold, from the current towel nodes."""
-        n, c, u, v, (u0, u1), (v0, v1) = self._towel(U)
-        _, yaw = self._h._base(U)
+        _, V = np.linalg.eigh(xy.T @ xy)
+        u, v = V[:, 1], V[:, 0]  # long, short axis
+        p, yaw = self._h._base(U)
         right = np.array([math.sin(yaw), -math.cos(yaw)])  # base -y in the world
         fwd = np.array([math.cos(yaw), math.sin(yaw)])
         if np.dot(u, right) < 0:
             u = -u
-            u0, u1 = -u1, -u0
         if np.dot(v, fwd) < 0:
             v = -v
-            v0, v1 = -v1, -v0
-        top = float(n[:, 2].max())
-        z_pick = top + GRIP_DZ
-        z_put = table_z + 0.03 + GRIP_DZ
-        p1 = c[:2] + u * (u1 - 0.04)                      # right short edge (middle)
-        q1 = c[:2] + u * (u0 + 0.04)                      # onto the left end
-        return {"pick": np.r_[p1, z_pick], "put": np.r_[q1, z_put], "label": "fold in half"}
+        pu, pv = xy @ u, xy @ v
+        return n, c, u, v, (float(pu.min()), float(pu.max())), (float(pv.min()), float(pv.max()))
 
-    def _plan_fold2(self, U, table_z):
+    def _plan(self, U, move, task):
         n, c, u, v, (u0, u1), (v0, v1) = self._towel(U)
-        _, yaw = self._h._base(U)
-        fwd = np.array([math.cos(yaw), math.sin(yaw)])
-        # the far edge: the axis most aligned with "forward"
-        ax = u if abs(np.dot(u, fwd)) > abs(np.dot(v, fwd)) else v
-        lo, hi = (u0, u1) if ax is u else (v0, v1)
-        if np.dot(ax, fwd) < 0:
-            ax, lo, hi = -ax, -hi, -lo
         top = float(n[:, 2].max())
-        p = c[:2] + ax * (hi - 0.04)
-        q = c[:2] + ax * (lo + 0.04)
-        return {"pick": np.r_[p, top + GRIP_DZ], "put": np.r_[q, table_z + 0.03 + GRIP_DZ], "label": "fold the right side"}
-
-    def _plan_stack(self, U, task, table_z):
-        n, c, *_ = self._towel(U)
-        top = float(n[:, 2].max())
-        return {"pick": np.r_[c[:2], top + GRIP_DZ], "put": np.r_[task.stack_xy, table_z + 0.05 + GRIP_DZ],
-                "label": "place on the stack"}
+        z_pick, z_put = top + GRIP_DZ, self.table_z + 0.03 + GRIP_DZ
+        if move == "right":   # right short edge -> just past the centre line
+            pick, put, side, label = c[:2] + u * (u1 - 0.04), c[:2] - u * 0.03, "right", "fold the right side"
+        elif move == "left":  # left short edge -> just past the centre line
+            pick, put, side, label = c[:2] + u * (u0 + 0.04), c[:2] + u * 0.03, "left", "fold the left side"
+        elif move == "half":  # far long edge (right half) -> near edge
+            pick = c[:2] + v * (v1 - 0.03) + u * 0.25 * u1
+            put = c[:2] + v * (v0 + 0.03) + u * 0.25 * u1
+            side, label = "right", "fold in half"
+        else:                 # folded towel -> stack spot, left hand
+            pick, put, side, label = c[:2], np.asarray(task.stack_xy), "left", "place on the stack"
+            z_put = self.table_z + 0.05 + GRIP_DZ
+        return {"pick": np.r_[pick, z_pick], "put": np.r_[put, z_put], "side": side, "label": label}
 
     # ------------------------------------------------------------------ main
     def get_action(self, env: gym.Env, observation) -> torch.Tensor:
@@ -121,10 +119,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         h = self._h
         a = np.zeros(17, dtype=np.float32)
         a[12:14] = 1.0
-        grip = 1.0
         self.t_phase += 1
-        torso = U.action_manager.get_term("torso")
-        tidx = int(torso.preset_index[0])
+        tidx = int(U.action_manager.get_term("torso").preset_index[0])
 
         def torso_to(idx):
             if tidx < idx:
@@ -140,44 +136,39 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         if self.phase == "approach":
             if self.goal is None:
                 desk = task.layout["parts_aabb"].get("CareDesk") or task.layout["furniture_aabb"]["CareDesk"]
-                p, yaw = h._base(U)
                 _, c, *_ = self._towel(U)
-                edge_x = float(desk[1][0])  # desk front edge (robot on the +x side, facing -x)
-                bx = edge_x + BASE_FRONT_X + self.cfg.edge_margin
+                bx = float(desk[1][0]) + BASE_FRONT_X + self.cfg.edge_margin  # robot on the +x side, facing -x
                 self.goal = (np.array([bx, float(c[1])]), math.pi)
                 self.table_z = float(desk[1][2])
             (v, w), ok = h._nav(U, self.goal[0], self.goal[1])
             a[15:17] = (v, w)
             if ok or self.t_phase > 300:
                 self.goal = None
-                self._set("crouch")
+                self._set("crouch", "flatten the shirt")
         elif self.phase == "crouch":
             a[14] = torso_to(self.cfg.work_preset_steps)
             if tidx == self.cfg.work_preset_steps and self.t_phase > 60:
-                self.moves = ["fold1", "fold2", "stack"]
+                self.moves = ["right", "left", "half", "stack"]
                 self._set("plan")
         elif self.phase == "plan":
             if not self.moves:
                 self._set("retract")
             else:
-                m = self.moves.pop(0)
-                mv = {"fold1": lambda: self._plan_folds(U, self.table_z),
-                      "fold2": lambda: self._plan_fold2(U, self.table_z),
-                      "stack": lambda: self._plan_stack(U, task, self.table_z)}[m]()
-                self.mv = mv
-                self.plan_log.append({k: (v.tolist() if hasattr(v, "tolist") else v) for k, v in mv.items()})
-                self.subtask = {"fold1": "fold in half", "fold2": "fold the right side", "stack": "place on the stack"}[m]
-                self._set("above")
+                self.mv = self._plan(U, self.moves.pop(0), task)
+                self.plan_log.append({k: (x.tolist() if hasattr(x, "tolist") else x) for k, x in self.mv.items()})
+                self._set("above", self.mv["label"])
         elif self.phase in ("above", "descend", "close", "lift", "carry", "lower", "release"):
-            mv = self.mv
+            mv, dz = self.mv, self.cfg.lift_dz
+            side = mv["side"]
+            off, gi = (0, 12) if side == "right" else (6, 13)
             pick, put = mv["pick"], mv["put"]
-            dz = self.cfg.lift_dz
+            grip, cmd = 1.0, None
             if self.phase == "above":
-                a[0:6], err = h._servo(observation, h._to_base(U, pick + [0, 0, dz]))
+                cmd, err = self._servo(observation, h._to_base(U, pick + [0, 0, dz]), side)
                 if err < 0.015 or self.t_phase > 90:
                     self._set("descend")
             elif self.phase == "descend":
-                a[0:6], err = h._servo(observation, h._to_base(U, pick), max_dp=0.012)
+                cmd, err = self._servo(observation, h._to_base(U, pick), side, max_dp=0.012)
                 if err < 0.01 or self.t_phase > 60:
                     self._set("close")
             elif self.phase == "close":
@@ -186,28 +177,33 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                     self._set("lift")
             elif self.phase == "lift":
                 grip = 0.0
-                a[0:6], err = h._servo(observation, h._to_base(U, pick + [0, 0, dz]))
+                cmd, err = self._servo(observation, h._to_base(U, pick + [0, 0, dz]), side)
                 if err < 0.02 or self.t_phase > 45:
                     self._set("carry")
             elif self.phase == "carry":
                 grip = 0.0
-                a[0:6], err = h._servo(observation, h._to_base(U, put + [0, 0, dz]), max_dp=0.015)
+                cmd, err = self._servo(observation, h._to_base(U, put + [0, 0, dz]), side, max_dp=0.015)
                 if err < 0.015 or self.t_phase > 120:
                     self._set("lower")
             elif self.phase == "lower":
                 grip = 0.0
-                a[0:6], err = h._servo(observation, h._to_base(U, put), max_dp=0.01)
+                cmd, err = self._servo(observation, h._to_base(U, put), side, max_dp=0.01)
                 if err < 0.01 or self.t_phase > 45:
                     self._set("release")
             elif self.phase == "release":
-                grip = 1.0
-                a[0:6], _ = h._servo(observation, h._to_base(U, put + [0, 0, 0.06]), max_dp=0.01)
+                cmd, _ = self._servo(observation, h._to_base(U, put + [0, 0, 0.08]), side, max_dp=0.01)
                 if self.t_phase > 25:
-                    self._set("plan")
+                    U.action_manager.get_term(f"{side}_arm").request_home()  # clear the workspace for the other arm
+                    self._set("rehome")
+            if cmd is not None:
+                a[off:off + 6] = cmd
+            a[gi] = grip
+        elif self.phase == "rehome":
+            arm = U.action_manager.get_term(f"{self.mv['side']}_arm")
+            if not bool(arm.homing[0]) or self.t_phase > 90:
+                self._set("plan")
         elif self.phase == "retract":
             a[14] = torso_to(0)
-            a[0:6], err = h._servo(observation, np.array([0.35, -0.25, 0.85]))
             if tidx == 0 and self.t_phase > 60:
                 self._set("finished")
-        a[12] = grip
         return torch.as_tensor(a, device=U.device).unsqueeze(0).repeat(U.num_envs, 1)

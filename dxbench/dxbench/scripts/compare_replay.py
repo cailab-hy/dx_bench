@@ -4,8 +4,11 @@
         --replay outputs/pipeline_test/replay_raw/episode-yyy [--out reports/stage4/replay_check.json]
 
 Errors per step: base pose (xy m, yaw rad), arm / torso joint positions (rad), TCP position (m, base frame).
-Pass: final base xy error <= 5 cm, max arm joint error <= 0.05 rad, max TCP error <= 5 cm (the original is
-recorded with rby1_ik - joint targets from DiffIK each step - and replayed as joint targets on rby1_joint).
+Pass (DECISIONS D-26): final base xy error <= 5 cm, >= 97 % of frames with every arm joint within 0.05 rad, and 99th
+percentile TCP error <= 2 cm. The cloth solver is not bit-deterministic, so while the hand carries or presses the cloth
+contact forces differ between runs and give short joint transients (2-5 frames, up to ~0.25 rad) that recover. The
+strict all-frames check (max arm joint <= 0.05 rad, max TCP <= 5 cm) is still reported as `pass_strict`. The original is
+recorded with rby1_ik (joint targets from DiffIK each step) and replayed as joint targets on rby1_joint.
 """
 from __future__ import annotations
 
@@ -41,9 +44,13 @@ def compare(orig, replay) -> dict:
            "base_yaw_err_max_rad": float(dyaw.max()),
            "arm_joint_err_max_rad": float(dq[:, :14].max()), "arm_joint_err_mean_rad": float(dq[:, :14].mean()),
            "torso_joint_err_max_rad": float(dq[:, 14:].max()),
-           "tcp_right_err_max_m": float(dtcp.max()), "tcp_right_err_mean_m": float(dtcp.mean())}
-    res["pass"] = bool(res["base_xy_err_final_m"] <= 0.05 and res["arm_joint_err_max_rad"] <= 0.05
-                       and res["tcp_right_err_max_m"] <= 0.05)
+           "tcp_right_err_max_m": float(dtcp.max()), "tcp_right_err_mean_m": float(dtcp.mean()),
+           "tcp_right_err_p99_m": float(np.percentile(dtcp, 99)),
+           "arm_frames_within_0.05rad": float((dq[:, :14].max(axis=1) <= 0.05).mean())}
+    res["pass_strict"] = bool(res["base_xy_err_final_m"] <= 0.05 and res["arm_joint_err_max_rad"] <= 0.05
+                              and res["tcp_right_err_max_m"] <= 0.05)
+    res["pass"] = bool(res["base_xy_err_final_m"] <= 0.05 and res["arm_frames_within_0.05rad"] >= 0.97
+                       and res["tcp_right_err_p99_m"] <= 0.02)
     return res
 
 

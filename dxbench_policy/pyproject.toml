@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dxbench_policy"
+version = "0.1.0"
+description = "DX bench policy side (dx_policy env): LeRobot conversion, training helpers, websocket policy server"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+include = ["dxbench_policy*"]
