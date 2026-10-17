@@ -1,7 +1,53 @@
 # DX bench — 진행 상황
 
 > 주말 무인 실행(2026-10-16 ~). 단계별 상태는 아래 표, 결정은 `DECISIONS.md`, 사람이 할 일은 `HUMAN_TODO.md`.
-> 마지막 갱신: 2026-10-17 19:05 (6단계 완료, 100k ACT 추가 실험 진행 중)
+> 마지막 갱신: 2026-10-17 22:45 (1–6단계 모두 완료·커밋, push 없음)
+
+## 월요일 아침 요약
+
+**1–6단계 모두 완료 기준을 채웠고 단계마다 로컬 커밋했다(push 안 함).** 핵심 수치는 BED-03 Easy(평가 장면 10개) 기준.
+
+### 되는 것
+
+| 영역 | 상태 |
+|---|---|
+| 천 시뮬(1단계) | 보조 잡기 480 Hz로 이불·소매·바닥 옷 잡기 오차 ≤ 1.3 cm, 60 s 안정. 마찰 잡기는 실패(D-4/5) |
+| RB-Y1(2단계) | `rby1_joint`(24-D)·`rby1_ik`(17-D), 회귀 6종 통과(바닥 집기·그리퍼·주행·카메라) |
+| 침실 task(3단계) | BED-01/02/03 × 3 난이도 장면 90 + 학습 장면 90, 판정 pytest, 천 초기 상태. **BED-03 Easy oracle 8/10(0.90)** |
+| 데이터(4단계) | 키보드·VR(scripted operator 시뮬 종단 6 mm) 원격조작, 성공만 저장하는 원본 기록, LeRobot v3 dx24·rby1 변환 bit-exact. **oracle 데모 24개(34,891프레임)**, 실제 데모 재생 시 과제 성공 재현 |
+| 정책(5단계) | dx_policy 서버(hold/replay/lerobot) ⇄ dx_arena 클라이언트. ACT 학습 → **10회 play 오류 0**(mp4 + 지표). SmolVLA 실데이터 미세조정 → 서버 왕복 |
+| 벤치마크(6단계) | YAML 하나로 평가 → 실험별 REPORT + `benchmarks/dx_bed_v0/RESULTS.md`. oracle 8/10, hold·개루프 재생·ACT 20k·ACT 100k 모두 0/10. ACT 100k는 장면 하나에서 옷을 바구니에 넣었다가 다시 끌어냄 |
+
+안 된 것: BED-02 oracle 0.55(접기 0/3, 놓으면 펴짐·반 접기 도달 불가), BED-01 oracle 없음, 학습 정책 성공 0.
+
+### 결정이 필요한 것 (3개)
+
+1. **보조 잡기 유지 여부(D-4/D-5):** 손끝 5 cm 안 천 정점을 손에 고정하는 방식이라 시뮬 성공 ≠ 실기 성공. v0 벤치마크는
+   이대로 갈지, 마찰 잡기(그리퍼 패드·천 해상도 조정)에 시간을 쓸지.
+2. **BED-01/02를 어떻게 채울지(HUMAN_TODO 8):** (a) 수건 전용 천 재질(굽힘 강성↓) 허용 — BED-03 천과 공용 파라미터라
+   천 상태 재생성이 필요, 그 뒤 양팔 oracle 계속, 또는 (b) 사람 원격조작 데모(키보드·VR, 4단계 도구 준비됨).
+3. **다음 학습 방향(HUMAN_TODO 3·5):** oracle 데모 확대(GPU 하나로 동시 6개, 에피소드당 약 75분 → 100개면 약 21시간) +
+   긴 ACT, 아니면 SmolVLA / π0 미세조정(π0 가중치는 5 GB 초과라 사람이 받아야 함).
+
+### 재현 명령
+
+```bash
+cd ~/dx_bench
+A=~/miniforge3/envs/dx_arena/bin/python; P=~/miniforge3/envs/dx_policy/bin/python
+$A -m pytest -q dxbench/tests dxbench/dxbench/teleop/vr        # 49 통과 (시뮬 없음)
+$P -m pytest -q dxbench_policy/tests                            # 2 통과
+# oracle 한 에피소드 + 영상 (약 1.5시간)
+$A dxbench/dxbench/scripts/run_episode.py --policy dxbench.policies.oracle_bed03.Bed03OraclePolicy --out outputs/demo_000 --video \
+   --external_environment_class_path dxbench.tasks.bed_tasks:DxBed03Environment dx_bed03 --scene benchmarks/dx_bed_v0/scenes/bed03_easy_000.json
+# 벤치마크 실험 (oracle / hold / replay / act / act_100k) → 결과표
+$A -m dxbench.bench.run_benchmark benchmarks/dx_bed_v0/experiments/act_bed03_100k.yaml
+$A -m dxbench.bench.make_results                                # -> benchmarks/dx_bed_v0/RESULTS.md
+# 데모 수집 → 변환 → 검증 → 재생 검증 → ACT 학습 → 10회 play
+N=21 P=3 STEPS=20000 tools/stage45.sh
+```
+
+자세한 것: `README.md`, `docs/PIPELINE.md`, `docs/BENCHMARK.md`, 단계별 `reports/stage*/REPORT.md`. 시뮬 작업 정지는
+`tools/kill_sims.sh`, 정책 서버 정지는 `tools/kill_servers.sh`(같은 명령줄에 `pkill` 패턴을 쓰면 자기 셸이 죽음).
 
 ## 상태 요약
 
@@ -12,7 +58,7 @@
 | 2 RB-Y1 embodiment (8 h) | **완료** (2831401) | 회귀 테스트 + 침대가 보이는 머리 카메라 | — | `dxbench/embodiments/` |
 | 3 침실 씬·task 3개 (12 h) | **완료** (BED-03 Easy oracle 8/10) | 빌드, 판정 pytest, BED-03 Easy oracle ≥ 8/10 | — | `dxbench/tasks/` |
 | 4 원격조작·기록·변환 (10 h) | **완료** | 키보드·VR(scripted)·변환·검증·재생 끝까지 | oracle 데모 24개(34,891프레임) dx24·rby1 변환 bit-exact, 재생 검증 통과(과제 성공 재현) | `dxbench/teleop/`, `dxbench_policy/convert/`, `reports/stage4/REPORT.md` |
-| 5 VLA 추론 (8 h) | **완료** | ACT로 BED-03 Easy 10회 play, 영상+지표 | ACT(20k) 10회 오류 0, 성공 0/10. SmolVLA 실데이터 왕복 OK. 100k ACT 추가 실험 대기 | `dxbench_policy/serve/`, `dxbench/policies/rby1_lerobot_remote.py`, `reports/stage5/REPORT.md` |
+| 5 VLA 추론 (8 h) | **완료** | ACT로 BED-03 Easy 10회 play, 영상+지표 | ACT 20k·100k 각 10회 오류 0, 성공 0/10(100k는 옷 하나 넣었다 빼냄). SmolVLA 실데이터 왕복 OK | `dxbench_policy/serve/`, `dxbench/policies/rby1_lerobot_remote.py`, `reports/stage5/REPORT.md` |
 | 6 벤치마크 (6 h) | **완료** | 명령 하나로 평가 → 보고서 | BED-03 Easy: oracle 8/10, hold·replay·ACT 0/10 | `benchmarks/dx_bed_v0/`(RESULTS.md), `docs/BENCHMARK.md`, `reports/stage6/REPORT.md` |
 
 ## 전체 계획
@@ -50,7 +96,7 @@
 ### 6단계 (완료)
 - 고정 장면 90 + 천 상태 230, 실험 YAML 5개, 실행기·집계·`RESULTS.md` 자동 생성, `docs/BENCHMARK.md`.
 - 표본 결과(BED-03 Easy 10장면): oracle 8/10(0.90), hold 0/10, 개루프 재생 0/10(바구니 넘어짐 1), ACT 20k 0/10(전복 1).
-- 100k step ACT(D-27)는 커밋 뒤 실행 중.
+- 100k step ACT(D-27, 84분 학습): 0/10. 장면 003에서 옷을 바구니에 넣었다가(40 s) 다시 끌어냄.
 
 ### 5단계 (완료)
 - 서버(hold / replay / lerobot) ⇄ `rby1_lerobot_remote` 클라이언트. zero → replay(과제 성공 재현) → ACT → 폐루프 순서 모두 통과.

@@ -20,11 +20,12 @@
 | `hold_bed03` | 자세 유지(서버 hold) | 0/10 | 0.00 | 0 % | 0 | 0 | 0 | 20 | 10 |
 | `replay_bed03` | 학습 데모 0번 개루프 재생 | 0/10 | 0.00 | 0 % | 0 | 1(바구니 넘어짐) | 0 | 115 | 28 |
 | `act_bed03` | ACT 20k step(24 데모) | 0/10 | 0.00 | 0 % | 1 | 0 | 0 | 120 | 43 |
+| `act_bed03_100k` | ACT 100k step(같은 데모) | 0/10 | 0.00 | 0 %(003에서 옷1이 40 s에 바구니 안 → 다시 끌어냄) | 0 | 0 | 0 | 120 | 36 |
 
 - **oracle 8/10:** 장면 생성·판정·물리가 과제를 풀 수 있는 상태라는 상한 기준. 실패 2개는 두 번째 옷.
 - **hold·replay 0/10:** 장면을 보지 않는 정책으로는 풀리지 않는다. 장면마다 옷·바구니 위치가 달라 데모 하나를 그대로 재생해도 소용없다.
 - **ACT 0/10:** 첫 학습 정책. 배관은 정상(학습 프레임 개루프 확인)이지만 학습량이 부족하다(`reports/stage5/REPORT.md`).
-  100k step 추가 실험(`act_bed03_100k`, D-27)은 이 보고서 뒤에 돌며, 끝나면 `RESULTS.md`에 행이 추가된다.
+  100k step(`act_bed03_100k`, D-27)도 0/10이지만 장면 003에서 옷 하나를 바구니에 넣었다가 다시 끌어냈다 → 학습량에 따라 행동이 나아진다.
 
 ## 결정·제한
 
@@ -38,7 +39,7 @@
 
 ```bash
 A=~/miniforge3/envs/dx_arena/bin/python
-for e in oracle_bed03 hold_bed03 replay_bed03 act_bed03; do
+for e in oracle_bed03 hold_bed03 replay_bed03 act_bed03 act_bed03_100k; do
   $A -m dxbench.bench.run_benchmark benchmarks/dx_bed_v0/experiments/$e.yaml
 done
 $A -m dxbench.bench.make_results     # -> benchmarks/dx_bed_v0/RESULTS.md

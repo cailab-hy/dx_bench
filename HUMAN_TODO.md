@@ -9,11 +9,13 @@
    - 할 일: `dxbench/dxbench/assets/rby1/make_rby1_usd.py`에 revolute 스위블 + 휠 관절 2개씩 추가.
 3. **π0 / π0.5 가중치** (각 5 GB 초과 → 받지 않음).
    - `dx_policy`에서 `huggingface-cli download lerobot/pi0` 등으로 받는다.
-   - 서버 실행법은 5단계 기록(`PROGRESS.md`)을 따른다.
+   - 서버: `python -m dxbench_policy.serve.server --backend lerobot --checkpoint <dir>`(`docs/PIPELINE.md` 6절), 확인은 `python -m dxbench_policy.serve.roundtrip`.
 4. **사람 원격조작 데모** (키보드 / VR 헤드셋).
    - 실행 명령과 키맵은 4단계 기록에 있다.
    - VR 헤드셋은 실제 착용 테스트가 필요하다(무인 실행에선 scripted operator로만 검증).
-5. **큰 학습 실행**: ACT 장시간 학습, SmolVLA·π0 미세조정. 무인 실행에서는 짧은 ACT 학습만 했다.
+5. **큰 학습 실행**: SmolVLA·π0 미세조정, 데모 확대(현재 BED-03 Easy oracle 24개).
+   - 무인 실행에서는 ACT 20k step(0/10)과 100k step(`act_bed03_100k`, 결과는 `benchmarks/dx_bed_v0/RESULTS.md`)만 했다.
+   - SmolVLA 미세조정 명령은 `docs/PIPELINE.md` 5절(rename_map 포함). 2 step 왕복까지만 확인했다.
 6. **결과물 정리**: 안전 검사 때문에 실험 중간 산출물을 지우지 못했다.
    - 대상: `reports/cloth_spike/runs/*_{dbg,probe*,smoke,pin_*}.json`, `outputs/` 아래 디버그 폴더.
    - 필요 없으면 사람이 지운다.

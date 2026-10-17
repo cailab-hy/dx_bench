@@ -95,5 +95,6 @@ Sample results on BED-03 Easy (10 evaluation scenes, 2026-10-17):
 | `hold_bed03` | 0/10 | 0.00 | Zero baseline |
 | `replay_bed03` | 0/10 | 0.00 | One training demo replayed open loop; knocks the basket over once. Scenes differ enough that blind replay fails |
 | `act_bed03` | 0/10 | 0.00 | ACT, 20k steps on 24 oracle demos; drives past the garments. Undertrained (`reports/stage5/REPORT.md`) |
+| `act_bed03_100k` | 0/10 | 0.00 | Same data, 100k steps; in one scene it carries a garment into the basket (40 s) and pulls it out again |
 
 Only BED-03 has an oracle so far; BED-01 / BED-02 scenes, predicates and cloth states are ready (HUMAN_TODO 8).
