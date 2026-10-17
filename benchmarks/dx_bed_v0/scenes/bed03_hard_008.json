@@ -1,0 +1,154 @@
+{
+ "scene_id": "bed03_hard_008",
+ "task": "BED-03",
+ "difficulty": "hard",
+ "seed": 8,
+ "robot": {
+  "xy": [
+   -2.6,
+   17.7
+  ],
+  "yaw": 0.044037529280506686,
+  "torso": "upright"
+ },
+ "objects": [
+  {
+   "name": "laundry_basket",
+   "kind": "basket",
+   "xyz": [
+    -0.81558045308077,
+    18.237393857300376,
+    0.0
+   ],
+   "yaw": -2.1507845843202515,
+   "variant": null,
+   "cloth_state": null
+  },
+  {
+   "name": "cloth_0",
+   "kind": "tshirt",
+   "xyz": [
+    1.7519547347533715,
+    17.891773319010262,
+    0.01
+   ],
+   "yaw": -0.41339027526851924,
+   "variant": "l_gray",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_008_cloth_0.npz"
+  },
+  {
+   "name": "cloth_1",
+   "kind": "towel",
+   "xyz": [
+    0.23973190004555356,
+    20.093468004515426,
+    0.01
+   ],
+   "yaw": 2.4530207019038075,
+   "variant": "small",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_008_cloth_1.npz"
+  },
+  {
+   "name": "cloth_2",
+   "kind": "tshirt",
+   "xyz": [
+    -1.622320140387893,
+    17.10232938442753,
+    0.01
+   ],
+   "yaw": -1.868120691014441,
+   "variant": "l_gray",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_008_cloth_2.npz"
+  },
+  {
+   "name": "cloth_3",
+   "kind": "sock",
+   "xyz": [
+    -2.319827820727106,
+    18.66666805234302,
+    0.01
+   ],
+   "yaw": -0.3661132385696533,
+   "variant": null,
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_008_cloth_3.npz"
+  },
+  {
+   "name": "cloth_4",
+   "kind": "tshirt",
+   "xyz": [
+    2.0444744453475763,
+    20.58708472881554,
+    0.5500000014901162
+   ],
+   "yaw": 0.2588250249103772,
+   "variant": "l_gray",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_008_cloth_4.npz"
+  },
+  {
+   "name": "cloth_5",
+   "kind": "towel",
+   "xyz": [
+    1.9536713721295191,
+    20.18007422689614,
+    0.5500000014901162
+   ],
+   "yaw": 0.0,
+   "variant": null,
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_008_cloth_5.npz"
+  },
+  {
+   "name": "doll",
+   "kind": "doll",
+   "xyz": [
+    0.18604506485103922,
+    18.312747972766164,
+    0.0
+   ],
+   "yaw": 1.926193642204466,
+   "variant": null,
+   "cloth_state": null
+  },
+  {
+   "name": "book",
+   "kind": "book",
+   "xyz": [
+    2.3385691459358178,
+    18.191735834491414,
+    0.0
+   ],
+   "yaw": 0.09299583640262732,
+   "variant": null,
+   "cloth_state": null
+  },
+  {
+   "name": "folded_towel",
+   "kind": "towel",
+   "xyz": [
+    0.943432584908253,
+    18.240246035715224,
+    0.01
+   ],
+   "yaw": 0.0,
+   "variant": "folded",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_008_folded_towel.npz"
+  }
+ ],
+ "lighting": {
+  "blinds": "up",
+  "room_lights": "on"
+ },
+ "language": {
+  "high": "Put the clothes in the laundry basket.",
+  "high_alternatives": [
+   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918"
+  ],
+  "subtasks": [
+   "look for clothes",
+   "go to the shirt",
+   "pick up the shirt",
+   "go to the basket",
+   "put it in the basket",
+   "carry the basket to the door"
+  ]
+ }
+}

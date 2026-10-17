@@ -134,31 +134,48 @@ class ClothGraspAssistActionCfg(ActionTermCfg):
     gain: float = 1.0
 
 
-def filter_finger_cloth_collisions(env, env_ids, cloth_names: list[str]):
-    """Prestartup event: author FilteredPairsAPI between all four finger links and each cloth (every env)."""
-    import isaaclab.sim as sim_utils
+HAND_LINKS = tuple(f"link_{side}_arm_{i}" for side in ("right", "left") for i in (5, 6)) + (
+    "right_gripper", "left_gripper", "ee_right", "ee_left", "ee_finger_r1", "ee_finger_r2", "ee_finger_l1", "ee_finger_l2")
+
+
+def _cloth_targets(stage, root, cloth_names):
+    from pxr import Usd
+
+    out = []
+    for c in cloth_names:
+        cp = stage.GetPrimAtPath(f"{root}/{c}")
+        if cp.IsValid():
+            found = [q.GetPath() for q in Usd.PrimRange(cp) if "OmniPhysicsDeformableBodyAPI" in q.GetAppliedSchemas()]
+            out += found or [cp.GetPath()]
+    return out
+
+
+def _filter_links(stage, root, link_names, targets):
     from pxr import Usd, UsdPhysics
 
+    robot = stage.GetPrimAtPath(f"{root}/Robot")
+    if not robot.IsValid() or not targets:
+        return 0
+    n = 0
+    for q in Usd.PrimRange(robot):
+        if q.GetName() in link_names and q.HasAPI(UsdPhysics.RigidBodyAPI):
+            rel = UsdPhysics.FilteredPairsAPI.Apply(q).CreateFilteredPairsRel()
+            for t in targets:
+                rel.AddTarget(t)
+            n += 1
+    return n
+
+
+def filter_finger_cloth_collisions(env, env_ids, cloth_names: list[str], links=HAND_LINKS):
+    """Prestartup event: FilteredPairsAPI between the hands (fingers, gripper body, ee, wrist links 5-6) and each
+    cloth (every env). Fingers only was not enough on the mobile robot: nodes pinned within 5 cm of the TCP overlap
+    the gripper body, the velocity pin fights that contact and the energy flung the free base (stage 3, D-19)."""
+    import isaaclab.sim as sim_utils
+
     stage = sim_utils.get_current_stage()
-
-    def deformable_prims(path):
-        root = stage.GetPrimAtPath(path)
-        if not root.IsValid():
-            return []
-        out = [p.GetPath() for p in Usd.PrimRange(root) if "OmniPhysicsDeformableBodyAPI" in p.GetAppliedSchemas()]
-        return out or [root.GetPath()]
-
     for e in range(env.num_envs):
         root = f"/World/envs/env_{e}"
-        for side, s in (("right", "r"), ("left", "l")):
-            for k in (1, 2):
-                fp = stage.GetPrimAtPath(f"{root}/Robot/{side}_gripper/ee_finger_{s}{k}")
-                if not fp.IsValid():
-                    continue
-                rel = UsdPhysics.FilteredPairsAPI.Apply(fp).CreateFilteredPairsRel()
-                for c in cloth_names:
-                    for t in deformable_prims(f"{root}/{c}"):
-                        rel.AddTarget(t)
+        _filter_links(stage, root, set(links), _cloth_targets(stage, root, cloth_names))
 
 
 def filter_base_cloth_collisions(env, env_ids, cloth_names: list[str], links=("wheel_l", "wheel_r", "base")):
@@ -166,24 +183,11 @@ def filter_base_cloth_collisions(env, env_ids, cloth_names: list[str], links=("w
     each cloth. Wheels rolling onto a PhysX surface deformable produced contact forces that flipped the robot
     (stage 3, BED-03 oracle); with the filter the robot drives over floor cloth as if it were flat (DECISIONS D-18)."""
     import isaaclab.sim as sim_utils
-    from pxr import Usd, UsdPhysics
 
     stage = sim_utils.get_current_stage()
     for e in range(env.num_envs):
         root = f"/World/envs/env_{e}"
-        targets = []
-        for c in cloth_names:
-            cp = stage.GetPrimAtPath(f"{root}/{c}")
-            if cp.IsValid():
-                found = [q.GetPath() for q in Usd.PrimRange(cp) if "OmniPhysicsDeformableBodyAPI" in q.GetAppliedSchemas()]
-                targets += found or [cp.GetPath()]
-        for link in links:
-            lp = stage.GetPrimAtPath(f"{root}/Robot/{link}")
-            if not lp.IsValid() or not targets:
-                continue
-            rel = UsdPhysics.FilteredPairsAPI.Apply(lp).CreateFilteredPairsRel()
-            for t in targets:
-                rel.AddTarget(t)
+        _filter_links(stage, root, set(links), _cloth_targets(stage, root, cloth_names))
 
 
 def add_base_cloth_filter(env_cfg, cloth_names: list[str]):

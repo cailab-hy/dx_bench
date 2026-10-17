@@ -1,0 +1,845 @@
+{
+ "experiment": "oracle_bed03",
+ "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+ "policy_kw": {},
+ "env_args": [
+  "--embodiment",
+  "rby1_ik"
+ ],
+ "groups": [
+  {
+   "task": "BED-03",
+   "difficulty": "easy",
+   "episodes": 10,
+   "errors": 0,
+   "success": 8,
+   "success_rate": 0.8,
+   "score_mean": 0.9,
+   "stage_rate": {
+    "in_basket/cloth_0": 1.0,
+    "in_basket/cloth_1": 0.8
+   },
+   "stage_time_s_mean": {
+    "in_basket/cloth_0": 33.5,
+    "in_basket/cloth_1": 38.0
+   },
+   "tipped": 0,
+   "sim_s_mean": 113.58,
+   "wall_s_mean": 5136.001271033287,
+   "failures": []
+  }
+ ],
+ "episodes": [
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_000.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 1469,
+   "sim_s": 97.93333333333334,
+   "wall_s": 4545.7422132492065,
+   "terminated_by": "success",
+   "done": true,
+   "success": true,
+   "score": 1.0,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": true
+   },
+   "first_reach_step": {
+    "in_basket/cloth_1": 580
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 8.476041854024713e-05,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "lower_basket",
+   "policy_plan_log": [
+    {
+     "target": "cloth_1",
+     "goal": [
+      -0.17130455581925952,
+      19.31778868835324
+     ],
+     "yaw": 6.348859620343148,
+     "ok": true,
+     "path_len": 3.0853598081984437,
+     "goal_clear": 0.25782259276427283,
+     "waypoints": 18
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.20081730558641903,
+      18.865608013698054
+     ],
+     "yaw": 4.221689876987399,
+     "ok": true,
+     "path_len": 0.43439447150312105,
+     "goal_clear": 0.0483382350381949,
+     "waypoints": 5
+    },
+    {
+     "target": "cloth_0",
+     "goal": [
+      0.6128670923889328,
+      18.659847833389538
+     ],
+     "yaw": -0.9026389673182021,
+     "ok": true,
+     "path_len": 0.8609914634393847,
+     "goal_clear": 0.27205403546173196,
+     "waypoints": 6
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.20081730558641903,
+      18.865608013698054
+     ],
+     "yaw": 4.221689876987399,
+     "ok": true,
+     "path_len": 0.8415516634728826,
+     "goal_clear": 0.0483382350381949,
+     "waypoints": 7
+    }
+   ],
+   "policy_done": [
+    "cloth_1"
+   ],
+   "fixed_post_reset_eval": true
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_001.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 1443,
+   "sim_s": 96.2,
+   "wall_s": 4514.100918531418,
+   "terminated_by": "success",
+   "done": true,
+   "success": true,
+   "score": 1.0,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": true
+   },
+   "first_reach_step": {
+    "in_basket/cloth_0": 500
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 9.210472741111887e-05,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "lower_basket",
+   "policy_plan_log": [
+    {
+     "target": "cloth_0",
+     "goal": [
+      -1.4309417136109848,
+      19.13954936753346
+     ],
+     "yaw": 0.7806619326781242,
+     "ok": true,
+     "path_len": 1.8823821774322178,
+     "goal_clear": 0.5439999959468438,
+     "waypoints": 11
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.25357524194567005,
+      19.5077432554838
+     ],
+     "yaw": -0.6327731833556854,
+     "ok": true,
+     "path_len": 1.3052667192450287,
+     "goal_clear": 0.050479941504292414,
+     "waypoints": 10
+    },
+    {
+     "target": "cloth_1",
+     "goal": [
+      0.26826438063280533,
+      17.873767551545328
+     ],
+     "yaw": -0.2642846136968533,
+     "ok": true,
+     "path_len": 2.3959400500203314,
+     "goal_clear": 0.2667904144503624,
+     "waypoints": 15
+    },
+    {
+     "target": "basket",
+     "goal": [
+      0.6065630380138614,
+      18.380905731332607
+     ],
+     "yaw": 2.5088194702341076,
+     "ok": true,
+     "path_len": 0.6635494419766914,
+     "goal_clear": 0.03967123214426649,
+     "waypoints": 5
+    }
+   ],
+   "policy_done": [
+    "cloth_0"
+   ],
+   "fixed_post_reset_eval": true
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_002.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 1449,
+   "sim_s": 96.6,
+   "wall_s": 4538.036569595337,
+   "terminated_by": "success",
+   "done": true,
+   "success": true,
+   "score": 1.0,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": true
+   },
+   "first_reach_step": {
+    "in_basket/cloth_0": 520
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 0.00010291425921204076,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "lower_basket",
+   "policy_plan_log": [
+    {
+     "target": "cloth_0",
+     "goal": [
+      -0.44760807721672036,
+      18.03184686066563
+     ],
+     "yaw": 0.06100662991570115,
+     "ok": true,
+     "path_len": 2.2240448900000427,
+     "goal_clear": 0.59384291990857,
+     "waypoints": 16
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.9247831629498661,
+      18.653462172058813
+     ],
+     "yaw": 3.06037178879066,
+     "ok": true,
+     "path_len": 0.7831171016514931,
+     "goal_clear": 0.08319725727045751,
+     "waypoints": 6
+    },
+    {
+     "target": "cloth_1",
+     "goal": [
+      0.03295079975901535,
+      19.163157631658724
+     ],
+     "yaw": 1.7563692671969653,
+     "ok": true,
+     "path_len": 0.8338920345094131,
+     "goal_clear": 0.7310000000000163,
+     "waypoints": 6
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.9247831629498661,
+      18.653462172058813
+     ],
+     "yaw": 3.06037178879066,
+     "ok": true,
+     "path_len": 1.1693732487366515,
+     "goal_clear": 0.08319725727045751,
+     "waypoints": 8
+    }
+   ],
+   "policy_done": [
+    "cloth_0"
+   ],
+   "fixed_post_reset_eval": true
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_003.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 1823,
+   "sim_s": 121.53333333333333,
+   "wall_s": 5584.990611791611,
+   "terminated_by": "success",
+   "done": true,
+   "success": true,
+   "score": 1.0,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": true
+   },
+   "first_reach_step": {
+    "in_basket/cloth_0": 505
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 6.386458387615443,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "release",
+   "policy_plan_log": [
+    {
+     "target": "cloth_0",
+     "goal": [
+      -1.7836755959031914,
+      18.257862502794826
+     ],
+     "yaw": 0.3957999493774997,
+     "ok": true,
+     "path_len": 1.0097218921697722,
+     "goal_clear": 0.7860115892308064,
+     "waypoints": 7
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -1.0374284672591187,
+      19.563757369976734
+     ],
+     "yaw": 5.951060329698526,
+     "ok": true,
+     "path_len": 1.5929423314046913,
+     "goal_clear": 0.061314268894256674,
+     "waypoints": 10
+    },
+    {
+     "target": "cloth_1",
+     "goal": [
+      0.2254103415802702,
+      19.78321522804591
+     ],
+     "yaw": 1.9708745688230505,
+     "ok": true,
+     "path_len": 4.1630804644429285,
+     "goal_clear": 0.12142398489102163,
+     "waypoints": 26
+    },
+    {
+     "target": "basket",
+     "goal": [
+      0.1362712135408939,
+      18.740290255904203
+     ],
+     "yaw": 2.8141143025535382,
+     "ok": true,
+     "path_len": 1.0580204569637315,
+     "goal_clear": 0.06461194281994426,
+     "waypoints": 8
+    }
+   ],
+   "policy_done": [
+    "cloth_0"
+   ],
+   "fixed_post_reset_eval": true
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_004.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 1378,
+   "sim_s": 91.86666666666666,
+   "wall_s": 4265.131055116653,
+   "terminated_by": "success",
+   "done": true,
+   "success": true,
+   "score": 1.0,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": true
+   },
+   "first_reach_step": {
+    "in_basket/cloth_1": 550
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 0.0001019071033732019,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "lower_basket",
+   "policy_plan_log": [
+    {
+     "target": "cloth_1",
+     "goal": [
+      -1.9161025212027218,
+      18.561048649445198
+     ],
+     "yaw": 0.716661657448351,
+     "ok": true,
+     "path_len": 1.1130582571562477,
+     "goal_clear": 1.091999999999991,
+     "waypoints": 7
+    },
+    {
+     "target": "basket",
+     "goal": [
+      0.0038243240663625166,
+      18.42212213677177
+     ],
+     "yaw": 1.3493745585474746,
+     "ok": true,
+     "path_len": 1.9797485716825893,
+     "goal_clear": 0.08003210493591933,
+     "waypoints": 15
+    },
+    {
+     "target": "cloth_0",
+     "goal": [
+      0.09122702180641373,
+      18.066782615018244
+     ],
+     "yaw": 0.2685542536633136,
+     "ok": true,
+     "path_len": 0.2026259431031528,
+     "goal_clear": 0.19220781621570887,
+     "waypoints": 3
+    },
+    {
+     "target": "basket",
+     "goal": [
+      0.0038243240663625166,
+      18.42212213677177
+     ],
+     "yaw": 1.3493745585474746,
+     "ok": true,
+     "path_len": 0.3803373422657177,
+     "goal_clear": 0.08003210493591933,
+     "waypoints": 4
+    }
+   ],
+   "policy_done": [
+    "cloth_1"
+   ],
+   "fixed_post_reset_eval": true
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_005.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 1509,
+   "sim_s": 100.6,
+   "wall_s": 4697.6044862270355,
+   "terminated_by": "success",
+   "done": true,
+   "success": true,
+   "score": 1.0,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": true
+   },
+   "first_reach_step": {
+    "in_basket/cloth_0": 585
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 6.242480901912931e-05,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "release",
+   "policy_plan_log": [
+    {
+     "target": "cloth_0",
+     "goal": [
+      -0.5196967230153247,
+      17.868693198854494
+     ],
+     "yaw": 0.4767582019623169,
+     "ok": true,
+     "path_len": 2.4722412799091935,
+     "goal_clear": 0.2765528473002999,
+     "waypoints": 16
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.9071709164873943,
+      18.502371184548053
+     ],
+     "yaw": 3.8654595781981658,
+     "ok": true,
+     "path_len": 0.7780557625626453,
+     "goal_clear": 0.0643099075760169,
+     "waypoints": 6
+    },
+    {
+     "target": "cloth_1",
+     "goal": [
+      -0.3082827821903589,
+      18.990684665759453
+     ],
+     "yaw": 0.21881440454681736,
+     "ok": true,
+     "path_len": 0.4506811030842913,
+     "goal_clear": 0.6523342122322318,
+     "waypoints": 4
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.9216989373080549,
+      18.462176211804824
+     ],
+     "yaw": 3.8373733666028453,
+     "ok": true,
+     "path_len": 0.7864749127475448,
+     "goal_clear": 0.07412525426624533,
+     "waypoints": 5
+    }
+   ],
+   "policy_done": [
+    "cloth_0"
+   ],
+   "fixed_post_reset_eval": true
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_006.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 2394,
+   "sim_s": 159.6,
+   "wall_s": 6959.746399641037,
+   "terminated_by": null,
+   "done": false,
+   "success": false,
+   "score": 0.5,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": false
+   },
+   "first_reach_step": {
+    "in_basket/cloth_0": 455
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 8.542430926948219e-05,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "finished",
+   "policy_plan_log": [
+    {
+     "target": "cloth_0",
+     "goal": [
+      -1.9066854124989991,
+      18.215430432610678
+     ],
+     "yaw": 0.4056612097951046,
+     "ok": true,
+     "path_len": 0.8766237292731018,
+     "goal_clear": 1.091012128734284,
+     "waypoints": 6
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.4540054222261825,
+      17.542434090773483
+     ],
+     "yaw": 1.130455956367436,
+     "ok": true,
+     "path_len": 1.7194011342552753,
+     "goal_clear": 0.050488351708318724,
+     "waypoints": 12
+    },
+    {
+     "target": "cloth_1",
+     "goal": [
+      0.9269737677582837,
+      18.489363346137726
+     ],
+     "yaw": 5.5135647941770065,
+     "ok": true,
+     "path_len": 3.4659432003451185,
+     "goal_clear": 0.12442322637681963,
+     "waypoints": 22
+    },
+    {
+     "target": "basket",
+     "goal": [
+      0.48753427543400896,
+      18.60220015605269
+     ],
+     "yaw": 4.2720486099572295,
+     "ok": true,
+     "path_len": 0.4287150092438345,
+     "goal_clear": 0.0655176807095243,
+     "waypoints": 4
+    }
+   ],
+   "policy_done": [
+    "cloth_0",
+    "cloth_1"
+   ]
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_007.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 1690,
+   "sim_s": 112.66666666666667,
+   "wall_s": 4999.098258972168,
+   "terminated_by": "success",
+   "done": true,
+   "success": true,
+   "score": 1.0,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": true
+   },
+   "first_reach_step": {
+    "in_basket/cloth_1": 635
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 7.289647186631665e-05,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "lower_basket",
+   "policy_plan_log": [
+    {
+     "target": "cloth_1",
+     "goal": [
+      -0.33716329649673193,
+      19.722240108986316
+     ],
+     "yaw": 0.6633583845666443,
+     "ok": true,
+     "path_len": 3.0907266631000248,
+     "goal_clear": 0.05711043807121846,
+     "waypoints": 17
+    },
+    {
+     "target": "basket",
+     "goal": [
+      0.6622849644611445,
+      18.891249888421207
+     ],
+     "yaw": 4.257936451076025,
+     "ok": true,
+     "path_len": 1.3210712897993013,
+     "goal_clear": 0.05713084159268583,
+     "waypoints": 8
+    },
+    {
+     "target": "cloth_0",
+     "goal": [
+      1.2227300750140224,
+      18.08264138036686
+     ],
+     "yaw": 0.801243334070865,
+     "ok": true,
+     "path_len": 4.803654002138335,
+     "goal_clear": 0.22554695074457026,
+     "waypoints": 29
+    },
+    {
+     "target": "basket",
+     "goal": [
+      0.6607273924699903,
+      18.818008361214588
+     ],
+     "yaw": 4.225278425717304,
+     "ok": true,
+     "path_len": 0.9490295229933202,
+     "goal_clear": 0.03843851936771192,
+     "waypoints": 7
+    }
+   ],
+   "policy_done": [
+    "cloth_1"
+   ],
+   "fixed_post_reset_eval": true
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_008.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 1397,
+   "sim_s": 93.13333333333333,
+   "wall_s": 4247.1846623420715,
+   "terminated_by": "success",
+   "done": true,
+   "success": true,
+   "score": 1.0,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": true
+   },
+   "first_reach_step": {
+    "in_basket/cloth_1": 515
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 7.134503677743306e-05,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "lower_basket",
+   "policy_plan_log": [
+    {
+     "target": "cloth_1",
+     "goal": [
+      -1.863935759025774,
+      17.320312063040305
+     ],
+     "yaw": -0.07560972011735062,
+     "ok": true,
+     "path_len": 0.8819461696897649,
+     "goal_clear": 0.5000000000000171,
+     "waypoints": 7
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.5150038086715583,
+      18.417296872063055
+     ],
+     "yaw": 0.13801036776114994,
+     "ok": true,
+     "path_len": 1.837036157140853,
+     "goal_clear": 0.04157121920147999,
+     "waypoints": 11
+    },
+    {
+     "target": "cloth_0",
+     "goal": [
+      0.7237717313745012,
+      17.5274552893866
+     ],
+     "yaw": 0.420393030334543,
+     "ok": true,
+     "path_len": 2.096894317340497,
+     "goal_clear": 0.08974679340212416,
+     "waypoints": 14
+    },
+    {
+     "target": "basket",
+     "goal": [
+      0.8870938950124625,
+      18.208199038581476
+     ],
+     "yaw": -3.003582285828643,
+     "ok": true,
+     "path_len": 0.7792119648099306,
+     "goal_clear": 0.07280274883751908,
+     "waypoints": 6
+    }
+   ],
+   "policy_done": [
+    "cloth_1"
+   ],
+   "fixed_post_reset_eval": true
+  },
+  {
+   "scene": "/home/cai/dx_bench/benchmarks/dx_bed_v0/scenes/bed03_easy_009.json",
+   "task": "BED-03",
+   "difficulty": "easy",
+   "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+   "steps": 2485,
+   "sim_s": 165.66666666666666,
+   "wall_s": 7008.377534866333,
+   "terminated_by": null,
+   "done": false,
+   "success": false,
+   "score": 0.5,
+   "failure": null,
+   "stages_end": {
+    "in_basket/cloth_0": true,
+    "in_basket/cloth_1": false
+   },
+   "first_reach_step": {
+    "in_basket/cloth_0": 450
+   },
+   "interventions": 0,
+   "safety": {
+    "robot_tilt_max_deg": 0.010855774499418424,
+    "robot_tipped": false
+   },
+   "policy_phase_end": "finished",
+   "policy_plan_log": [
+    {
+     "target": "cloth_0",
+     "goal": [
+      -2.171255005709934,
+      18.23216853940224
+     ],
+     "yaw": 0.5956107604746281,
+     "ok": true,
+     "path_len": 0.6915930171049822,
+     "goal_clear": 0.8475607896591957,
+     "waypoints": 5
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.48226142879043965,
+      19.270229786120115
+     ],
+     "yaw": 6.246610017504233,
+     "ok": true,
+     "path_len": 2.084397302727674,
+     "goal_clear": 0.06963894268179754,
+     "waypoints": 13
+    },
+    {
+     "target": "cloth_1",
+     "goal": [
+      -0.27501413534728647,
+      19.99845827735871
+     ],
+     "yaw": 0.6784264368415207,
+     "ok": false,
+     "path_len": 0.882806432347598,
+     "goal_clear": -1.0,
+     "waypoints": 1
+    },
+    {
+     "target": "basket",
+     "goal": [
+      -0.4822614883950844,
+      19.270229786120115
+     ],
+     "yaw": 6.246610017504233,
+     "ok": true,
+     "path_len": 0.7589183675565411,
+     "goal_clear": 0.069638885534476,
+     "waypoints": 6
+    }
+   ],
+   "policy_done": [
+    "cloth_0",
+    "cloth_1"
+   ]
+  }
+ ],
+ "generated": "2026-10-17 08:59"
+}

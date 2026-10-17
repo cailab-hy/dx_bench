@@ -34,7 +34,9 @@
 | 15–16 | base_v, base_omega | m/s, rad/s | 위와 같음 |
 
 - TCP = `ee_{side}` 프레임 (0, 0, −0.1045) m(닫힌 손가락 박스 중심), 접근축 ee −z.
-- Isaac Lab `DifferentialInverseKinematicsAction` (pose, relative mode, DLS)로 팔 7관절 목표를 만든다.
+- 팔 7관절 목표는 `HomingDiffIKAction`이 만든다. Isaac Lab `DifferentialInverseKinematicsAction`(pose, relative mode, DLS)에 홈 복귀 경로를 더한 것이다.
+  - 행동 벡터 밖의 `request_home()`을 부르면 관절공간에서 READY 자세로 돌아간다(원격조작 H 키, oracle). D-24.
+  - 기록되는 `action.joint_target`과 dx24 행동에는 홈 복귀가 포함된다.
 - 몸통 프리셋 (torso_1, torso_2, torso_3) deg: upright (0, 0, 0), lean (45, −70, 45), crouch (60, −90, 60), deep (90, −130, 90).
 
 ## 관측 (`obs["policy"]`, 항목별 dict)

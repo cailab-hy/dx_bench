@@ -1,0 +1,47 @@
+{
+ "scene_id": "bed02_easy_007",
+ "task": "BED-02",
+ "difficulty": "easy",
+ "seed": 7,
+ "robot": {
+  "xy": [
+   -2.692,
+   19.07
+  ],
+  "yaw": 3.141592653589793,
+  "torso": "upright"
+ },
+ "objects": [
+  {
+   "name": "cloth_0",
+   "kind": "towel",
+   "xyz": [
+    -3.68449427200372,
+    19.149442760193914,
+    0.7300000238418579
+   ],
+   "yaw": 1.681070602892974,
+   "variant": "small",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed02_easy_007_cloth_0.npz"
+  }
+ ],
+ "lighting": {
+  "blinds": "up",
+  "room_lights": "on"
+ },
+ "language": {
+  "high": "Fold the clothes.",
+  "high_alternatives": [
+   "\uc637 \uac1c\uc5b4 \uc918"
+  ],
+  "subtasks": [
+   "pick up a shirt",
+   "flatten the shirt",
+   "align the shirt",
+   "fold the left side",
+   "fold the right side",
+   "fold in half",
+   "place on the stack"
+  ]
+ }
+}

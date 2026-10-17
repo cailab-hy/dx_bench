@@ -59,7 +59,7 @@
   "pass": true,
   "test": "gripper",
   "embodiment": "rby1_ik",
-  "wall_s": 184.04368352890015,
+  "wall_s": 479.34049820899963,
   "physics_dt": 0.004166666666666667,
   "step_dt": 0.06666666666666667
 }

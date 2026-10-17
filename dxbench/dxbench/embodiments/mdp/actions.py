@@ -260,3 +260,67 @@ class TorsoPresetActionCfg(ActionTermCfg):
 def wrap_to_pi(a: torch.Tensor) -> torch.Tensor:
     return (a + math.pi) % (2 * math.pi) - math.pi
 
+
+
+# ------------------------------------------------------------------------------------------ IK with arm homing
+from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg  # noqa: E402
+from isaaclab.envs.mdp.actions.task_space_actions import DifferentialInverseKinematicsAction  # noqa: E402
+
+
+class HomingDiffIKAction(DifferentialInverseKinematicsAction):
+    """Isaac Lab relative DiffIK arm action + a joint-space "home" side channel (not part of the action vector).
+
+    `request_home(env_ids)` makes the arm joint targets move to the default (READY) joint positions at `home_rad_s`
+    (largest joint), overriding the IK output until reached; teleop (home key) and the scripted oracles use it.
+    The relative IK alone cannot always bring the arm back from far configurations (crouched over the basket):
+    it got stuck near joint limits and the next pick failed (stage 3). Recorded joint targets include the homing.
+    """
+
+    cfg: "HomingDiffIKActionCfg"
+
+    def __init__(self, cfg, env):
+        super().__init__(cfg, env)
+        self._homing = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._dt = env.physics_dt
+
+    def request_home(self, env_ids=None):
+        if env_ids is None:
+            self._homing[:] = True
+        else:
+            self._homing[env_ids] = True
+
+    @property
+    def homing(self) -> torch.Tensor:
+        return self._homing
+
+    def apply_actions(self):
+        super().apply_actions()
+        if not self._homing.any():
+            return
+        q = self._asset.data.joint_pos.torch[:, self._joint_ids]
+        q_home = self._asset.data.default_joint_pos.torch[:, self._joint_ids]
+        d = q_home - q
+        span = d.abs().max(dim=-1, keepdim=True).values.clamp(min=1e-6)
+        step = self.cfg.home_rad_s * self._dt * 4.0  # targets lead the joints a little (PD lag)
+        tgt = q + d * (step / span).clamp(max=1.0)
+        done = span.squeeze(-1) < 0.02
+        self._homing &= ~done
+        ids = torch.nonzero(self._homing | done, as_tuple=False).squeeze(-1)
+        if len(ids):
+            # override the IK output for homing envs only
+            cur = self._asset.data.joint_pos_target.torch[:, self._joint_ids].clone()
+            cur[ids] = tgt[ids]
+            self._asset.set_joint_position_target_index(target=cur, joint_ids=self._joint_ids)
+
+    def reset(self, env_ids=None):
+        super().reset(env_ids)
+        if env_ids is None:
+            self._homing[:] = False
+        else:
+            self._homing[env_ids] = False
+
+
+@configclass
+class HomingDiffIKActionCfg(DifferentialInverseKinematicsActionCfg):
+    class_type: type[ActionTerm] = HomingDiffIKAction
+    home_rad_s: float = 0.8

@@ -39,6 +39,11 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - 파일을 python으로 패치할 때 `open(p,'w')` 전에 문자열 치환이 성공했는지 확인(0단계에서 파일이 0바이트가 된 적 있음).
 - Arena: 외부 env 인자 이름이 Arena 인자의 접두어가 되면 argparse가 그쪽으로 매칭한다(`--preset` → `--presets`). 고유한 이름을 쓸 것.
 - 지면을 크게 스케일한 얇은 Cube(40×40×0.1)로 만들면 GPU 접촉이 떨려 RB-Y1이 넘어진다 → `UsdGeom.Plane` 충돌체 사용.
+  **DX CareRoom 바닥 충돌체도 29×47×0.1 m Cube**(`Building/Collision/floor_325`)라, 침실 task는 prestartup에서 이를 끄고 Plane으로 바꾼다(D-22).
+- 이동 로봇 + 천: 바퀴·베이스 ↔ 천(D-18), 손 전체 ↔ 천(D-19) 충돌 필터가 없으면 접촉력이 폭주해 로봇이 튕겨 나간다.
+- RB-Y1은 베이스 원점이 아니라 **바퀴 축 중점(x 0.228)**을 중심으로 돈다. 내비게이션은 축 중점을 제어하고, 제자리 회전 시 뒤쪽이 약 0.5 m 휩쓴다.
+- 오른팔 도달(그리퍼 아래 방향): 서 있으면 z < 0.75 m는 대부분 못 닿음, crouch는 앞 0.55–0.70 m · z 0.45–0.75 m, deep은 바닥(앞 0.47–0.52 m).
+  책상 높이에서 왼쪽 절반(y > 0)은 오른팔로 못 닿음. `tools/rby1_check/reach_check.py`로 확인.
 - 고정 베이스(`fix_root_link`)에선 `body_link_jacobian_w`에 root가 없어서 body 인덱스 −1 (Isaac Lab DiffIK 액션은 처리함).
 - surface deformable: kinematic target 없음. 정점 위치 덮어쓰기는 움직이는 큰 천을 폭주시킴 → 속도 쓰기로 고정(1단계 D-4).
   `DeformableObjectCfg`에 `UsdFileCfg(deformable_props=...)`를 주면 이미 API가 있는 자산(TShirt)에 시뮬 메시가 둘 생김 → props 없이 USD 속성 직접 설정.
@@ -52,5 +57,8 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - Isaac Lab 3.0 AppLauncher엔 `--headless`가 없다(기본이 headless). GUI는 `--visualizer kit`.
 - USD `customLayerData`에 파이썬 list를 넣으면 타입 없는 `color = [..]`로 저장돼 레이어 자체가 안 열린다 → `Gf.Vec3f` 등 타입 값 사용.
   USD 경고가 음소거돼 Isaac Lab은 "Expected 1 prims ... found 0"만 보여 준다 → `Usd.Stage.Open`으로 파일을 직접 열어 확인.
-- `pkill -f <패턴>`은 그 패턴이 들어간 내 bash 명령 자신도 죽인다 → PID로 kill.
+- `pkill -f <패턴>`은 그 패턴이 들어간 내 bash 명령 자신도 죽인다 → `tools/kill_sims.sh` 또는 PID로 kill.
+- Isaac Lab은 종료(terminated/truncated)된 env를 `env.step()` 안에서 바로 리셋한다. 종료 시점의 성공 판정은 `task.last_eval`(종료 검사 때 계산)을 써야 한다. 다시 `evaluate()`하면 리셋된 장면을 평가한다.
+- Arena 기록 HDF5 파일명은 초 단위 타임스탬프 → 같은 초에 시작한 프로세스끼리 파일 잠금 충돌. `ArenaRuntime`이 프로세스별 이름을 준다.
+- AppLauncher에 `--device`(cuda)가 있으니 스크립트 인자로 `--device`를 쓰지 말 것(원격조작은 `--teleop_device`).
 - 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.

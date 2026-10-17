@@ -1,0 +1,70 @@
+{
+ "scene_id": "bed03_easy_008",
+ "task": "BED-03",
+ "difficulty": "easy",
+ "seed": 8,
+ "robot": {
+  "xy": [
+   -2.6,
+   17.7
+  ],
+  "yaw": -0.033377786513270634,
+  "torso": "upright"
+ },
+ "objects": [
+  {
+   "name": "laundry_basket",
+   "kind": "basket",
+   "xyz": [
+    0.18604506485103922,
+    18.312747972766164,
+    0.0
+   ],
+   "yaw": -3.003582271936699,
+   "variant": null,
+   "cloth_state": null
+  },
+  {
+   "name": "cloth_0",
+   "kind": "tshirt",
+   "xyz": [
+    1.2491388045955105,
+    17.571476534845267,
+    0.01
+   ],
+   "yaw": -2.6451730495389243,
+   "variant": "l_gray",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_easy_008_cloth_0.npz"
+  },
+  {
+   "name": "cloth_1",
+   "kind": "towel",
+   "xyz": [
+    -1.3804717825199622,
+    17.083112495833866,
+    0.01
+   ],
+   "yaw": -0.40526507779345966,
+   "variant": "small",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_easy_008_cloth_1.npz"
+  }
+ ],
+ "lighting": {
+  "blinds": "up",
+  "room_lights": "on"
+ },
+ "language": {
+  "high": "Put the clothes in the laundry basket.",
+  "high_alternatives": [
+   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918"
+  ],
+  "subtasks": [
+   "look for clothes",
+   "go to the shirt",
+   "pick up the shirt",
+   "go to the basket",
+   "put it in the basket",
+   "carry the basket to the door"
+  ]
+ }
+}

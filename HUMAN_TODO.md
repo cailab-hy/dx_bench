@@ -17,3 +17,13 @@
 6. **결과물 정리**: 안전 검사 때문에 실험 중간 산출물을 지우지 못했다.
    - 대상: `reports/cloth_spike/runs/*_{dbg,probe*,smoke,pin_*}.json`, `outputs/` 아래 디버그 폴더.
    - 필요 없으면 사람이 지운다.
+7. **RTF 단독 측정**:
+   - 1단계 카메라 포함 RTF는 다른 Kit 작업과 GPU를 같이 쓴 값이다.
+   - 다른 작업이 없을 때 `STAGE=rtf tools/cloth_spike/run_matrix.sh`를 다시 돌려 `config/cloth_params.yaml`의 원격조작 Hz를 확정한다.
+8. **BED-01 / BED-02 oracle** (best-effort, 미완):
+   - BED-02 Easy 오른팔 단독 접기는 실패했다(점수 0.3, flatten만).
+     - 원인: 오른팔은 책상 높이에서 왼쪽 절반(y > 0)에 닿지 않는다(`reports/rby1_check/t5/reach_desk_*.json`).
+     - 필요한 것: 양팔 접기(왼팔이 왼쪽, 오른팔이 오른쪽을 가운데로 접은 뒤 반 접기) 구현, 또는 사람 원격조작 데모.
+   - BED-01 oracle은 만들지 않았다(이불 양 모서리를 두 팔로 잡아 끄는 동작).
+   - 사람 데모(키보드/VR)를 모으는 편이 빠를 수 있다.
+

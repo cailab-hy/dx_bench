@@ -1,0 +1,58 @@
+{
+ "scene_id": "bed01_medium_004",
+ "task": "BED-01",
+ "difficulty": "medium",
+ "seed": 4,
+ "robot": {
+  "xy": [
+   0.5909999904632569,
+   19.9685
+  ],
+  "yaw": 0.0,
+  "torso": "upright"
+ },
+ "objects": [
+  {
+   "name": "duvet",
+   "kind": "duvet",
+   "xyz": [
+    2.0696112211144735,
+    19.973031021125742,
+    0.6800000014901162
+   ],
+   "yaw": 1.9517912913610598,
+   "variant": null,
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed01_medium_004_duvet.npz"
+  },
+  {
+   "name": "pillow",
+   "kind": "pillow",
+   "xyz": [
+    1.8552508071686806,
+    20.476293248017303,
+    0.6100000014901161
+   ],
+   "yaw": -0.07410804937363646,
+   "variant": null,
+   "cloth_state": null
+  }
+ ],
+ "lighting": {
+  "blinds": "up",
+  "room_lights": "on"
+ },
+ "language": {
+  "high": "Make the bed.",
+  "high_alternatives": [
+   "\uce68\ub300 \uc815\ub9ac\ud574 \uc918"
+  ],
+  "subtasks": [
+   "pick up the pillow",
+   "spread the duvet",
+   "grasp the top corners",
+   "pull toward the headboard",
+   "smooth the duvet",
+   "place the pillow"
+  ]
+ }
+}

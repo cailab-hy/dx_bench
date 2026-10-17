@@ -1,0 +1,94 @@
+{
+ "scene_id": "bed03_medium_007",
+ "task": "BED-03",
+ "difficulty": "medium",
+ "seed": 7,
+ "robot": {
+  "xy": [
+   -2.6,
+   17.7
+  ],
+  "yaw": 0.5853577849757949,
+  "torso": "upright"
+ },
+ "objects": [
+  {
+   "name": "laundry_basket",
+   "kind": "basket",
+   "xyz": [
+    -2.3345824224707656,
+    18.64242731294282,
+    0.0
+   ],
+   "yaw": -0.6126212607780666,
+   "variant": null,
+   "cloth_state": null
+  },
+  {
+   "name": "cloth_0",
+   "kind": "tshirt",
+   "xyz": [
+    -0.2622494506489872,
+    19.249585171617156,
+    0.01
+   ],
+   "yaw": -2.5339829114537347,
+   "variant": "l_gray",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_medium_007_cloth_0.npz"
+  },
+  {
+   "name": "cloth_1",
+   "kind": "towel",
+   "xyz": [
+    2.3256062616983284,
+    18.27489856068175,
+    0.01
+   ],
+   "yaw": 2.9394503366364164,
+   "variant": "small",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_medium_007_cloth_1.npz"
+  },
+  {
+   "name": "cloth_2",
+   "kind": "tshirt",
+   "xyz": [
+    -0.7953982223380431,
+    17.491558186245328,
+    0.01
+   ],
+   "yaw": -1.7906824450910368,
+   "variant": "l_gray",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_medium_007_cloth_2.npz"
+  },
+  {
+   "name": "cloth_3",
+   "kind": "tshirt",
+   "xyz": [
+    2.0634472813295774,
+    19.693079713392788,
+    0.5500000014901162
+   ],
+   "yaw": 0.7481540522990089,
+   "variant": "l_gray",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed03_medium_007_cloth_3.npz"
+  }
+ ],
+ "lighting": {
+  "blinds": "up",
+  "room_lights": "on"
+ },
+ "language": {
+  "high": "Put the clothes in the laundry basket.",
+  "high_alternatives": [
+   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918"
+  ],
+  "subtasks": [
+   "look for clothes",
+   "go to the shirt",
+   "pick up the shirt",
+   "go to the basket",
+   "put it in the basket",
+   "carry the basket to the door"
+  ]
+ }
+}

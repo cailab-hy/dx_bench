@@ -1,0 +1,194 @@
+#usda 1.0
+(
+    defaultPrim = "LaundryBasket"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "LaundryBasket" (
+    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+)
+{
+    float physics:mass = 0.8
+
+    def "Looks"
+    {
+        def Material "plastic"
+        {
+            token outputs:surface.connect = </LaundryBasket/Looks/plastic/Shader.outputs:surface>
+
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.55, 0.75, 0.9)
+                float inputs:roughness = 0.7
+                token outputs:surface
+            }
+        }
+
+        def Material "physics" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.51
+            float physics:restitution = 0
+            float physics:staticFriction = 0.6
+        }
+    }
+
+    def Cube "bottom" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.6, 0.44, 0.01)
+        double3 xformOp:translate = (0, 0, 0.005)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_long_s" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.6, 0.01, 0.32)
+        double3 xformOp:translate = (0, -0.215, 0.16)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_short_w_low" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.01, 0.44, 0.24)
+        double3 xformOp:translate = (-0.295, 0, 0.12)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_short_w_postm" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.01, 0.16, 0.08)
+        double3 xformOp:translate = (-0.295, -0.14, 0.28)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_short_w_postp" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.01, 0.16, 0.08)
+        double3 xformOp:translate = (-0.295, 0.14, 0.28)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_short_w_rim" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.01, 0.12, 0.02)
+        double3 xformOp:translate = (-0.295, 0, 0.31)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_long_n" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.6, 0.01, 0.32)
+        double3 xformOp:translate = (0, 0.215, 0.16)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_short_e_low" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.01, 0.44, 0.24)
+        double3 xformOp:translate = (0.295, 0, 0.12)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_short_e_postm" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.01, 0.16, 0.08)
+        double3 xformOp:translate = (0.295, -0.14, 0.28)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_short_e_postp" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.01, 0.16, 0.08)
+        double3 xformOp:translate = (0.295, 0.14, 0.28)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "wall_short_e_rim" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/plastic>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.01, 0.12, 0.02)
+        double3 xformOp:translate = (0.295, 0, 0.31)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+}
+

@@ -62,8 +62,12 @@ class RBY1JointActionsCfg:
     gravity = A.GravityCompensationActionCfg(asset_name="robot")
 
 
-def _ik(side: str) -> DifferentialInverseKinematicsActionCfg:
-    return DifferentialInverseKinematicsActionCfg(
+def _ik(side: str) -> A.HomingDiffIKActionCfg:
+    # request_home() is the joint-space way back to READY (teleop home key, oracles): the relative IK alone got
+    # stuck near joint limits after placing (stage 3). Isaac Lab's null-space joint-limit avoidance
+    # (joint_limit_avoidance_gain) was tried: it only protects the position rows and tilted the gripper (t5 gripper
+    # lift 14.4 -> 10.3 cm), so it stays off.
+    return A.HomingDiffIKActionCfg(
         asset_name="robot", joint_names=[f"{side}_arm_[0-6]"], body_name=f"ee_{side}",
         body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(pos=TCP_OFFSET),
         controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),

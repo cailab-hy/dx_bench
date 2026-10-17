@@ -1,0 +1,95 @@
+{
+ "scene_id": "bed02_hard_001",
+ "task": "BED-02",
+ "difficulty": "hard",
+ "seed": 1,
+ "robot": {
+  "xy": [
+   -2.692,
+   19.07
+  ],
+  "yaw": 3.141592653589793,
+  "torso": "upright"
+ },
+ "objects": [
+  {
+   "name": "cloth_0",
+   "kind": "tshirt",
+   "xyz": [
+    -3.742,
+    18.82,
+    0.775000023841858
+   ],
+   "yaw": 0.023643249400513433,
+   "variant": "l_gray",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_0.npz"
+  },
+  {
+   "name": "cloth_1",
+   "kind": "tshirt",
+   "xyz": [
+    -3.742,
+    18.82,
+    0.835000023841858
+   ],
+   "yaw": 0.9009273926518706,
+   "variant": "m_white",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_1.npz"
+  },
+  {
+   "name": "cloth_2",
+   "kind": "towel",
+   "xyz": [
+    -3.742,
+    18.82,
+    0.895000023841858
+   ],
+   "yaw": -0.7116807745607325,
+   "variant": null,
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_2.npz"
+  },
+  {
+   "name": "cloth_3",
+   "kind": "tshirt",
+   "xyz": [
+    -3.742,
+    18.82,
+    0.9550000238418579
+   ],
+   "yaw": 0.8972988942744877,
+   "variant": "m_white",
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_3.npz"
+  },
+  {
+   "name": "cloth_4",
+   "kind": "towel",
+   "xyz": [
+    -3.742,
+    18.82,
+    1.015000023841858
+   ],
+   "yaw": -0.3763370959790291,
+   "variant": null,
+   "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_4.npz"
+  }
+ ],
+ "lighting": {
+  "blinds": "up",
+  "room_lights": "on"
+ },
+ "language": {
+  "high": "Fold the clothes.",
+  "high_alternatives": [
+   "\uc637 \uac1c\uc5b4 \uc918"
+  ],
+  "subtasks": [
+   "pick up a shirt",
+   "flatten the shirt",
+   "align the shirt",
+   "fold the left side",
+   "fold the right side",
+   "fold in half",
+   "place on the stack"
+  ]
+ }
+}

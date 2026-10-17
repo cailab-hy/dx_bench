@@ -1,0 +1,68 @@
+#usda 1.0
+(
+    defaultPrim = "Doll"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Doll" (
+    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+)
+{
+    float physics:mass = 0.3
+
+    def "Looks"
+    {
+        def Material "fur"
+        {
+            token outputs:surface.connect = </Doll/Looks/fur/Shader.outputs:surface>
+
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.6, 0.42, 0.25)
+                float inputs:roughness = 0.7
+                token outputs:surface
+            }
+        }
+
+        def Material "physics" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.68
+            float physics:restitution = 0
+            float physics:staticFriction = 0.8
+        }
+    }
+
+    def Capsule "body" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        uniform token axis = "Z"
+        double height = 0.08
+        rel material:binding = </Doll/Looks/fur>
+        rel material:binding:physics = </Doll/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double radius = 0.07
+        double3 xformOp:translate = (0, 0, 0.11)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Sphere "head" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </Doll/Looks/fur>
+        rel material:binding:physics = </Doll/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double radius = 0.06
+        double3 xformOp:translate = (0, 0, 0.27)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+}
+

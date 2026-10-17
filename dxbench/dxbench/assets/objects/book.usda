@@ -1,0 +1,54 @@
+#usda 1.0
+(
+    defaultPrim = "Book"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Book" (
+    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+)
+{
+    float physics:mass = 0.5
+
+    def "Looks"
+    {
+        def Material "cover"
+        {
+            token outputs:surface.connect = </Book/Looks/cover/Shader.outputs:surface>
+
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.2, 0.45, 0.3)
+                float inputs:roughness = 0.7
+                token outputs:surface
+            }
+        }
+
+        def Material "physics" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.51
+            float physics:restitution = 0
+            float physics:staticFriction = 0.6
+        }
+    }
+
+    def Cube "block" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </Book/Looks/cover>
+        rel material:binding:physics = </Book/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.23, 0.16, 0.03)
+        double3 xformOp:translate = (0, 0, 0.015)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+}
+

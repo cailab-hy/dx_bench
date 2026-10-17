@@ -36,6 +36,10 @@ class ArenaRuntime:
         parser = get_isaaclab_arena_environments_cli_parser(self.parser)
         self.args, overrides = parser.parse_known_args(self._argv)
         builder = get_arena_builder_from_cli(self.args, hydra_overrides=overrides)
+        # Arena names the recorder HDF5 "<base>_<YYYYmmdd_HHMMSS>_rank0": processes started in the same second
+        # (parallel benchmark / demo collection) collide on its file lock -> one file per process
+        if getattr(builder, "cfg", None) is not None and getattr(builder.cfg, "recorder_dataset_filename", "x") is None:
+            builder.cfg.recorder_dataset_filename = f"arena_dataset_pid{os.getpid()}"
         self.env = builder.make_registered(render_mode=render_mode) if render_mode else builder.make_registered()
         return self.env
 
