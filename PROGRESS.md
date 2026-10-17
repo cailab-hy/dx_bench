@@ -123,6 +123,19 @@ N=21 P=3 STEPS=20000 tools/stage45.sh
   - 11:50 `tools/after_collect.sh`가 수집기 종료를 기다렸다가 `N=21 tools/stage45.sh`를 자동 실행(10002 제외분 보충).
   - ACT·재생 평가 상한을 1500 → 1800 step으로 올림(데모가 1340–1567 step, D-23 수정).
 
-### 5–6단계 (코드 완료)
+### 5–6단계 (코드 완료 시점 기록, 2026-10-17 오전 — 결과는 위 5·6단계 절)
 - 정책 서버·클라이언트·SmolVLA 왕복 확인(`reports/stage5/REPORT.md`).
-- 벤치마크 실행기·집계·보고서: oracle 8/10, hold(zero) 0/10. replay·ACT는 데이터셋이 나온 뒤 실행.
+- 벤치마크 실행기·집계·보고서: oracle 8/10, hold(zero) 0/10. replay·ACT는 데이터셋 뒤에 실행했다(위 6단계 절).
+
+## git log --oneline
+
+```
+b1b2088 final: ACT 100k results, Monday-morning summary in PROGRESS.md
+3160445 stage 6: dx_bed_v0 benchmark - fixed scenes, experiment configs, metrics, auto report, sample results
+3aba493 stage 5: policy server + rby1_lerobot_remote, ACT trained on 24 oracle demos, 10 closed-loop plays on BED-03 Easy
+4b833da stage 4: teleop (keyboard, VR, scripted VR), raw recorder, LeRobot v3 conversion, 24 BED-03 oracle demos
+975e946 stage 3: bedroom tasks BED-01/02/03 - scenes, cloth states, predicates, oracle; BED-03 Easy oracle 8/10
+2831401 stage 2: dxbench package + RB-Y1 embodiments (rby1_joint 24-D / rby1_ik 17-D), regression passes
+8bd0fe8 stage 1: cloth spike - assisted grasp (velocity pins) at 480 Hz passes duvet/sleeve/floor, friction grasp fails
+761b82b stage 0: RB-Y1 USD validation on Isaac Sim 6.1 / Isaac Lab 3.0
+```
