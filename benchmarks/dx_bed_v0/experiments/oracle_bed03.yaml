@@ -1,7 +1,7 @@
 name: oracle_bed03
 policy: dxbench.policies.oracle_bed03.Bed03OraclePolicy
 policy_kw: {}
-env_args: [--embodiment, rby1_ik]
+env_args: [--embodiment, rby1_ik, --assist_radius, "0.025"]   # assisted grasp radius (D-U11)
 tasks: {BED-03: [easy]}
 scenes_dir: benchmarks/dx_bed_v0/scenes
 video: false

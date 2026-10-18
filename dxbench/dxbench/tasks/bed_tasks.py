@@ -325,7 +325,7 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         parser.add_argument("--physics_hz", type=int, default=480)
         parser.add_argument("--untiled_cameras", action="store_true")
         parser.add_argument("--no_assist", action="store_true", help="disable the assisted cloth grasp")
-        parser.add_argument("--assist_radius", type=float, default=0.05)
+        parser.add_argument("--assist_radius", type=float, default=0.025)  # D-U11
         parser.add_argument("--episode_s", type=float, default=None)
 
 

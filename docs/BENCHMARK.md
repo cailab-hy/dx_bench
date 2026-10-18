@@ -36,7 +36,10 @@ The predicates are pure numpy and are tested in `dxbench/tests/test_predicates.p
 - Embodiments `rby1_joint` (24-D, policies) and `rby1_ik` (17-D, teleop and oracles): see `docs/action_space.md`.
 - Control 15 Hz; physics 480 Hz (DECISIONS D-11).
 - Cameras: head plus two wrist cameras, 480 × 640 RGB.
-- **Assisted cloth grasp:** closing the gripper pins the cloth nodes within 5 cm of the TCP to the hand. This differs from the real robot (stage 1 report, D-4/D-5).
+- **Assisted cloth grasp:** closing the gripper pins the cloth nodes within 2.5 cm of the TCP axis to the hand
+  (5 cm until 2026-10-18; D-U11). This is the same scale as the attachment grasps of GarmentLab / GarmentPile
+  (`docs/notes/cloth_grasp_survey.md`) and still differs from the real robot's friction grasp (stage 1 report, D-4/D-5).
+- **Towels** use Young's modulus 1e5 (other cloth 1e6) so a fold stays folded (D-28, `reports/towel_fold/REPORT.md`).
 
 ## Metrics (per task × difficulty)
 

@@ -130,7 +130,7 @@ class ClothGraspAssistActionCfg(ActionTermCfg):
     cloth_names: list[str] = []
     gripper_term: str = "gripper"
     close_threshold: float = 0.5
-    radius: float = 0.05
+    radius: float = 0.025  # D-U11 (2026-10-18): 5 -> 2.5 cm, in line with GarmentLab / GarmentPile attachment (docs/notes/cloth_grasp_survey.md)
     gain: float = 1.0
 
 
@@ -196,7 +196,7 @@ def add_base_cloth_filter(env_cfg, cloth_names: list[str]):
     return env_cfg
 
 
-def add_cloth_assist(env_cfg, cloth_names: list[str], radius: float = 0.05):
+def add_cloth_assist(env_cfg, cloth_names: list[str], radius: float = 0.025):
     """Call from an env_cfg_callback: adds the action term (0-dim) and the prestartup collision filter."""
     env_cfg.actions.cloth_assist = ClothGraspAssistActionCfg(cloth_names=list(cloth_names), radius=radius)
     env_cfg.events.filter_finger_cloth = EventTermCfg(func=filter_finger_cloth_collisions, mode="prestartup",

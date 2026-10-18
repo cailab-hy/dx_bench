@@ -41,23 +41,25 @@ def main():
     for f in sorted((REPO / "outputs" / "bench").glob("*/summary.json")):
         s = json.loads(f.read_text())
         pol = policy_name(f.parent, s)
+        y = f.parent / "experiment.yaml"
+        note = ((yaml.safe_load(y.read_text()) or {}).get("note") or "") if y.exists() else ""
         for g in s["groups"]:
-            rows.append((s["experiment"], pol, g))
+            rows.append((s["experiment"], pol, g, note))
     L = ["# dx_bed_v0 sample results", "",
          f"Generated {time.strftime('%Y-%m-%d %H:%M')} by `python -m dxbench.bench.make_results` from "
          "`outputs/bench/*/summary.json`. Per-episode tables: `outputs/bench/<experiment>/REPORT.md`. "
          "Experiment definitions: `benchmarks/dx_bed_v0/experiments/<experiment>.yaml`.", "",
          "| experiment | policy | task | difficulty | episodes | success | score mean | stage completion "
-         "| stage time (s) | tipped | task failures | errors |",
-         "|---|---|---|---|---|---|---|---|---|---|---|---|"]
-    for exp, pol, g in rows:
+         "| stage time (s) | tipped | task failures | errors | settings |",
+         "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for exp, pol, g, note in rows:
         st = ", ".join(f"{k.split('/')[-1]} {v:.0%}" for k, v in g["stage_rate"].items())
         tt = ", ".join(f"{k.split('/')[-1]} {v:.0f}" for k, v in (g.get("stage_time_s_mean") or {}).items()
                        if v is not None) or "-"
         nf = len(g.get("failures") or [])
         L.append(f"| {exp} | {pol} | {g['task']} | {g['difficulty']} | {g['episodes']} | "
                  f"{g['success']}/{g['episodes']} ({g['success_rate']:.0%}) | {g['score_mean']:.2f} | {st} | {tt} | "
-                 f"{g['tipped']} | {nf} | {g['errors']} |")
+                 f"{g['tipped']} | {nf} | {g['errors']} | {note} |")
     out = REPO / "benchmarks" / "dx_bed_v0" / "RESULTS.md"
     out.write_text("\n".join(L) + "\n")
     print(f"[results] {len(rows)} rows -> {out}")

@@ -44,7 +44,8 @@ def tshirt(name: str, variant: str = "m_blue", xyz=(0.0, 0.0, 0.0), yaw: float =
 
 
 def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, rgb=(0.9, 0.85, 0.6),
-               spacing_m: float = 0.023, iters: int = 16, self_collision: bool = True) -> DeformableObject:
+               spacing_m: float = 0.023, iters: int = 16, self_collision: bool = True,
+               youngs_modulus: float = 1.0e6) -> DeformableObject:
     import math
 
     diag = math.hypot(*size)
@@ -53,15 +54,19 @@ def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.
         deformable_props=sim_utils.DeformableBodyPropertiesCfg(solver_position_iteration_count=iters,
                                                                self_collision=self_collision),
         physics_material=sim_utils.PhysxSurfaceDeformableBodyMaterialCfg(
-            density=120.0, static_friction=0.72, dynamic_friction=0.6, youngs_modulus=1.0e6, poissons_ratio=0.25,
+            density=120.0, static_friction=0.72, dynamic_friction=0.6, youngs_modulus=youngs_modulus, poissons_ratio=0.25,
             surface_thickness=0.0015, bend_damping=0.1, elasticity_damping=0.1),
         collision_props=[PhysxCollisionCfg(contact_offset=0.008, rest_offset=0.002)],
         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=rgb))
     return DeformableObject(name=name, spawner_cfg=cfg, initial_pose=_pose(xyz, yaw))
 
 
+TOWEL_YOUNGS = 1.0e5  # D-28: at 1e6 a folded towel springs back flat after release (1/6); 1e5 keeps it (3/3), strain < 1 %
+
+
 def towel(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, small: bool = False) -> DeformableObject:
-    return rect_cloth(name, (0.5, 0.3) if small else (0.7, 0.45), xyz, yaw, rgb=(0.95, 0.9, 0.7))
+    return rect_cloth(name, (0.5, 0.3) if small else (0.7, 0.45), xyz, yaw, rgb=(0.95, 0.9, 0.7),
+                      youngs_modulus=TOWEL_YOUNGS)
 
 
 def sock(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:

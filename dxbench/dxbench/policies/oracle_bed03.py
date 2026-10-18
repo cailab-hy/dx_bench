@@ -79,6 +79,8 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         self.plan_log: list[dict] = []
         self.last_err = None
         self.retries = 0
+        self.regrasps = 0
+        self.replans = 0
         self.homed_for_place = False
 
     def _set(self, phase, subtask=None):
@@ -362,6 +364,8 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             else:
                 self.target = self.queue.pop(0)
                 self.retries = 0
+                self.regrasps = 0
+                self.replans = 0
                 self.homed_for_place = False
                 self._set("goto_cloth", "go to the shirt")
         if self.phase == "goto_cloth":
@@ -401,7 +405,17 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         elif self.phase == "close":
             grip = 0.0
             if self.t_phase > 12:
-                self._set("lift")
+                # privileged check: did the assisted grasp capture any node (right hand)? if not, open and re-descend
+                got = int(U.action_manager.get_term("cloth_assist").grasped[0, 0])
+                if got == 0 and self.regrasps < 2:
+                    self.regrasps += 1
+                    self.plan_log.append({"target": self.target, "regrasp": self.regrasps})
+                    self._set("reopen")
+                else:
+                    self._set("lift")
+        elif self.phase == "reopen":  # gripper open (default), short pause so the fingers clear, then descend again
+            if self.t_phase > 8:
+                self._set("descend")
         elif self.phase == "lift":
             grip = 0.0
             a[14] = torso_to(0)
@@ -415,6 +429,18 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
                     self.plan_log.append({"target": self.target, "retry_pick": self.retries})
                     U.action_manager.get_term("right_arm").request_home()
                     self._set("crouch", "pick up the shirt")
+                elif float(n[:, 2].max()) < 0.25 and self.replans < 1:
+                    # same spot failed twice (out of reach from here): re-plan the approach from the current pose
+                    self.replans += 1
+                    self.retries = 0
+                    self.regrasps = 0
+                    self.plan_log.append({"target": self.target, "replan_pick": self.replans})
+                    U.action_manager.get_term("right_arm").request_home()
+                    self._set("goto_cloth", "go to the shirt")
+                elif float(n[:, 2].max()) < 0.25:
+                    self.plan_log.append({"target": self.target, "skip": True})  # don't carry an empty hand
+                    U.action_manager.get_term("right_arm").request_home()
+                    self._set("next", "look for clothes")
                 else:
                     self._set("goto_basket", "go to the basket")
         elif self.phase == "goto_basket":

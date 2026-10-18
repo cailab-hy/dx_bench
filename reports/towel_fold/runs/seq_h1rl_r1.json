@@ -1,0 +1,91 @@
+{
+ "tag": "seq_h1rl_r1",
+ "sequence": [
+  "half1",
+  "right",
+  "left"
+ ],
+ "grasp": "mid",
+ "material": {
+  "E": 100000.0,
+  "thickness": 0.0015,
+  "bend": null,
+  "bend_damping": 0.1,
+  "poisson": 0.25,
+  "density": 120.0
+ },
+ "radius": 0.025,
+ "towel": [
+  0.5,
+  0.3
+ ],
+ "hz": 480,
+ "flat_extent": [
+  0.5,
+  0.30000001192092896,
+  0.001999974250793457
+ ],
+ "moves": [
+  {
+   "move": "half1",
+   "grasp_points": 1,
+   "grasped_nodes": 13,
+   "held_extent": [
+    0.41825637221336365,
+    0.25799959897994995,
+    0.09371405839920044
+   ],
+   "after_release_extent": [
+    0.42957109212875366,
+    0.2988986074924469,
+    0.11592847108840942
+   ]
+  },
+  {
+   "move": "right",
+   "grasp_points": 1,
+   "grasped_nodes": 0,
+   "held_extent": [
+    0.42937523126602173,
+    0.2978183925151825,
+    0.11554455757141113
+   ],
+   "after_release_extent": [
+    0.42931273579597473,
+    0.2978016436100006,
+    0.11558938026428223
+   ]
+  },
+  {
+   "move": "left",
+   "grasp_points": 1,
+   "grasped_nodes": 0,
+   "held_extent": [
+    0.42920970916748047,
+    0.29786139726638794,
+    0.11564701795578003
+   ],
+   "after_release_extent": [
+    0.4291149973869324,
+    0.2979159951210022,
+    0.11554300785064697
+   ]
+  }
+ ],
+ "end_extent": [
+  0.4291149973869324,
+  0.2979159951210022,
+  0.11554300785064697
+ ],
+ "predicates_end": {
+  "fold_left": false,
+  "fold_right": false,
+  "fold_half": false,
+  "size_ok": false
+ },
+ "carry_strain_max_mean": [
+  0.767,
+  0.0087
+ ],
+ "finite": true
+}

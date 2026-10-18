@@ -7,22 +7,23 @@ cd "$(dirname "$0")/.."
 N=${N:-20}; P=${P:-3}; RAW=${RAW:-data/raw/bed03_oracle}
 POLICY=${POLICY:-dxbench.policies.oracle_bed03.Bed03OraclePolicy}
 EMB=${EMB:-rby1_ik}
-mkdir -p "$RAW" outputs/demos/logs
+OUTD=${OUTD:-outputs/demos}   # per-scene results + logs (a scene with a result here is skipped)
+mkdir -p "$RAW" "$OUTD/logs"
 saved() { ls -d "$RAW"/episode-* 2>/dev/null | wc -l; }
 one() {
   f=$1; id=$(basename "$f" .json)
   [ "$(saved)" -ge "$N" ] && return
-  [ -f "outputs/demos/$id/result.json" ] && return
+  [ -f "$OUTD/$id/result.json" ] && return
   task=$(python3 -c "import json;print(json.load(open('$f'))['task'][-1])")
   for try in 1 2 3; do
     timeout ${TIMEOUT:-7200} ~/miniforge3/envs/dx_arena/bin/python dxbench/dxbench/scripts/run_episode.py --policy "$POLICY" \
-      --out "outputs/demos/$id" --record "$RAW" --progress_every 150 \
+      --out "$OUTD/$id" --record "$RAW" --progress_every 150 \
       --external_environment_class_path dxbench.tasks.bed_tasks:DxBed0${task}Environment dx_bed0${task} --scene "$f" \
-      --embodiment "$EMB" > "outputs/demos/logs/$id.log" 2>&1
-    grep -q "^\[episode\]" "outputs/demos/logs/$id.log" && { grep "^\[episode\]" "outputs/demos/logs/$id.log"; break; }
-    grep -q "platforminfo\|Segmentation" "outputs/demos/logs/$id.log" || break
+      --embodiment "$EMB" > "$OUTD/logs/$id.log" 2>&1
+    grep -q "^\[episode\]" "$OUTD/logs/$id.log" && { grep "^\[episode\]" "$OUTD/logs/$id.log"; break; }
+    grep -q "platforminfo\|Segmentation" "$OUTD/logs/$id.log" || break
   done
 }
-export -f one saved; export N RAW POLICY EMB TIMEOUT
+export -f one saved; export N RAW POLICY EMB TIMEOUT OUTD
 printf '%s\n' "$@" | xargs -P "$P" -I{} bash -c 'one {}'
 echo "[collect] saved $(saved) episodes in $RAW"
