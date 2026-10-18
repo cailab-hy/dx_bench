@@ -114,9 +114,15 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         n, c, u, v, pu, pv = self._towel(U)
         u0, u1, v0, v1 = float(pu.min()), float(pu.max()), float(pv.min()), float(pv.max())
 
-        def local_top(xy, r=0.04):  # cloth surface height around xy (the global max may be a crumple elsewhere)
+        def local_top(xy, r=0.025):
+            """Cloth surface height under the grasp: 75th percentile of the node heights within the capture radius.
+            The max lifted the TCP onto a crumple (4.6 cm above the desk) so the folded layers below were > 5 cm under
+            the TCP, outside the assist capture window (v10 / v11: 0-4 nodes grasped)."""
             d = np.linalg.norm(n[:, :2] - np.asarray(xy)[:2], axis=1)
-            return float(n[d < r, 2].max()) if (d < r).any() else self.table_z
+            m = d < r
+            if m.sum() < 3:
+                m = d < 2 * r
+            return float(np.percentile(n[m, 2], 75)) if m.any() else self.table_z
 
         def end_v(sign):  # centre (along v) of the strip end on the right (+1) / left (-1)
             m = (pu > u1 - 0.08) if sign > 0 else (pu < u0 + 0.08)
@@ -222,10 +228,12 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 a[off:off + 6], e = self._servo(observation, tb, side, max_dp=mdp)
                 a[gi] = grip
                 errs.append(e)
-                if self.debug and self.t_phase % 15 == 1:
-                    tcp = observation["policy"][f"tcp_{side}"][0, :3].cpu().numpy()
+                if self.debug and (self.t_phase % 15 == 1 or self.phase == "close" and self.t_phase == 2):
+                    tcp7 = observation["policy"][f"tcp_{side}"][0].cpu().numpy()
+                    R = self._h._qmat(tcp7[3:])
+                    tilt = math.degrees(math.acos(np.clip(R[2, 2], -1, 1)))  # TCP z axis vs base z (0 = pointing down)
                     print(f"[bed02dbg] {self.mv['move']} {self.phase} t={self.t_phase} {side} tgt_b={np.round(tb, 3)} "
-                          f"tcp_b={np.round(tcp, 3)} err={e:.3f} s={self.arc_s:.2f}", flush=True)
+                          f"tcp_b={np.round(tcp7[:3], 3)} err={e:.3f} tilt={tilt:.1f}deg s={self.arc_s:.2f}", flush=True)
             err = max(errs)
             self.last_err = err
             st = self.plan_log[-1].setdefault("min_err", {})
