@@ -8,7 +8,7 @@ IsaacLab-Arena 0.3.1, PhysX). Source of the task definitions: "DX Hub 실내 서
 | ID | Instruction | Success | Partial score |
 |---|---|---|---|
 | BED-01 | "Make the bed." / "침대 정리해 줘" | The duvet covers ≥ 90 % of the mattress top. The left/right overhang differs by ≤ 15 cm. The pillow is within 20 cm of the headboard centre. The pillow was moved | pillow cleared 0.1, duvet spread 0.5, even 0.2, pillow placed 0.2. **Fail** if the duvet touches the floor |
-| BED-02 | "Fold the clothes." / "옷 개어 줘" | Garment flattened, 3 folds done, fold bbox ≤ 35 × 30 cm (+2 cm), on the stack spot | flattened 0.3, each fold 0.15, on the stack 0.25 |
+| BED-02 | "Fold the clothes." / "옷 개어 줘" | Garment flattened, 3 folds done, fold bbox ≤ 35 × 30 cm (+2 cm), on the stack spot (desk, 40 cm in from the front edge straight behind the garments, radius 12 cm; D-32) | flattened 0.3, each fold 0.15, on the stack 0.25 |
 | BED-03 | "Put the clothes in the laundry basket." / "방에 있는 옷 정리해 줘" | Every loose garment is inside the basket. No distractor (doll, book) and no folded towel is in it | fraction of garments in the basket − 0.2 per wrong item. **Fail** if the basket tips over (> 45°) |
 
 Subtask labels for each task are in `dxbench/tasks/predicates.py` `TEXT`; the oracle and recorder use them.

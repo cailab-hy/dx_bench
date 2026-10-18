@@ -18,6 +18,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--xs", default="0.45,0.55,0.62,0.70")
 ap.add_argument("--zs", default="0.35,0.45,0.55,0.65,0.75")
 ap.add_argument("--y", type=float, default=-0.20)
+ap.add_argument("--out", default="~/dx_bench/reports/rby1_check/t5/reach_check.json")
 AppLauncher.add_app_launcher_args(ap)
 args = ap.parse_args()
 app = AppLauncher(args).app
@@ -58,7 +59,7 @@ def main():
             for z in [float(v) for v in args.zs.split(",")]:
                 _, ep, er = ik.solve((x, args.y, z), torch.eye(3), q0=q)
                 res[f"{name}|{x}|{z}"] = {"pos_err": float(ep), "rot_err": float(er)}
-    out = os.path.expanduser("~/dx_bench/reports/rby1_check/t5/reach_check.json")
+    out = os.path.expanduser(args.out)
     json.dump(res, open(out, "w"), indent=1)
     zs = [float(v) for v in args.zs.split(",")]
     for name in TORSO_PRESETS:

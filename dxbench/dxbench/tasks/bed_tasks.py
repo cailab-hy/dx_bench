@@ -183,11 +183,15 @@ class Bed02FoldTask(BedTaskBase):
         desk = self.layout["parts_aabb"].get("CareDesk") or self.layout["furniture_aabb"]["CareDesk"]
         self.table_z = float(desk[1][2])
         lo, hi = np.array(desk[0]), np.array(desk[1])
-        # stack spot: 22 cm in from the desk front edge, 30 cm left of the desk centre line as seen from the robot
-        # (robot faces -x from the +x side; its left is -y). Reachable by the right arm from the desk front (the far
-        # corners of the desk are ~1 m from the base) and where the two folds leave the garment (stage 3).
-        cy = 0.5 * float(lo[1] + hi[1])
-        self.stack_xy = (float(hi[0] - 0.22), cy - 0.30)
+        # stack spot (D-32, 2026-10-18): straight behind the garment(s) as seen from the robot - 40 cm in from the desk
+        # front edge (robot faces -x from the +x side), laterally at the garments' mean y. Standing at the desk front in
+        # front of the garment, both hands reach it with the towel held at its two ends (each hand on its own side,
+        # +-12 cm, x 0.55-0.75 m: reports/rby1_check/t5/reach_desk_+-0.12.json), so the folded towel is carried with
+        # both hands. Garments spawn 25 cm in, so a flat towel starts 15 cm from it (radius 12 cm: not on the stack).
+        # Before: 22 cm in, 30 cm left of the desk centre - only the left hand could reach it.
+        ys = [o.xyz[1] for o in spec.objects if o.kind in ("towel", "tshirt")]
+        cy = float(np.mean(ys)) if ys else 0.5 * float(lo[1] + hi[1])
+        self.stack_xy = (float(hi[0] - 0.40), cy)
 
     def evaluate(self, env) -> list[dict]:
         out = []

@@ -10,7 +10,8 @@ reports/towel_fold). The fold order is therefore:
    folding away from the robot left the strip ~0.7 m ahead, out of reach for the side folds),
 3. "fold the right side" / "fold the left side": each hand pinches its end of the folded strip (both layers) and lays
    it 3 cm past the centre line on a 10 cm arc (higher arcs open the half fold again),
-4. "place on the stack": left hand carries the folded towel to the stack spot (desk front, left of centre),
+4. "place on the stack": both hands pinch the folded towel at its two ends and carry it together to the stack spot
+   (40 cm in from the desk front, straight behind the towel - D-32; one central pinch let the half fold open),
 5. arms home, torso upright.
 In the robot-free test this order gave 4/4 side folds and 2/4 all three folds (towel E 1e5, D-28). The towel frame
 comes from a PCA of its nodes. `policy.subtask` follows the BED-02 subtask labels.
@@ -69,6 +70,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         self.last_err = None
         self.arc_s = 0.0
         self.axes = None
+        self.tilt = {"right": 0.0, "left": 0.0}
 
     def _set(self, phase, subtask=None):
         self.phase, self.t_phase = phase, 0
@@ -77,16 +79,20 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
 
     # ------------------------------------------------------------------ helpers
     def _servo(self, obs, target_b, side, kp=0.6, max_dp=0.025):
-        """Relative IK step of one arm towards a base-frame TCP position, gripper pointing down."""
+        """Relative IK step of one arm towards a base-frame TCP position, gripper pointing down (identity orientation
+        in the base frame). A tilt-only variant (yaw free) did not stop the left-wrist flip of v13 (v14), so v12's full
+        orientation is kept."""
         tcp = obs["policy"][f"tcp_{side}"][0].cpu().numpy()
         d = np.asarray(target_b) - tcp[:3]
         dp = np.clip(kp * d, -max_dp, max_dp)
-        Re = np.eye(3) @ self._h._qmat(tcp[3:]).T
+        R = self._h._qmat(tcp[3:])
+        Re = R.T  # identity (gripper pointing down) times R^T
         ang = math.acos(np.clip((np.trace(Re) - 1) / 2, -1, 1))
         dr = np.zeros(3)
         if ang > 1e-4:
             ax = np.array([Re[2, 1] - Re[1, 2], Re[0, 2] - Re[2, 0], Re[1, 0] - Re[0, 1]]) / (2 * math.sin(ang))
             dr = np.clip(ax * ang * kp, -0.08, 0.08)
+        self.tilt[side] = math.degrees(math.acos(np.clip(R[2, 2], -1, 1)))  # TCP z axis vs base z
         return np.r_[dp, dr], float(np.linalg.norm(d))
 
     def _towel(self, U):
@@ -124,8 +130,10 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 m = d < 2 * r
             return float(np.percentile(n[m, 2], 75)) if m.any() else self.table_z
 
-        def end_v(sign):  # centre (along v) of the strip end on the right (+1) / left (-1)
+        def end_v(sign):  # centre (along v) of the strip end on the right (+1) / left (-1), kept near the robot
             m = (pu > u1 - 0.08) if sign > 0 else (pu < u0 + 0.08)
+            # (clamping this towards the near edge put the left target at x 0.55 / y 0.27, next to the body, where
+            # the left arm's relative IK flipped the wrist - v13 / v14)
             return float(pv[m].mean()) if m.any() else 0.0
 
         if move == "half2":   # far long edge (v1) by both corners -> near long edge (v0): the strip ends up close
@@ -138,12 +146,14 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         elif move == "left":
             label, ve = "fold the left side", end_v(-1)
             arms = [("left", c[:2] + u * (u0 + 0.04) + v * ve, c[:2] + u * 0.03 + v * ve)]
-        else:                  # folded towel -> stack spot, left hand
+        else:                  # folded towel -> stack spot with both hands (each on its own end), translated together
             label = "place on the stack"
-            arms = [("left", c[:2], np.asarray(task.stack_xy, dtype=float))]
+            shift = np.asarray(task.stack_xy, dtype=float) - c[:2]
+            ends = [("right", u1 - 0.03, end_v(+1)), ("left", u0 + 0.03, end_v(-1))]
+            arms = [(s_, c[:2] + u * uu + v * ve, c[:2] + u * uu + v * ve + shift) for s_, uu, ve in ends]
         out = []
         for side, pick, put in arms:
-            z_put = (self.table_z + 0.05 if move == "stack" else local_top(put) + 0.012) + GRIP_DZ
+            z_put = local_top(put) + 0.012 + GRIP_DZ
             out.append({"side": side, "pick": np.r_[pick, local_top(pick) + GRIP_DZ], "put": np.r_[put, z_put]})
         return {"move": move, "label": label, "arms": out}
 
@@ -230,15 +240,22 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 errs.append(e)
                 if self.debug and (self.t_phase % 15 == 1 or self.phase == "close" and self.t_phase == 2):
                     tcp7 = observation["policy"][f"tcp_{side}"][0].cpu().numpy()
-                    R = self._h._qmat(tcp7[3:])
-                    tilt = math.degrees(math.acos(np.clip(R[2, 2], -1, 1)))  # TCP z axis vs base z (0 = pointing down)
+                    tilt = self.tilt[side]  # TCP z axis vs base z (0 = pointing down)
                     print(f"[bed02dbg] {self.mv['move']} {self.phase} t={self.t_phase} {side} tgt_b={np.round(tb, 3)} "
                           f"tcp_b={np.round(tcp7[:3], 3)} err={e:.3f} tilt={tilt:.1f}deg s={self.arc_s:.2f}", flush=True)
             err = max(errs)
             self.last_err = err
             st = self.plan_log[-1].setdefault("min_err", {})
             st[self.phase] = round(min(st.get(self.phase, 9.0), err), 4)
-            if self.phase == "above" and (err < 0.015 or self.t_phase > 90):
+            if (self.phase == "above" and self.mv["move"] != "half2" and any(self.tilt[s_] > 60.0 for s_ in targets)
+                    and self.t_phase > 15 and not self.mv.get("recovered")):
+                # a wrist flip: send the flipped arm(s) back to READY once and retry this move from there
+                self.mv["recovered"] = True
+                self.plan_log[-1]["recover_home"] = [s_ for s_ in targets if self.tilt[s_] > 60.0]
+                for s_ in self.plan_log[-1]["recover_home"]:
+                    U.action_manager.get_term(f"{s_}_arm").request_home()
+                self._set("recover")
+            elif self.phase == "above" and (err < 0.015 or self.t_phase > 90):
                 self._set("descend")
             elif self.phase == "descend" and (err < 0.01 or self.t_phase > 60):
                 self._set("close")
@@ -259,6 +276,10 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             homing = [bool(U.action_manager.get_term(f"{arm['side']}_arm").homing[0]) for arm in self.mv["arms"]]
             if (not any(homing) and self.t_phase > 5) or self.t_phase > 200:
                 self._set("plan")
+        elif self.phase == "recover":
+            homing = [bool(U.action_manager.get_term(f"{arm['side']}_arm").homing[0]) for arm in self.mv["arms"]]
+            if (not any(homing) and self.t_phase > 5) or self.t_phase > 200:
+                self._set("above")
         elif self.phase == "retract":
             a[14] = torso_to(0)
             if tidx == 0 and self.t_phase > 60:
