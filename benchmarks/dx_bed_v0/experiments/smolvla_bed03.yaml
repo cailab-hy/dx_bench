@@ -1,0 +1,12 @@
+# SmolVLA (lerobot/smolvla_base) fine-tuned on the BED-03 easy oracle demos v2 (2.5 cm grasp, towel E 1e5)
+name: smolvla_bed03
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8785, open_loop_horizon: 10}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-03: [easy]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend lerobot --checkpoint outputs/train/smolvla_bed03/checkpoints/last/pretrained_model --chunk 10 --port 8785
+video: true   # the policy needs the camera images (also writes the mp4s)
+timeout_s: 7200
+parallel: 2
+max_steps: 1800   # 120 s sim cap (compute; oracle demos took 1340-1567 steps for two garments) - DECISIONS D-23
