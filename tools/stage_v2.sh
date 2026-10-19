@@ -23,7 +23,7 @@ cp $DS/meta/dx_validation.json reports/stage_v2/validation_dx24.json 2>/dev/null
 echo "[v2] train $(date)"
 DATA=$DS OUT=outputs/train/act_bed03_v2 STEPS=100000 SAVE=25000 dxbench_policy/train_act.sh > outputs/logs/train_act_v2.log 2>&1 &
 ACT=$!
-DATA=$DS OUT=outputs/train/smolvla_bed03 STEPS=20000 dxbench_policy/train_smolvla.sh > outputs/logs/train_smolvla.log 2>&1 &
+DATA=$DS OUT=outputs/train/smolvla_bed03 STEPS=20000 SAVE=10000 dxbench_policy/train_smolvla.sh > outputs/logs/train_smolvla.log 2>&1 &
 SVL=$!
 wait $ACT; echo "[v2] act done rc=$? $(date)"
 wait $SVL; echo "[v2] smolvla done rc=$? $(date)"

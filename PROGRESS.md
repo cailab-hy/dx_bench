@@ -1,7 +1,7 @@
 # DX bench — 진행 상황
 
 > 주말 무인 실행(2026-10-16 ~). 단계별 상태는 아래 표, 결정은 `DECISIONS.md`, 사람이 할 일은 `HUMAN_TODO.md`.
-> 마지막 갱신: 2026-10-17 22:45 (1–6단계 모두 완료·커밋, push 없음)
+> 마지막 갱신: 2026-10-19 13:45 (1–6단계 완료 후 사용자 결정 D-U8–D-U11·D-32 반영 중, push 없음)
 
 ## 월요일 아침 요약
 
@@ -48,6 +48,15 @@ N=21 P=3 STEPS=20000 tools/stage45.sh
 
 자세한 것: `README.md`, `docs/PIPELINE.md`, `docs/BENCHMARK.md`, 단계별 `reports/stage*/REPORT.md`. 시뮬 작업 정지는
 `tools/kill_sims.sh`, 정책 서버 정지는 `tools/kill_servers.sh`(같은 명령줄에 `pkill` 패턴을 쓰면 자기 셸이 죽음).
+
+## 주말 이후 (2026-10-18 ~, 사용자 결정 반영)
+
+| 결정 | 한 일 | 상태 |
+|---|---|---|
+| D-U11 보조 잡기 반경 5 → 2.5 cm | Isaac Sim 천 레포 조사(`docs/notes/cloth_grasp_survey.md`), oracle 잡기 확인·재접근·건너뛰기(D-29) | **BED-03 Easy oracle 8/10**(새 조건) |
+| D-U8 BED-02 수건 재질 | 수건 영률 1e5(D-28, `reports/towel_fold/REPORT.md`), 수건 장면 110개 천 상태 재생성, 양손 반 접기(D-30), 쌓는 자리 이동·양손 쌓기(D-32, 사용자 선택 ③) | oracle 최고 0.7에서 **중단**(D-33) → 사람 데모 제안 |
+| D-U9 BED-01 | 사람 원격조작으로 나중에 | — |
+| D-U10 데모 확대 + ACT·SmolVLA 동시 | 학습 장면 100개, 새 조건 oracle 데모 수집(`data/raw/bed03_oracle_v2`) → `tools/stage_v2.sh`(변환 → ACT 100k + SmolVLA 20k 동시 학습 → 각 10회 평가) | 수집 중(78 + 남은 16장면). 10-19 오전 정전 → 무결성 검사 후 재개 |
 
 ## 상태 요약
 
