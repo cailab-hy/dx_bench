@@ -1,7 +1,7 @@
 # DX bench — 진행 상황
 
 > 주말 무인 실행(2026-10-16 ~). 단계별 상태는 아래 표, 결정은 `DECISIONS.md`, 사람이 할 일은 `HUMAN_TODO.md`.
-> 마지막 갱신: 2026-10-19 13:45 (1–6단계 완료 후 사용자 결정 D-U8–D-U11·D-32 반영 중, push 없음)
+> 마지막 갱신: 2026-10-20 02:45 (사용자 결정 D-U8–D-U11·D-32 반영, v2 ACT·SmolVLA 평가 완료, push 없음)
 
 ## 월요일 아침 요약
 
@@ -56,7 +56,7 @@ N=21 P=3 STEPS=20000 tools/stage45.sh
 | D-U11 보조 잡기 반경 5 → 2.5 cm | Isaac Sim 천 레포 조사(`docs/notes/cloth_grasp_survey.md`), oracle 잡기 확인·재접근·건너뛰기(D-29) | **BED-03 Easy oracle 8/10**(새 조건) |
 | D-U8 BED-02 수건 재질 | 수건 영률 1e5(D-28, `reports/towel_fold/REPORT.md`), 수건 장면 110개 천 상태 재생성, 양손 반 접기(D-30), 쌓는 자리 이동·양손 쌓기(D-32, 사용자 선택 ③) | oracle 최고 0.7에서 **중단**(D-33) → 사람 데모 제안 |
 | D-U9 BED-01 | 사람 원격조작으로 나중에 | — |
-| D-U10 데모 확대 + ACT·SmolVLA 동시 | 학습 장면 100개, 새 조건 oracle 데모 수집(`data/raw/bed03_oracle_v2`) → `tools/stage_v2.sh`(변환 → ACT 100k + SmolVLA 20k 동시 학습 → 각 10회 평가) | 수집 중(78 + 남은 16장면). 10-19 오전 정전 → 무결성 검사 후 재개 |
+| D-U10 데모 확대 + ACT·SmolVLA 동시 | 학습 장면 100개, 새 조건 oracle 데모 92개(`data/raw/bed03_oracle_v2`) → ACT 100k + SmolVLA 20k 동시 학습 → 평가 | **ACT 0/10, SmolVLA 0/10**(학습 장면에서도 0/3). 팔·몸통은 v1보다 2–4배 정확해졌지만 베이스 이동을 못 배움 → `reports/stage_v2/REPORT.md` |
 
 ## 상태 요약
 

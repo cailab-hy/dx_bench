@@ -1,0 +1,13 @@
+# diagnostic (2026-10-20): same policy on training scenes, to separate garment OOD from a policy that cannot do the task
+# ACT 100k steps on the BED-03 easy oracle demos v2 (2.5 cm grasp, towel E 1e5, D-U10)
+name: act_bed03_v2_train
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8787, open_loop_horizon: 8}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-03: [easy]}
+scenes_dir: data/scenes_train   # diagnostic: training scenes (garments seen in the demos)
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend lerobot --checkpoint outputs/train/act_bed03_v2/checkpoints/last/pretrained_model --chunk 8 --port 8787
+video: true   # ACT needs the camera images (also writes the mp4s)
+timeout_s: 7200
+parallel: 3
+max_steps: 1800   # 120 s sim cap (compute; oracle demos took 1340-1567 steps for two garments) - DECISIONS D-23
