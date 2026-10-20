@@ -29,8 +29,11 @@ AXLE_X = 0.228     # drive-wheel axle ahead of the base origin (the base turns a
 
 @dataclass
 class Bed03OraclePolicyCfg(PolicyCfg):
-    pick_ahead_m: float = 0.18       # garment ahead of the base front when picking (deep posture: fingertip 1.3 cm
-                                     # above the floor at 0.15-0.20 m, 4 cm at 0.30 m - out of the 5 cm assist radius)
+    pick_ahead_m: float = 0.12       # garment ahead of the base front when picking. The pad assist (D-34) needs the
+                                     # fingertips within 4 mm of the cloth; the deep posture only reaches TCP z 2.9-3.4
+                                     # cm (tips on the floor) at x <= 0.50 m from the base origin
+                                     # (reports/rby1_check/t5/reach_floor_pinch.json): 0.18 (x 0.50) stopped 4-8 mm
+                                     # above the cloth (0/10 grasps), 0.12 (x 0.44) caught 5-14 nodes (2026-10-21)
     place_ahead_m: float = 0.35      # basket centre ahead of the base front when placing (0.30: a rotated basket's
                                      # near corner can touch the base front; crouch still reaches 0.67 m)
     place_tcp_z: float = 0.50        # release height (TCP); crouch reaches x 0.55-0.70 m at z 0.45-0.75 m. The
@@ -125,7 +128,8 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         wheels / base do not collide with cloth (D-18)."""
         obs = []
         b = (_T(U.scene["laundry_basket"].data.root_link_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
-        obs.append((b[:2], 0.38))  # 60 x 44 cm basket: half diagonal 0.37 m
+        hl, hs = self._basket_half()
+        obs.append((b[:2], math.hypot(hl, hs) + 0.01))  # basket half diagonal (60 x 44: 0.37 m, real 49 x 36: 0.30 m)
         for n in ("doll", "book"):
             if n in U.scene.rigid_objects.keys():
                 p = (_T(U.scene[n].data.root_link_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
@@ -253,6 +257,20 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             return (v, w), False
         return self._nav(U, path[0], goal_yaw)
 
+    def _rim_extra(self):
+        """Release / press heights were tuned for the 32 cm rim; the real basket (D-36) is 40 cm high: +5 / +2 cm
+        (release 0.55, press 0.42 m; crouch reaches z 0.45-0.75 m)."""
+        return 0.05 if self._basket_half() == (0.245, 0.18) else 0.0
+
+    @staticmethod
+    def _basket_half():
+        """Outer (long, short) half extents at the rim: the real gray basket (D-36) 49 x 36 cm, else 60 x 44 cm."""
+        from dxbench.tasks import bed_tasks
+
+        spec = getattr(bed_tasks.CURRENT_TASK, "spec", None)
+        v = next((o.variant for o in spec.objects if o.kind == "basket"), None) if spec else None
+        return (0.245, 0.18) if v == "gray" else (0.30, 0.22)
+
     def _plan_approach_basket(self, U, b_xy):
         """Approach the basket facing one of its sides (long sides first), so its near wall is a known distance from
         the base front: basket centre at BASE_FRONT_X + half extent + 6 cm ahead, under the right hand."""
@@ -267,8 +285,9 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         G = self._grid(obs, self.layout)
         p, yaw0 = self._base(U)
         best, best_key = None, None
-        # basket frame: x = long side (0.60), y = short side (0.44). Facing a long side = approaching along +-y.
-        for k, half in ((1, 0.22), (3, 0.22), (0, 0.30), (2, 0.30)):
+        # basket frame: x = long side, y = short side. Facing a long side = approaching along +-y.
+        hl, hs = self._basket_half()
+        for k, half in ((1, hs), (3, hs), (0, hl), (2, hl)):
             yaw = byaw + k * math.pi / 2
             ahead = BASE_FRONT_X + half + 0.06
             cy, sy = math.cos(yaw), math.sin(yaw)
@@ -279,7 +298,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             if path is None:
                 continue
             length = sum(float(np.linalg.norm(path[i + 1] - path[i])) for i in range(len(path) - 1))
-            key = length + 0.25 * abs(wrap(yaw - yaw0)) + (0.0 if half < 0.25 else 0.5)
+            key = length + 0.25 * abs(wrap(yaw - yaw0)) + (0.0 if half == hs else 0.5)
             if best_key is None or key < best_key:
                 best, best_key = (goal, yaw, True, length, float(G["clear"][self._cell(G, goal)]), path), key
         if best is None:
@@ -407,16 +426,26 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             c, n = self._cloth_xyz(U, self.target)
             near = n[np.argsort(np.linalg.norm(n[:, :2] - c[:2], axis=1))[:30]]
             top = float(near[:, 2].max())
-            tb = self._to_base(U, [c[0], c[1], top + pinch_dz(U)])
+            pad = pinch_dz(U) < 0.031
+            # pad assist (D-34): the fingertips must end within 4 mm of the cloth, but the deep floor posture tracks to
+            # ~1 cm - aim 5 mm lower (the floor stops the fingers) and close on a tighter error or the timeout
+            tb = self._to_base(U, [c[0], c[1], top + pinch_dz(U) - (0.005 if pad else 0.0)])
             a[0:6], err = self._servo(observation, tb, max_dp=0.012)
             self.last_err = err
-            if err < 0.012 or self.t_phase > 90:
+            if err < (0.006 if pad else 0.012) or self.t_phase > 90:
                 self._set("close")
         elif self.phase == "close":
             grip = 0.0
             if self.t_phase > 12:
                 # privileged check: did the assisted grasp capture any node (right hand)? if not, open and re-descend
-                got = int(U.action_manager.get_term("cloth_assist").grasped[0, 0])
+                term_ca = U.action_manager.get_term("cloth_assist")
+                got = int(term_ca.grasped[0, 0])
+                diag = getattr(term_ca, "last_capture", {}).get((0, 0))
+                tcp_z = float(self._tcp_b(observation)[2])
+                self.plan_log.append({"target": self.target, "close": {"nodes": got, "diag": diag, "err": self.last_err,
+                                                                      "tcp_z_base": tcp_z}})
+                print(f"[bed03dbg] close target={self.target} nodes={got} err={self.last_err:.4f} tcp_z_b={tcp_z:.3f} "
+                      f"diag={diag}", flush=True)
                 if got == 0 and self.regrasps < 2:
                     self.regrasps += 1
                     self.plan_log.append({"target": self.target, "regrasp": self.regrasps})
@@ -485,7 +514,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         elif self.phase == "lower_basket":
             grip = 0.0
             b = (_T(U.scene["laundry_basket"].data.root_link_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
-            tb = self._to_base(U, [b[0], b[1], self.cfg.place_tcp_z])
+            tb = self._to_base(U, [b[0], b[1], self.cfg.place_tcp_z + self._rim_extra()])
             a[0:6], err = self._servo(observation, tb, max_dp=0.012)
             self.last_err = err
             if err < 0.015 or self.t_phase > 60:
@@ -499,7 +528,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             # a dropped wad can bridge the rim: push it down once with the open hand, then lift out
             b = (_T(U.scene["laundry_basket"].data.root_link_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
             down = self.t_phase <= 30
-            tb = self._to_base(U, [b[0], b[1], self.cfg.press_tcp_z if down else self.cfg.place_above_z])
+            tb = self._to_base(U, [b[0], b[1], self.cfg.press_tcp_z + self._rim_extra() if down else self.cfg.place_above_z])
             a[0:6], err = self._servo(observation, tb, max_dp=0.015)
             if self.t_phase > 60:
                 self._set("retract", "look for clothes")

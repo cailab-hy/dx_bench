@@ -16,6 +16,11 @@ Here a hand only grasps what a real parallel gripper could pinch:
       v = gain * (target - x) / dt + target velocity
   and opening the command releases them.
 
+* support ring (heavy cloth only, `support_cloths`): a few nodes caught between the pads cannot carry a duvet
+  (1.5 x 1.4 m: 2-5 nodes drifted 2-4 cm out of the pads and shook, 2026-10-21). Nodes within `support_r` of the pad
+  centre in the pad height band are also held, at their own offset and `support_gain` - load sharing without letting
+  cloth hang below the fingers (duvet: 5 cm / 1.0 -> 1.0 cm mean, 2.8 cm max out of the pads, stable).
+
 The hand <-> cloth collision must be filtered (fingers pass through the pinched layers, as in LeIsaac's PBD cloth);
 use `filter_hand_cloth_collisions` as a prestartup event.
 """
@@ -126,7 +131,14 @@ class PadGraspAction(ActionTerm):
                 if len(ids) >= c.min_nodes:
                     self._pins[(e, h, name)] = {"ids": ids, "loc0": loc[ids].clone(), "t": 0, "prev": None,
                                                 "tip_to_cloth": diag.get(f"{name}_tip_to_cloth"),
-                                                "out_max": 0.0, "out_sum": 0.0, "out_n": 0}
+                                                "out_max": 0.0, "out_sum": 0.0, "out_n": 0, "sup": None}
+                    if name in c.support_cloths and c.support_r > 0:
+                        sm = ((loc[:, :2].norm(dim=-1) <= c.support_r) & (loc[:, 2] >= -hs.pad_h)
+                              & (loc[:, 2] <= c.tip_margin) & ~m)
+                        sid = torch.nonzero(sm).flatten()
+                        if len(sid):
+                            self._pins[(e, h, name)]["sup"] = {"ids": sid, "loc0": loc[sid].clone(), "prev": None}
+                        diag["support_nodes"] = int(len(sid))
                     self.grasped[e, h] += len(ids)
                     diag["n"] += len(ids)
             self.last_capture[(e, h)] = diag
@@ -167,6 +179,12 @@ class PadGraspAction(ActionTerm):
                 v_ff = (tgt - pin["prev"]) / self._dt if pin["prev"] is not None else torch.zeros_like(tgt)
                 pin["prev"] = tgt.clone()
                 vel[e, pin["ids"]] = c.gain * (tgt - pos[e, pin["ids"]]) / self._dt + v_ff
+                sup = pin["sup"]
+                if sup is not None:  # support ring: own offset in the grip frame, softer gain
+                    st_ = o[e, h] + sup["loc0"] @ G[e, h].T
+                    sv = (st_ - sup["prev"]) / self._dt if sup["prev"] is not None else torch.zeros_like(st_)
+                    sup["prev"] = st_.clone()
+                    vel[e, sup["ids"]] = c.support_gain * (st_ - pos[e, sup["ids"]]) / self._dt + sv
             obj.write_nodal_velocity_to_sim_index(vel)
 
     def _record(self, e, h, name, pin):
@@ -208,6 +226,9 @@ class PadGraspActionCfg(ActionTermCfg):
     snap_s: float = 0.2
     squeeze: float = 0.0  # fraction of the closing-direction spread removed (see module docstring)
     capture_c: float | None = None  # only catch nodes within this distance of the closing midplane (None: whole gap)
+    support_cloths: list[str] = []  # heavy cloths (duvet) that also get the support ring
+    support_r: float = 0.05
+    support_gain: float = 1.0
     gain: float = 1.0
 
 
@@ -234,7 +255,7 @@ RBY1_HANDS = [HandSpec(body=f"ee_{side}", tip_offset=(0.0, 0.0, -0.1355),
 
 
 def add_pad_grasp(env_cfg, cloth_names: list[str], squeeze: float = 0.0, tip_margin: float = 0.004,
-                  capture_c: float | None = 0.025):  # D-35
+                  capture_c: float | None = 0.025, support_cloths: list[str] | None = None):  # D-35, D-37
     """Call from an env_cfg_callback (RB-Y1): registers the term as `cloth_assist` (oracles read `.grasped` there)
     plus the hand/cloth prestartup filter of `cloth_assist` (D-19 links)."""
     from isaaclab.managers import EventTermCfg
@@ -243,7 +264,8 @@ def add_pad_grasp(env_cfg, cloth_names: list[str], squeeze: float = 0.0, tip_mar
 
     env_cfg.actions.cloth_assist = PadGraspActionCfg(cloth_names=list(cloth_names), gripper_term="gripper",
                                                      hands=RBY1_HANDS, squeeze=squeeze, tip_margin=tip_margin,
-                                                     snap_s=0.5 if squeeze > 0 else 0.2, capture_c=capture_c)
+                                                     snap_s=0.5 if squeeze > 0 else 0.2, capture_c=capture_c,
+                                                     support_cloths=list(support_cloths or []))
     env_cfg.events.filter_finger_cloth = EventTermCfg(func=filter_finger_cloth_collisions, mode="prestartup",
                                                       params={"cloth_names": list(cloth_names)})
     return env_cfg

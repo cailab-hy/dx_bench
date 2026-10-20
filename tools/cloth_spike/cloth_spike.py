@@ -30,7 +30,9 @@ from isaaclab.app import AppLauncher
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--test", required=True, choices=["duvet", "sleeve", "floor"])
-ap.add_argument("--grip", default="friction", choices=["friction", "assist"])
+ap.add_argument("--grip", default="friction", choices=["friction", "assist", "pad"],
+                help="pad: the BED-task pad-box grasp (D-34/35): fingertips onto the cloth, only cloth between the "
+                     "pads (+-2.5 cm, <= 4 mm beyond the tips) captured when closing, pulled into the pads")
 ap.add_argument("--dt", type=int, default=240, help="physics Hz")
 ap.add_argument("--duration", type=float, default=60.0)
 ap.add_argument("--cameras", action="store_true", help="render the 3 robot cameras at 15 Hz (+ observer snapshots)")
@@ -45,12 +47,18 @@ ap.add_argument("--pin_mode", default="velocity", choices=["position", "velocity
                 help="velocity (default, stable) | position (blows up large moving cloth, kept for the record)")
 ap.add_argument("--assist_filter", type=int, default=1, help="assist: filter right-finger/cloth collisions")
 ap.add_argument("--pin_gain", type=float, default=1.0, help="assist: fraction of the position error removed per step")
+ap.add_argument("--pad_capture_c", type=float, default=0.025, help="pad: capture half width along the closing axis")
+ap.add_argument("--pad_support_r", type=float, default=0.0,
+                help="pad: also hold nodes within this radius of the pad centre, in the pad height band (load sharing)")
+ap.add_argument("--pad_support_gain", type=float, default=0.5)
 ap.add_argument("--tag", default="")
 AppLauncher.add_app_launcher_args(ap)
 args = ap.parse_args()
 if args.cameras:
     args.enable_cameras = True
 app = AppLauncher(args).app
+# TCP height above the cloth top at the grasp: fingertips (TCP - 3.1 cm) 2 mm above it, or 2 mm into it for pad mode
+GRIP_DZ = 0.031 - 0.002 if args.grip == "pad" else 0.033
 
 import json  # noqa: E402
 import math  # noqa: E402
@@ -267,6 +275,7 @@ class Bot:
         self.f = {n: self.idx[f"gripper_finger_{n}"] for n in ("r1", "r2", "l1", "l2")}
         self.t = 0.0
         self.pins = None  # (node ids, offsets in TCP frame)
+        self.pad = None   # pad mode: {"ids", "loc0" (grip frame w, c, a), "t", "prev", "out_max", ...}
         self.tcp_off = torch.tensor([TCP_OFF], device=DEV)
         self.steps = 0
         self.wall = 0.0
@@ -300,6 +309,8 @@ class Bot:
             self.r.set_joint_effort_target_index(target=ff)
             if self.pins is not None:
                 self._apply_pins()
+            if self.pad is not None:
+                self._apply_pad()
             self.scene.write_data_to_sim()
             self.sim.step(render=args.cameras and self.steps % max(1, args.dt // CTRL_HZ) == 0)
             self.scene.update(DT)
@@ -330,6 +341,71 @@ class Bot:
             vel[0, ids] = v
             self.cloth.write_nodal_pos_to_sim_index(pos)
         self.cloth.write_nodal_velocity_to_sim_index(vel)
+
+    # ---- pad mode (same rules as dxbench/embodiments/mdp/pad_grasp.py, right hand)
+    PAD_W, PAD_H, TIP_MARGIN, CAPTURE_C, INSET, SNAP_S = 0.032, 0.02, 0.004, 0.025, 0.002, 0.2
+
+    def grip_frame(self):
+        p, q = self.ee()
+        R = quat_to_mat(q[0])
+        o = p[0] + R @ torch.tensor([0.0, 0.0, -0.1355], device=DEV)
+        G = torch.stack([R[:, 1], R[:, 0], -R[:, 2]], dim=1)  # columns w, c, a
+        return o, G
+
+    def pad_capture(self):
+        o, G = self.grip_frame()
+        q = T(self.r.data.joint_pos)[0]
+        half = float((q[self.f["r1"]].abs() + q[self.f["r2"]].abs()) / 2)
+        loc = (self.nodes() - o) @ G
+        fm = (loc[:, 0].abs() <= self.PAD_W / 2 + 0.002) & (loc[:, 1].abs() <= min(half + 0.002, args.pad_capture_c))
+        m = fm & (loc[:, 2] >= -self.PAD_H) & (loc[:, 2] <= self.TIP_MARGIN)
+        under = fm & (loc[:, 2] >= -self.PAD_H)
+        ids = torch.nonzero(m).flatten()
+        info = {"half_gap": half, "tip_to_cloth": float(loc[under, 2].min()) if under.any() else None,
+                "nodes": int(len(ids))}
+        if len(ids):
+            self.pad = {"ids": ids, "loc0": loc[ids].clone(), "t": 0, "prev": None, "out_max": 0.0, "out_sum": 0.0,
+                        "out_n": 0, "sup": None}
+            if args.pad_support_r > 0:
+                sm = ((loc[:, :2].norm(dim=-1) <= args.pad_support_r) & (loc[:, 2] >= -self.PAD_H)
+                      & (loc[:, 2] <= self.TIP_MARGIN) & ~m)
+                sid = torch.nonzero(sm).flatten()
+                if len(sid):
+                    self.pad["sup"] = (sid, loc[sid].clone())
+                info["support_nodes"] = int(len(sid))
+        return info
+
+    def _apply_pad(self):
+        P_ = self.pad
+        o, G = self.grip_frame()
+        loc0 = P_["loc0"]
+        wl = self.PAD_W / 2 - self.INSET
+        goal = torch.stack([loc0[:, 0].clamp(-wl, wl), loc0[:, 1],
+                            loc0[:, 2].clamp(-self.PAD_H + self.INSET, -self.INSET)], -1)
+        P_["t"] += 1
+        s = min(1.0, P_["t"] / max(1, round(self.SNAP_S / DT)))
+        s = s * s * (3 - 2 * s)
+        tl = loc0 + s * (goal - loc0)
+        tgt = o + tl @ G.T
+        v = (tgt - P_["prev"]) / DT if P_["prev"] is not None else torch.zeros_like(tgt)
+        P_["prev"] = tgt.clone()
+        pos = T(self.cloth.data.nodal_pos_w)
+        vel = T(self.cloth.data.nodal_vel_w).clone()
+        vel[0, P_["ids"]] = (tgt - pos[0, P_["ids"]]) / DT + v
+        if P_["sup"] is not None:  # support ring: keep its offset in the grip frame, softer gain
+            sid, sl0 = P_["sup"]
+            st_ = o + sl0 @ G.T
+            sv = (st_ - P_["sprev"]) / DT if P_.get("sprev") is not None else torch.zeros_like(st_)
+            P_["sprev"] = st_.clone()
+            vel[0, sid] = args.pad_support_gain * (st_ - pos[0, sid]) / DT + sv
+        self.cloth.write_nodal_velocity_to_sim_index(vel)
+        if s >= 1.0:
+            cur = (pos[0, P_["ids"]] - o) @ G
+            out = torch.stack([cur[:, 0].abs() - self.PAD_W / 2, cur[:, 1].abs() - loc0[:, 1].abs(), cur[:, 2],
+                               -self.PAD_H - cur[:, 2]], -1).clamp(min=0.0).amax(-1)
+            P_["out_max"] = max(P_["out_max"], float(out.max()))
+            P_["out_sum"] += float(out.mean())
+            P_["out_n"] += 1
 
     def grasp_region(self, r):
         """Nodes inside the finger region: within r of the TCP approach axis, between 5 cm below and
@@ -442,7 +518,7 @@ def main():
         ci = int(torch.argmin(nodes0[:, 0] + nodes0[:, 1]))  # near-right corner
         corner = nodes0[ci]
         sel = (nodes0[:, :2] - corner[:2]).norm(dim=-1) < 0.06
-        g = (float(corner[0]) + 0.03, float(corner[1]) + 0.03, float(nodes0[sel, 2].max()) + 0.033)
+        g = (float(corner[0]) + 0.03, float(corner[1]) + 0.03, float(nodes0[sel, 2].max()) + GRIP_DZ)
         approach = [(g[0], g[1], g[2] + 0.12), g]
         carry = [(g[0] - 0.1 * k, g[1], g[2] + 0.4 / 3 * k) for k in (1, 2, 3)]
         target_ids = torch.nonzero(sel).flatten()
@@ -458,7 +534,7 @@ def main():
         tip = nodes0[sel].mean(dim=0)
         surf = float(nodes0[sel, 2].max())
         # fingertips (TCP - 0.031 m along the approach axis) 2 mm above the cloth surface
-        g = (float(tip[0]), float(tip[1]) + (0.03 if args.test == "sleeve" else 0.0), surf + 0.033)
+        g = (float(tip[0]), float(tip[1]) + (0.03 if args.test == "sleeve" else 0.0), surf + GRIP_DZ)
         approach = [(g[0], g[1], g[2] + 0.12), g]
         if args.test == "sleeve":
             cy = float(nodes0[:, 1].mean())
@@ -500,6 +576,8 @@ def main():
     p_tcp, _ = bot.tcp()
     info["tcp_at_grasp"] = p_tcp[0].tolist()
     info["tcp_grasp_err_m"] = float((p_tcp[0] - torch.tensor(approach[-1], device=DEV)).norm())
+    if args.grip == "pad":  # capture on the close command, with the fingers still open (pad_grasp)
+        info["pad_capture"] = bot.pad_capture()
     bot.grip(0.0)
     bot.step(int(LAY["hold_close"] / DT))
     q = T(bot.r.data.joint_pos)[0]
@@ -554,6 +632,10 @@ def main():
         info["body_centre_y"] = float(nodes0[:, 1].mean())
         bot.grip(0.05)
         bot.pins = None
+        if bot.pad is not None:
+            info["pad_out_max_m"] = bot.pad["out_max"]
+            info["pad_out_mean_m"] = bot.pad["out_sum"] / max(1, bot.pad["out_n"])
+        bot.pad = None
         bot.step(int(1.5 / DT))
         info["sleeve_end_y_after_release"] = float(bot.nodes()[target_ids, 1].mean())
         snap("release")
@@ -578,12 +660,20 @@ def main():
                  "rtf": bot.t / bot.wall if bot.wall else None, "snapshots": snaps})
     stable = finite and vmax < 5.0 and ext < 5.0
     held = info["drift_mean_m"] <= 0.02
+    if args.grip == "pad":  # pinned nodes stay in the pad box (out of the box: mean <= 5 mm)
+        if bot.pad is not None:
+            info["pad_out_max_m"] = bot.pad["out_max"]
+            info["pad_out_mean_m"] = bot.pad["out_sum"] / max(1, bot.pad["out_n"])
+        held = info["pad_capture"]["nodes"] > 0 and info.get("pad_out_mean_m", 1.0) <= 0.005
     res = {"run": RUN, "args": vars(args), "info": info,
            "criteria": {"grasp_hold(mean drift<=2cm)": held, "stable_60s": stable,
                         "rtf>=0.5": (info["rtf"] or 0) >= 0.5},
            "wall_total_s": time.time() - t_start}
     res["pass"] = held and stable
     (OUT / "runs" / f"{RUN}.json").write_text(json.dumps(res, indent=2))
+    if args.grip == "pad":
+        print(f"[cloth] pad capture={info['pad_capture']} out_mean={info.get('pad_out_mean_m')} "
+              f"out_max={info.get('pad_out_max_m')} target_travel={info.get('target_nodes_travel_m')}")
     print(f"[cloth] {RUN}: pass={res['pass']} drift_mean={info['drift_mean_m']:.4f} max={info['drift_max_m']:.4f} "
           f"stable={stable} rtf={info['rtf']:.2f} nodes={info['num_nodes']} ik={info['ik_err_max_m']:.4f}")
 

@@ -21,7 +21,7 @@
     0.0
    ],
    "yaw": 1.3860916137921446,
-   "variant": null,
+   "variant": "gray",
    "cloth_state": null
   },
   {
@@ -33,7 +33,7 @@
     0.01
    ],
    "yaw": -3.049440169561344,
-   "variant": "l_gray",
+   "variant": "m95_green",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_medium_009_cloth_0.npz"
   },
   {
@@ -45,7 +45,7 @@
     0.01
    ],
    "yaw": -0.7714507256984091,
-   "variant": "small",
+   "variant": "10_lavender",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_medium_009_cloth_1.npz"
   },
   {
@@ -57,7 +57,7 @@
     0.01
    ],
    "yaw": -2.7981292357114844,
-   "variant": "l_gray",
+   "variant": "m95_green",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_medium_009_cloth_2.npz"
   },
   {
@@ -69,7 +69,7 @@
     0.5500000014901162
    ],
    "yaw": 0.2050900502669739,
-   "variant": "l_gray",
+   "variant": "m95_green",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_medium_009_cloth_3.npz"
   }
  ],

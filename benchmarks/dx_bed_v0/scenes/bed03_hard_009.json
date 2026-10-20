@@ -21,7 +21,7 @@
     0.0
    ],
    "yaw": 0.37091260419684025,
-   "variant": null,
+   "variant": "gray",
    "cloth_state": null
   },
   {
@@ -33,7 +33,7 @@
     0.01
    ],
    "yaw": 0.10714920344306833,
-   "variant": "l_gray",
+   "variant": "m95_green",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_009_cloth_0.npz"
   },
   {
@@ -45,7 +45,7 @@
     0.01
    ],
    "yaw": -0.9986971286958011,
-   "variant": "small",
+   "variant": "10_lavender",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_009_cloth_1.npz"
   },
   {
@@ -57,7 +57,7 @@
     0.01
    ],
    "yaw": -0.676122934954726,
-   "variant": "l_gray",
+   "variant": "m95_green",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_009_cloth_2.npz"
   },
   {
@@ -81,7 +81,7 @@
     0.5500000014901162
    ],
    "yaw": 0.43090403627785556,
-   "variant": "l_gray",
+   "variant": "m95_green",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_009_cloth_4.npz"
   },
   {
@@ -93,7 +93,7 @@
     0.5500000014901162
    ],
    "yaw": 0.0,
-   "variant": null,
+   "variant": "10_lavender",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_009_cloth_5.npz"
   },
   {
@@ -129,7 +129,7 @@
     0.01
    ],
    "yaw": 0.0,
-   "variant": "folded",
+   "variant": "folded:10_lavender",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed03_hard_009_folded_towel.npz"
   }
  ],

@@ -1,0 +1,1121 @@
+#usda 1.0
+(
+    defaultPrim = "LaundryBasket"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "LaundryBasket" (
+    prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+    customData = {
+        dictionary dxbench = {
+            float2 bottom = (0.38, 0.28)
+            double height = 0.4
+            float2 top = (0.49, 0.36)
+        }
+    }
+)
+{
+    float physics:mass = 1
+
+    def "Looks"
+    {
+        def Material "body"
+        {
+            token outputs:surface.connect = </LaundryBasket/Looks/body/Shader.outputs:surface>
+
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.6444797, 0.6444797, 0.6172066)
+                float inputs:roughness = 0.7
+                token outputs:surface
+            }
+        }
+
+        def Material "rim"
+        {
+            token outputs:surface.connect = </LaundryBasket/Looks/rim/Shader.outputs:surface>
+
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.11193243, 0.114435375, 0.12477182)
+                float inputs:roughness = 0.7
+                token outputs:surface
+            }
+        }
+
+        def Material "physics" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.51
+            float physics:restitution = 0
+            float physics:staticFriction = 0.6
+        }
+    }
+
+    def Cube "bottom" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </LaundryBasket/Looks/body>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        float3 xformOp:scale = (0.38, 0.28, 0.008)
+        double3 xformOp:translate = (0, 0, 0.004)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def "Render"
+    {
+        def Cube "foot_0" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            rel material:binding = </LaundryBasket/Looks/body>
+            double size = 1
+            float3 xformOp:scale = (0.05, 0.04, 0.008)
+            double3 xformOp:translate = (0.16, 0.11000000000000001, 0.004)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "foot_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            rel material:binding = </LaundryBasket/Looks/body>
+            double size = 1
+            float3 xformOp:scale = (0.05, 0.04, 0.008)
+            double3 xformOp:translate = (0.16, -0.11000000000000001, 0.004)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "foot_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            rel material:binding = </LaundryBasket/Looks/body>
+            double size = 1
+            float3 xformOp:scale = (0.05, 0.04, 0.008)
+            double3 xformOp:translate = (-0.16, 0.11000000000000001, 0.004)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "foot_3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            rel material:binding = </LaundryBasket/Looks/body>
+            double size = 1
+            float3 xformOp:scale = (0.05, 0.04, 0.008)
+            double3 xformOp:translate = (-0.16, -0.11000000000000001, 0.004)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Mesh "short_m_bottom" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.19, -0.14, 0), (-0.19, 0.14, 0), (-0.1948125, 0.1435, 0.035), (-0.1948125, -0.1435, 0.035), (-0.182, -0.132, 0), (-0.182, 0.132, 0), (-0.1868125, 0.1355, 0.035), (-0.1868125, -0.1355, 0.035)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_top" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.2371625, -0.1743, 0.343), (-0.2371625, 0.1743, 0.343), (-0.241975, 0.1778, 0.378), (-0.241975, -0.1778, 0.378), (-0.2291625, -0.1663, 0.343), (-0.2291625, 0.1663, 0.343), (-0.233975, 0.1698, 0.378), (-0.233975, -0.1698, 0.378)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_cornerA" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1948125, -0.1435, 0.035), (-0.1948125, -0.0896875, 0.035), (-0.2371625, -0.1089375, 0.343), (-0.2371625, -0.1743, 0.343), (-0.1868125, -0.1355, 0.035), (-0.1868125, -0.0846875, 0.035), (-0.2291625, -0.1039375, 0.343), (-0.2291625, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_cornerB" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1948125, 0.0896875, 0.035), (-0.1948125, 0.1435, 0.035), (-0.2371625, 0.1743, 0.343), (-0.2371625, 0.1089375, 0.343), (-0.1868125, 0.0846875, 0.035), (-0.1868125, 0.1355, 0.035), (-0.2291625, 0.1663, 0.343), (-0.2291625, 0.1039375, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h0" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1978375, -0.0910625, 0.057), (-0.1978375, 0.0910625, 0.057), (-0.199075, 0.091625, 0.066), (-0.199075, -0.091625, 0.066), (-0.1898375, -0.0860625, 0.057), (-0.1898375, 0.0860625, 0.057), (-0.191075, 0.086625, 0.066), (-0.191075, -0.086625, 0.066)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.2021, -0.093, 0.088), (-0.2021, 0.093, 0.088), (-0.2033375, 0.0935625, 0.097), (-0.2033375, -0.0935625, 0.097), (-0.1941, -0.088, 0.088), (-0.1941, 0.088, 0.088), (-0.1953375, 0.0885625, 0.097), (-0.1953375, -0.0885625, 0.097)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.2063625, -0.0949375, 0.119), (-0.2063625, 0.0949375, 0.119), (-0.2076, 0.0955, 0.128), (-0.2076, -0.0955, 0.128), (-0.1983625, -0.0899375, 0.119), (-0.1983625, 0.0899375, 0.119), (-0.1996, 0.0905, 0.128), (-0.1996, -0.0905, 0.128)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.210625, -0.096875, 0.15), (-0.210625, 0.096875, 0.15), (-0.2118625, 0.0974375, 0.159), (-0.2118625, -0.0974375, 0.159), (-0.202625, -0.091875, 0.15), (-0.202625, 0.091875, 0.15), (-0.2038625, 0.0924375, 0.159), (-0.2038625, -0.0924375, 0.159)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h4" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.2148875, -0.0988125, 0.181), (-0.2148875, 0.0988125, 0.181), (-0.216125, 0.099375, 0.19), (-0.216125, -0.099375, 0.19), (-0.2068875, -0.0938125, 0.181), (-0.2068875, 0.0938125, 0.181), (-0.208125, 0.094375, 0.19), (-0.208125, -0.094375, 0.19)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h5" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.21915, -0.10075, 0.212), (-0.21915, 0.10075, 0.212), (-0.2203875, 0.1013125, 0.221), (-0.2203875, -0.1013125, 0.221), (-0.21115, -0.09575, 0.212), (-0.21115, 0.09575, 0.212), (-0.2123875, 0.0963125, 0.221), (-0.2123875, -0.0963125, 0.221)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h6" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.2234125, -0.1026875, 0.243), (-0.2234125, 0.1026875, 0.243), (-0.22465, 0.10325, 0.252), (-0.22465, -0.10325, 0.252), (-0.2154125, -0.0976875, 0.243), (-0.2154125, 0.0976875, 0.243), (-0.21665, 0.09825, 0.252), (-0.21665, -0.09825, 0.252)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h7" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.227675, -0.104625, 0.274), (-0.227675, 0.104625, 0.274), (-0.2289125, 0.1051875, 0.283), (-0.2289125, -0.1051875, 0.283), (-0.219675, -0.099625, 0.274), (-0.219675, 0.099625, 0.274), (-0.2209125, 0.1001875, 0.283), (-0.2209125, -0.1001875, 0.283)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_h8" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.2319375, -0.1065625, 0.305), (-0.2319375, 0.1065625, 0.305), (-0.233175, 0.107125, 0.314), (-0.233175, -0.107125, 0.314), (-0.2239375, -0.1015625, 0.305), (-0.2239375, 0.1015625, 0.305), (-0.225175, 0.102125, 0.314), (-0.225175, -0.102125, 0.314)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_v0_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1948125, -0.063827604, 0.035), (-0.1948125, -0.05575573, 0.035), (-0.2371625, -0.06772281, 0.343), (-0.2371625, -0.07752719, 0.343), (-0.1868125, -0.06026927, 0.035), (-0.1868125, -0.052647397, 0.035), (-0.2291625, -0.06461448, 0.343), (-0.2291625, -0.07396886, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_v0_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1948125, -0.03393177, 0.035), (-0.1948125, -0.025859896, 0.035), (-0.2371625, -0.031410314, 0.343), (-0.2371625, -0.041214686, 0.343), (-0.1868125, -0.032040104, 0.035), (-0.1868125, -0.02441823, 0.035), (-0.2291625, -0.029968645, 0.343), (-0.2291625, -0.03932302, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_v1_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1948125, 0.025859896, 0.035), (-0.1948125, 0.03393177, 0.035), (-0.2371625, 0.041214686, 0.343), (-0.2371625, 0.031410314, 0.343), (-0.1868125, 0.02441823, 0.035), (-0.1868125, 0.032040104, 0.035), (-0.2291625, 0.03932302, 0.343), (-0.2291625, 0.029968645, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_v1_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1948125, 0.05575573, 0.035), (-0.1948125, 0.063827604, 0.035), (-0.2371625, 0.07752719, 0.343), (-0.2371625, 0.06772281, 0.343), (-0.1868125, 0.052647397, 0.035), (-0.1868125, 0.06026927, 0.035), (-0.2291625, 0.07396886, 0.343), (-0.2291625, 0.06461448, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_m_rim" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/rim>
+            point3f[] points = [(-0.253975, -0.1898, 0.378), (-0.253975, 0.1898, 0.378), (-0.257, 0.192, 0.4), (-0.257, -0.192, 0.4), (-0.233975, -0.1698, 0.378), (-0.233975, 0.1698, 0.378), (-0.237, 0.172, 0.4), (-0.237, -0.172, 0.4)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_bottom" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.19, -0.14, 0), (0.19, 0.14, 0), (0.1948125, 0.1435, 0.035), (0.1948125, -0.1435, 0.035), (0.182, -0.132, 0), (0.182, 0.132, 0), (0.1868125, 0.1355, 0.035), (0.1868125, -0.1355, 0.035)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_top" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.2371625, -0.1743, 0.343), (0.2371625, 0.1743, 0.343), (0.241975, 0.1778, 0.378), (0.241975, -0.1778, 0.378), (0.2291625, -0.1663, 0.343), (0.2291625, 0.1663, 0.343), (0.233975, 0.1698, 0.378), (0.233975, -0.1698, 0.378)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_cornerA" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.1948125, -0.1435, 0.035), (0.1948125, -0.0896875, 0.035), (0.2371625, -0.1089375, 0.343), (0.2371625, -0.1743, 0.343), (0.1868125, -0.1355, 0.035), (0.1868125, -0.0846875, 0.035), (0.2291625, -0.1039375, 0.343), (0.2291625, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_cornerB" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.1948125, 0.0896875, 0.035), (0.1948125, 0.1435, 0.035), (0.2371625, 0.1743, 0.343), (0.2371625, 0.1089375, 0.343), (0.1868125, 0.0846875, 0.035), (0.1868125, 0.1355, 0.035), (0.2291625, 0.1663, 0.343), (0.2291625, 0.1039375, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h0" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.1978375, -0.0910625, 0.057), (0.1978375, 0.0910625, 0.057), (0.199075, 0.091625, 0.066), (0.199075, -0.091625, 0.066), (0.1898375, -0.0860625, 0.057), (0.1898375, 0.0860625, 0.057), (0.191075, 0.086625, 0.066), (0.191075, -0.086625, 0.066)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.2021, -0.093, 0.088), (0.2021, 0.093, 0.088), (0.2033375, 0.0935625, 0.097), (0.2033375, -0.0935625, 0.097), (0.1941, -0.088, 0.088), (0.1941, 0.088, 0.088), (0.1953375, 0.0885625, 0.097), (0.1953375, -0.0885625, 0.097)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.2063625, -0.0949375, 0.119), (0.2063625, 0.0949375, 0.119), (0.2076, 0.0955, 0.128), (0.2076, -0.0955, 0.128), (0.1983625, -0.0899375, 0.119), (0.1983625, 0.0899375, 0.119), (0.1996, 0.0905, 0.128), (0.1996, -0.0905, 0.128)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.210625, -0.096875, 0.15), (0.210625, 0.096875, 0.15), (0.2118625, 0.0974375, 0.159), (0.2118625, -0.0974375, 0.159), (0.202625, -0.091875, 0.15), (0.202625, 0.091875, 0.15), (0.2038625, 0.0924375, 0.159), (0.2038625, -0.0924375, 0.159)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h4" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.2148875, -0.0988125, 0.181), (0.2148875, 0.0988125, 0.181), (0.216125, 0.099375, 0.19), (0.216125, -0.099375, 0.19), (0.2068875, -0.0938125, 0.181), (0.2068875, 0.0938125, 0.181), (0.208125, 0.094375, 0.19), (0.208125, -0.094375, 0.19)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h5" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.21915, -0.10075, 0.212), (0.21915, 0.10075, 0.212), (0.2203875, 0.1013125, 0.221), (0.2203875, -0.1013125, 0.221), (0.21115, -0.09575, 0.212), (0.21115, 0.09575, 0.212), (0.2123875, 0.0963125, 0.221), (0.2123875, -0.0963125, 0.221)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h6" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.2234125, -0.1026875, 0.243), (0.2234125, 0.1026875, 0.243), (0.22465, 0.10325, 0.252), (0.22465, -0.10325, 0.252), (0.2154125, -0.0976875, 0.243), (0.2154125, 0.0976875, 0.243), (0.21665, 0.09825, 0.252), (0.21665, -0.09825, 0.252)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h7" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.227675, -0.104625, 0.274), (0.227675, 0.104625, 0.274), (0.2289125, 0.1051875, 0.283), (0.2289125, -0.1051875, 0.283), (0.219675, -0.099625, 0.274), (0.219675, 0.099625, 0.274), (0.2209125, 0.1001875, 0.283), (0.2209125, -0.1001875, 0.283)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_h8" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.2319375, -0.1065625, 0.305), (0.2319375, 0.1065625, 0.305), (0.233175, 0.107125, 0.314), (0.233175, -0.107125, 0.314), (0.2239375, -0.1015625, 0.305), (0.2239375, 0.1015625, 0.305), (0.225175, 0.102125, 0.314), (0.225175, -0.102125, 0.314)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_v0_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.1948125, -0.063827604, 0.035), (0.1948125, -0.05575573, 0.035), (0.2371625, -0.06772281, 0.343), (0.2371625, -0.07752719, 0.343), (0.1868125, -0.06026927, 0.035), (0.1868125, -0.052647397, 0.035), (0.2291625, -0.06461448, 0.343), (0.2291625, -0.07396886, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_v0_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.1948125, -0.03393177, 0.035), (0.1948125, -0.025859896, 0.035), (0.2371625, -0.031410314, 0.343), (0.2371625, -0.041214686, 0.343), (0.1868125, -0.032040104, 0.035), (0.1868125, -0.02441823, 0.035), (0.2291625, -0.029968645, 0.343), (0.2291625, -0.03932302, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_v1_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.1948125, 0.025859896, 0.035), (0.1948125, 0.03393177, 0.035), (0.2371625, 0.041214686, 0.343), (0.2371625, 0.031410314, 0.343), (0.1868125, 0.02441823, 0.035), (0.1868125, 0.032040104, 0.035), (0.2291625, 0.03932302, 0.343), (0.2291625, 0.029968645, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_v1_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.1948125, 0.05575573, 0.035), (0.1948125, 0.063827604, 0.035), (0.2371625, 0.07752719, 0.343), (0.2371625, 0.06772281, 0.343), (0.1868125, 0.052647397, 0.035), (0.1868125, 0.06026927, 0.035), (0.2291625, 0.07396886, 0.343), (0.2291625, 0.06461448, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "short_p_rim" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/rim>
+            point3f[] points = [(0.253975, -0.1898, 0.378), (0.253975, 0.1898, 0.378), (0.257, 0.192, 0.4), (0.257, -0.192, 0.4), (0.233975, -0.1698, 0.378), (0.233975, 0.1698, 0.378), (0.237, 0.172, 0.4), (0.237, -0.172, 0.4)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_bottom" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.19, -0.14, 0), (0.19, -0.14, 0), (0.1948125, -0.1435, 0.035), (-0.1948125, -0.1435, 0.035), (-0.182, -0.132, 0), (0.182, -0.132, 0), (0.1868125, -0.1355, 0.035), (-0.1868125, -0.1355, 0.035)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_top" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.2371625, -0.1743, 0.343), (0.2371625, -0.1743, 0.343), (0.241975, -0.1778, 0.378), (-0.241975, -0.1778, 0.378), (-0.2291625, -0.1663, 0.343), (0.2291625, -0.1663, 0.343), (0.233975, -0.1698, 0.378), (-0.233975, -0.1698, 0.378)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_cornerA" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1948125, -0.1435, 0.035), (-0.14107113, -0.1435, 0.035), (-0.17173836, -0.1743, 0.343), (-0.2371625, -0.1743, 0.343), (-0.1868125, -0.1355, 0.035), (-0.13527802, -0.1355, 0.035), (-0.16594526, -0.1663, 0.343), (-0.2291625, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_cornerB" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.14107113, -0.1435, 0.035), (0.1948125, -0.1435, 0.035), (0.2371625, -0.1743, 0.343), (0.17173836, -0.1743, 0.343), (0.13527802, -0.1355, 0.035), (0.1868125, -0.1355, 0.035), (0.2291625, -0.1663, 0.343), (0.16594526, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_panel" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.04285875, -0.1435, 0.035), (0.04285875, -0.1435, 0.035), (0.05217575, -0.1743, 0.343), (-0.05217575, -0.1743, 0.343), (-0.04109875, -0.1355, 0.035), (0.04109875, -0.1355, 0.035), (0.05041575, -0.1663, 0.343), (-0.05041575, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h0" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.14326164, -0.1457, 0.057), (0.14326164, -0.1457, 0.057), (0.14415775, -0.1466, 0.066), (-0.14415775, -0.1466, 0.066), (-0.13746853, -0.1377, 0.057), (0.13746853, -0.1377, 0.057), (0.13836466, -0.1386, 0.066), (-0.13836466, -0.1386, 0.066)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.14634828, -0.1488, 0.088), (0.14634828, -0.1488, 0.088), (0.1472444, -0.1497, 0.097), (-0.1472444, -0.1497, 0.097), (-0.14055517, -0.1408, 0.088), (0.14055517, -0.1408, 0.088), (0.1414513, -0.1417, 0.097), (-0.1414513, -0.1417, 0.097)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.14943491, -0.1519, 0.119), (0.14943491, -0.1519, 0.119), (0.15033104, -0.1528, 0.128), (-0.15033104, -0.1528, 0.128), (-0.14364181, -0.1439, 0.119), (0.14364181, -0.1439, 0.119), (0.14453793, -0.1448, 0.128), (-0.14453793, -0.1448, 0.128)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.15252155, -0.155, 0.15), (0.15252155, -0.155, 0.15), (0.15341768, -0.1559, 0.159), (-0.15341768, -0.1559, 0.159), (-0.14672844, -0.147, 0.15), (0.14672844, -0.147, 0.15), (0.14762457, -0.1479, 0.159), (-0.14762457, -0.1479, 0.159)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h4" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.15560819, -0.1581, 0.181), (0.15560819, -0.1581, 0.181), (0.1565043, -0.159, 0.19), (-0.1565043, -0.159, 0.19), (-0.14981508, -0.1501, 0.181), (0.14981508, -0.1501, 0.181), (0.15071121, -0.151, 0.19), (-0.15071121, -0.151, 0.19)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h5" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.15869483, -0.1612, 0.212), (0.15869483, -0.1612, 0.212), (0.15959094, -0.1621, 0.221), (-0.15959094, -0.1621, 0.221), (-0.15290172, -0.1532, 0.212), (0.15290172, -0.1532, 0.212), (0.15379785, -0.1541, 0.221), (-0.15379785, -0.1541, 0.221)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h6" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.16178146, -0.1643, 0.243), (0.16178146, -0.1643, 0.243), (0.16267759, -0.1652, 0.252), (-0.16267759, -0.1652, 0.252), (-0.15598837, -0.1563, 0.243), (0.15598837, -0.1563, 0.243), (0.15688448, -0.1572, 0.252), (-0.15688448, -0.1572, 0.252)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h7" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1648681, -0.1674, 0.274), (0.1648681, -0.1674, 0.274), (0.16576423, -0.1683, 0.283), (-0.16576423, -0.1683, 0.283), (-0.159075, -0.1594, 0.274), (0.159075, -0.1594, 0.274), (0.15997112, -0.1603, 0.283), (-0.15997112, -0.1603, 0.283)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_h8" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.16795474, -0.1705, 0.305), (0.16795474, -0.1705, 0.305), (0.16885087, -0.1714, 0.314), (-0.16885087, -0.1714, 0.314), (-0.16216163, -0.1625, 0.305), (0.16216163, -0.1625, 0.305), (0.16305776, -0.1634, 0.314), (-0.16305776, -0.1634, 0.314)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_v0_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.12054863, -0.1435, 0.035), (-0.11248743, -0.1435, 0.035), (-0.1369409, -0.1743, 0.343), (-0.14675452, -0.1743, 0.343), (-0.11559828, -0.1355, 0.035), (-0.10786811, -0.1355, 0.035), (-0.13232158, -0.1663, 0.343), (-0.14180417, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_v0_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.09599554, -0.1435, 0.035), (-0.08793433, -0.1435, 0.035), (-0.10705025, -0.1743, 0.343), (-0.11686387, -0.1743, 0.343), (-0.09205347, -0.1355, 0.035), (-0.084323294, -0.1355, 0.035), (-0.10343921, -0.1663, 0.343), (-0.1129218, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_v0_3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.07144245, -0.1435, 0.035), (-0.06338124, -0.1435, 0.035), (-0.07715959, -0.1743, 0.343), (-0.08697321, -0.1743, 0.343), (-0.068508655, -0.1355, 0.035), (-0.06077848, -0.1355, 0.035), (-0.074556835, -0.1663, 0.343), (-0.08403942, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_v1_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.06338124, -0.1435, 0.035), (0.07144245, -0.1435, 0.035), (0.08697321, -0.1743, 0.343), (0.07715959, -0.1743, 0.343), (0.06077848, -0.1355, 0.035), (0.068508655, -0.1355, 0.035), (0.08403942, -0.1663, 0.343), (0.074556835, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_v1_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.08793433, -0.1435, 0.035), (0.09599554, -0.1435, 0.035), (0.11686387, -0.1743, 0.343), (0.10705025, -0.1743, 0.343), (0.084323294, -0.1355, 0.035), (0.09205347, -0.1355, 0.035), (0.1129218, -0.1663, 0.343), (0.10343921, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_v1_3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.11248743, -0.1435, 0.035), (0.12054863, -0.1435, 0.035), (0.14675452, -0.1743, 0.343), (0.1369409, -0.1743, 0.343), (0.10786811, -0.1355, 0.035), (0.11559828, -0.1355, 0.035), (0.14180417, -0.1663, 0.343), (0.13232158, -0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_m_rim" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/rim>
+            point3f[] points = [(-0.253975, -0.1898, 0.378), (0.253975, -0.1898, 0.378), (0.257, -0.192, 0.4), (-0.257, -0.192, 0.4), (-0.233975, -0.1698, 0.378), (0.233975, -0.1698, 0.378), (0.237, -0.172, 0.4), (-0.237, -0.172, 0.4)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_bottom" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.19, 0.14, 0), (0.19, 0.14, 0), (0.1948125, 0.1435, 0.035), (-0.1948125, 0.1435, 0.035), (-0.182, 0.132, 0), (0.182, 0.132, 0), (0.1868125, 0.1355, 0.035), (-0.1868125, 0.1355, 0.035)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_top" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.2371625, 0.1743, 0.343), (0.2371625, 0.1743, 0.343), (0.241975, 0.1778, 0.378), (-0.241975, 0.1778, 0.378), (-0.2291625, 0.1663, 0.343), (0.2291625, 0.1663, 0.343), (0.233975, 0.1698, 0.378), (-0.233975, 0.1698, 0.378)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_cornerA" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1948125, 0.1435, 0.035), (-0.14107113, 0.1435, 0.035), (-0.17173836, 0.1743, 0.343), (-0.2371625, 0.1743, 0.343), (-0.1868125, 0.1355, 0.035), (-0.13527802, 0.1355, 0.035), (-0.16594526, 0.1663, 0.343), (-0.2291625, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_cornerB" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.14107113, 0.1435, 0.035), (0.1948125, 0.1435, 0.035), (0.2371625, 0.1743, 0.343), (0.17173836, 0.1743, 0.343), (0.13527802, 0.1355, 0.035), (0.1868125, 0.1355, 0.035), (0.2291625, 0.1663, 0.343), (0.16594526, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_panel" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.04285875, 0.1435, 0.035), (0.04285875, 0.1435, 0.035), (0.05217575, 0.1743, 0.343), (-0.05217575, 0.1743, 0.343), (-0.04109875, 0.1355, 0.035), (0.04109875, 0.1355, 0.035), (0.05041575, 0.1663, 0.343), (-0.05041575, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h0" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.14326164, 0.1457, 0.057), (0.14326164, 0.1457, 0.057), (0.14415775, 0.1466, 0.066), (-0.14415775, 0.1466, 0.066), (-0.13746853, 0.1377, 0.057), (0.13746853, 0.1377, 0.057), (0.13836466, 0.1386, 0.066), (-0.13836466, 0.1386, 0.066)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.14634828, 0.1488, 0.088), (0.14634828, 0.1488, 0.088), (0.1472444, 0.1497, 0.097), (-0.1472444, 0.1497, 0.097), (-0.14055517, 0.1408, 0.088), (0.14055517, 0.1408, 0.088), (0.1414513, 0.1417, 0.097), (-0.1414513, 0.1417, 0.097)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.14943491, 0.1519, 0.119), (0.14943491, 0.1519, 0.119), (0.15033104, 0.1528, 0.128), (-0.15033104, 0.1528, 0.128), (-0.14364181, 0.1439, 0.119), (0.14364181, 0.1439, 0.119), (0.14453793, 0.1448, 0.128), (-0.14453793, 0.1448, 0.128)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.15252155, 0.155, 0.15), (0.15252155, 0.155, 0.15), (0.15341768, 0.1559, 0.159), (-0.15341768, 0.1559, 0.159), (-0.14672844, 0.147, 0.15), (0.14672844, 0.147, 0.15), (0.14762457, 0.1479, 0.159), (-0.14762457, 0.1479, 0.159)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h4" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.15560819, 0.1581, 0.181), (0.15560819, 0.1581, 0.181), (0.1565043, 0.159, 0.19), (-0.1565043, 0.159, 0.19), (-0.14981508, 0.1501, 0.181), (0.14981508, 0.1501, 0.181), (0.15071121, 0.151, 0.19), (-0.15071121, 0.151, 0.19)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h5" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.15869483, 0.1612, 0.212), (0.15869483, 0.1612, 0.212), (0.15959094, 0.1621, 0.221), (-0.15959094, 0.1621, 0.221), (-0.15290172, 0.1532, 0.212), (0.15290172, 0.1532, 0.212), (0.15379785, 0.1541, 0.221), (-0.15379785, 0.1541, 0.221)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h6" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.16178146, 0.1643, 0.243), (0.16178146, 0.1643, 0.243), (0.16267759, 0.1652, 0.252), (-0.16267759, 0.1652, 0.252), (-0.15598837, 0.1563, 0.243), (0.15598837, 0.1563, 0.243), (0.15688448, 0.1572, 0.252), (-0.15688448, 0.1572, 0.252)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h7" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.1648681, 0.1674, 0.274), (0.1648681, 0.1674, 0.274), (0.16576423, 0.1683, 0.283), (-0.16576423, 0.1683, 0.283), (-0.159075, 0.1594, 0.274), (0.159075, 0.1594, 0.274), (0.15997112, 0.1603, 0.283), (-0.15997112, 0.1603, 0.283)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_h8" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.16795474, 0.1705, 0.305), (0.16795474, 0.1705, 0.305), (0.16885087, 0.1714, 0.314), (-0.16885087, 0.1714, 0.314), (-0.16216163, 0.1625, 0.305), (0.16216163, 0.1625, 0.305), (0.16305776, 0.1634, 0.314), (-0.16305776, 0.1634, 0.314)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_v0_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.12054863, 0.1435, 0.035), (-0.11248743, 0.1435, 0.035), (-0.1369409, 0.1743, 0.343), (-0.14675452, 0.1743, 0.343), (-0.11559828, 0.1355, 0.035), (-0.10786811, 0.1355, 0.035), (-0.13232158, 0.1663, 0.343), (-0.14180417, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_v0_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.09599554, 0.1435, 0.035), (-0.08793433, 0.1435, 0.035), (-0.10705025, 0.1743, 0.343), (-0.11686387, 0.1743, 0.343), (-0.09205347, 0.1355, 0.035), (-0.084323294, 0.1355, 0.035), (-0.10343921, 0.1663, 0.343), (-0.1129218, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_v0_3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(-0.07144245, 0.1435, 0.035), (-0.06338124, 0.1435, 0.035), (-0.07715959, 0.1743, 0.343), (-0.08697321, 0.1743, 0.343), (-0.068508655, 0.1355, 0.035), (-0.06077848, 0.1355, 0.035), (-0.074556835, 0.1663, 0.343), (-0.08403942, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_v1_1" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.06338124, 0.1435, 0.035), (0.07144245, 0.1435, 0.035), (0.08697321, 0.1743, 0.343), (0.07715959, 0.1743, 0.343), (0.06077848, 0.1355, 0.035), (0.068508655, 0.1355, 0.035), (0.08403942, 0.1663, 0.343), (0.074556835, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_v1_2" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.08793433, 0.1435, 0.035), (0.09599554, 0.1435, 0.035), (0.11686387, 0.1743, 0.343), (0.10705025, 0.1743, 0.343), (0.084323294, 0.1355, 0.035), (0.09205347, 0.1355, 0.035), (0.1129218, 0.1663, 0.343), (0.10343921, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_v1_3" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/body>
+            point3f[] points = [(0.11248743, 0.1435, 0.035), (0.12054863, 0.1435, 0.035), (0.14675452, 0.1743, 0.343), (0.1369409, 0.1743, 0.343), (0.10786811, 0.1355, 0.035), (0.11559828, 0.1355, 0.035), (0.14180417, 0.1663, 0.343), (0.13232158, 0.1663, 0.343)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Mesh "long_p_rim" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+            rel material:binding = </LaundryBasket/Looks/rim>
+            point3f[] points = [(-0.253975, 0.1898, 0.378), (0.253975, 0.1898, 0.378), (0.257, 0.192, 0.4), (-0.257, 0.192, 0.4), (-0.233975, 0.1698, 0.378), (0.233975, 0.1698, 0.378), (0.237, 0.172, 0.4), (-0.237, 0.172, 0.4)]
+            uniform token purpose = "render"
+            uniform token subdivisionScheme = "none"
+        }
+    }
+
+    def Mesh "wall_short_m" (
+        prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        rel material:binding = </LaundryBasket/Looks/body>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        uniform token physics:approximation = "convexHull"
+        point3f[] points = [(-0.19, -0.14, 0), (-0.19, 0.14, 0), (-0.245, 0.18, 0.4), (-0.245, -0.18, 0.4), (-0.182, -0.132, 0), (-0.182, 0.132, 0), (-0.237, 0.172, 0.4), (-0.237, -0.172, 0.4)]
+        uniform token purpose = "guide"
+        uniform token subdivisionScheme = "none"
+    }
+
+    def Mesh "wall_short_p" (
+        prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        rel material:binding = </LaundryBasket/Looks/body>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        uniform token physics:approximation = "convexHull"
+        point3f[] points = [(0.19, -0.14, 0), (0.19, 0.14, 0), (0.245, 0.18, 0.4), (0.245, -0.18, 0.4), (0.182, -0.132, 0), (0.182, 0.132, 0), (0.237, 0.172, 0.4), (0.237, -0.172, 0.4)]
+        uniform token purpose = "guide"
+        uniform token subdivisionScheme = "none"
+    }
+
+    def Mesh "wall_long_m" (
+        prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        rel material:binding = </LaundryBasket/Looks/body>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        uniform token physics:approximation = "convexHull"
+        point3f[] points = [(-0.19, -0.14, 0), (0.19, -0.14, 0), (0.245, -0.18, 0.4), (-0.245, -0.18, 0.4), (-0.182, -0.132, 0), (0.182, -0.132, 0), (0.237, -0.172, 0.4), (-0.237, -0.172, 0.4)]
+        uniform token purpose = "guide"
+        uniform token subdivisionScheme = "none"
+    }
+
+    def Mesh "wall_long_p" (
+        prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        rel material:binding = </LaundryBasket/Looks/body>
+        rel material:binding:physics = </LaundryBasket/Looks/physics> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        uniform token physics:approximation = "convexHull"
+        point3f[] points = [(-0.19, 0.14, 0), (0.19, 0.14, 0), (0.245, 0.18, 0.4), (-0.245, 0.18, 0.4), (-0.182, 0.132, 0), (0.182, 0.132, 0), (0.237, 0.172, 0.4), (-0.237, 0.172, 0.4)]
+        uniform token purpose = "guide"
+        uniform token subdivisionScheme = "none"
+    }
+}
+

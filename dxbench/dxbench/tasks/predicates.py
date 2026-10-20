@@ -105,25 +105,44 @@ def obb_extent_xy(nodes_xy: np.ndarray) -> tuple[float, float]:
 # ------------------------------------------------------------------------------------------ BED-03 laundry
 @dataclass
 class BasketSpec:
-    """Laundry basket interior in the basket frame (origin at the floor centre of the basket)."""
+    """Laundry basket interior in the basket frame (origin at the floor centre of the basket). `inner_half` is the
+    interior half extent at the rim; a tapered basket also gives `inner_half_bottom` (at the floor)."""
     inner_half: tuple = (0.29, 0.21)  # m (outer 60 x 44 cm minus 1 cm walls; assets/make_objects.py)
     inner_height: float = 0.31
     tip_deg: float = 45.0
+    inner_half_bottom: tuple | None = None
+
+    def half_at(self, z):
+        """Interior half extents (x, y) at height(s) z (above the rim: the rim value)."""
+        z = np.asarray(z, dtype=float)
+        top = np.asarray(self.inner_half, dtype=float)
+        bot = top if self.inner_half_bottom is None else np.asarray(self.inner_half_bottom, dtype=float)
+        f = np.clip(z / self.inner_height, 0.0, 1.0)[..., None]
+        return bot + (top - bot) * f
+
+
+# real gray basket (D-36): outer top 49 x 36, bottom 38 x 28 cm, 40 cm high, 8 mm walls (assets/make_objects.py)
+BASKET_GRAY = BasketSpec(inner_half=(0.237, 0.172), inner_height=0.39, inner_half_bottom=(0.182, 0.132))
+
+
+def basket_spec(variant: str | None) -> BasketSpec:
+    return BASKET_GRAY if variant == "gray" else BasketSpec()
 
 
 def cloth_in_basket(nodes: np.ndarray, basket_pos, basket_quat, spec: BasketSpec = BasketSpec(),
                     frac: float = 0.6) -> bool:
     """A garment counts as in the basket when >= `frac` of its nodes are inside the basket interior volume."""
     loc = to_local(nodes, basket_pos, basket_quat)
-    inside = (np.abs(loc[:, 0]) <= spec.inner_half[0] + 0.01) & (np.abs(loc[:, 1]) <= spec.inner_half[1] + 0.01) \
+    h = spec.half_at(loc[:, 2])
+    inside = (np.abs(loc[:, 0]) <= h[:, 0] + 0.01) & (np.abs(loc[:, 1]) <= h[:, 1] + 0.01) \
         & (loc[:, 2] >= -0.02) & (loc[:, 2] <= spec.inner_height + 0.10)
     return bool(inside.mean() >= frac)
 
 
 def point_in_basket(p, basket_pos, basket_quat, spec: BasketSpec = BasketSpec()) -> bool:
     loc = to_local(np.asarray(p)[None], basket_pos, basket_quat)[0]
-    return bool(abs(loc[0]) <= spec.inner_half[0] and abs(loc[1]) <= spec.inner_half[1]
-                and -0.02 <= loc[2] <= spec.inner_height + 0.10)
+    h = spec.half_at(loc[2])
+    return bool(abs(loc[0]) <= h[0] and abs(loc[1]) <= h[1] and -0.02 <= loc[2] <= spec.inner_height + 0.10)
 
 
 def evaluate_bed03(clothes: dict[str, np.ndarray], distractors: dict[str, tuple], basket_pos, basket_quat,

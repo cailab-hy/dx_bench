@@ -2,8 +2,9 @@
 
     python -m dxbench.tasks.scene_gen --task BED-03 --difficulty easy --n 10 --seed0 0 --out benchmarks/dx_bed_v0/scenes
 Evaluation scenes use seeds 0..999 (benchmarks/dx_bed_v0), training / demo scenes 10000+ (data/scenes_train) so
-the two never overlap. Garment variants for evaluation and training are disjoint (OOD split): training uses the
-"m_blue"/"s_red" T-shirts and full towels, evaluation adds the unseen "l_gray"/"m_white" shirts and small towels.
+the two never overlap. Garment variants for evaluation and training are disjoint (OOD split by colour, D-36): the
+real products only - M(95) T-shirt blue / wine for training, green for evaluation; 40 x 80 cm towel in 9 colours for
+training, lavender for evaluation; the gray laundry basket everywhere.
 """
 from __future__ import annotations
 
@@ -18,12 +19,21 @@ from dxbench.tasks.scene_spec import ObjSpec, SceneSpec, free_floor_ok, language
 
 BASKET_SEP = 1.02   # garment centre to basket centre (m)
 GARMENT_SEP = 0.85  # garment to garment (m)
-TRAIN_SHIRTS = ("m_blue", "s_red")
-EVAL_SHIRTS = ("l_gray", "m_white")
+TRAIN_SHIRTS = ("m95_blue", "m95_wine")
+EVAL_SHIRTS = ("m95_green",)
+EVAL_TOWEL = "10_lavender"
+TRAIN_TOWELS = ("01_charcoalgray", "05_coolgray", "06_white", "07_oatmeal", "08_lightpink", "09_ivory", "11_applegreen",
+                "12_skyblue", "13_sandbeige")
+BASKET_VARIANT = "gray"
 
 
 def _shirts(split: str):
     return TRAIN_SHIRTS if split == "train" else EVAL_SHIRTS
+
+
+def _towel(split: str, seed: int, i: int = 0) -> str:
+    """Towel colour (no rng draw, so the layouts stay those of the stage-3 seeds)."""
+    return TRAIN_TOWELS[(seed + i) % len(TRAIN_TOWELS)] if split == "train" else EVAL_TOWEL
 
 
 def _robot_facing(target_xy, start=CARE_SPAWN[:2]):
@@ -56,24 +66,24 @@ def gen_bed03(diff: str, seed: int, split: str) -> SceneSpec:
         # easy: basket and the two garments clustered near each other in the open floor
         if diff != "easy" or all(math.hypot(p[0] - b[0], p[1] - b[1]) < 2.0 for p in pts):
             break
-    objs = [ObjSpec("laundry_basket", "basket", [b[0], b[1], 0.0], float(rng.uniform(-math.pi, math.pi)))]
+    objs = [ObjSpec("laundry_basket", "basket", [b[0], b[1], 0.0], float(rng.uniform(-math.pi, math.pi)), BASKET_VARIANT)]
     kinds = ["tshirt", "towel", "tshirt", "sock", "tshirt", "towel"]
     k = 0
     for i, p in enumerate(pts):
         kind = kinds[k % len(kinds)]
         k += 1
-        var = shirts[i % len(shirts)] if kind == "tshirt" else ("small" if split == "eval" and kind == "towel" else None)
+        var = shirts[i % len(shirts)] if kind == "tshirt" else (_towel(split, seed, i) if kind == "towel" else None)
         objs.append(ObjSpec(f"cloth_{i}", kind, [p[0], p[1], 0.01], float(rng.uniform(-math.pi, math.pi)), var))
     if diff in ("medium", "hard"):
         objs.append(ObjSpec(f"cloth_{len(pts)}", "tshirt", _on_mattress(rng, L), float(rng.uniform(-1, 1)),
                             shirts[0]))
     if diff == "hard":
-        objs.append(ObjSpec(f"cloth_{len(pts) + 1}", "towel", _on_mattress(rng, L), 0.0))
+        objs.append(ObjSpec(f"cloth_{len(pts) + 1}", "towel", _on_mattress(rng, L), 0.0, _towel(split, seed, 7)))
         extra = sample_floor(rng, L, 3, clearance=0.6, sep=0.5,
                              avoid=robot_disc + [(b, 0.75)] + [((p[0], p[1]), 0.6) for p in pts])
         objs += [ObjSpec("doll", "doll", [*extra[0], 0.0], float(rng.uniform(-3, 3))),
                  ObjSpec("book", "book", [*extra[1], 0.0], float(rng.uniform(-3, 3))),
-                 ObjSpec("folded_towel", "towel", [*extra[2], 0.01], 0.0, "folded")]
+                 ObjSpec("folded_towel", "towel", [*extra[2], 0.01], 0.0, "folded:" + _towel(split, seed, 8))]
     first = next(o for o in objs if o.kind in ("tshirt", "towel"))
     return SceneSpec(scene_id=f"bed03_{diff}_{seed:03d}" if split == "eval" else f"bed03_{diff}_train_{seed}",
                      task="BED-03", difficulty=diff, seed=seed, robot=_robot_facing(first.xyz[:2]), objects=objs,
@@ -94,14 +104,14 @@ def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
     if diff == "easy":
         objs.append(ObjSpec("cloth_0", "towel", [cx + float(rng.uniform(-0.03, 0.03)), cy + float(rng.uniform(-0.1, 0.1)),
                                                  top + 0.005], float(rng.uniform(-0.2, 0.2)) + math.pi / 2,
-                            "small" if split == "eval" else None))
+                            _towel(split, seed)))
     elif diff == "medium":
         objs.append(ObjSpec("cloth_0", "tshirt", [cx - 0.05, cy, top + 0.08], float(rng.uniform(-0.6, 0.6)) + math.pi / 2,
-                            _shirts(split)[seed % 2]))
+                            _shirts(split)[seed % len(_shirts(split))]))
     else:
         for i, kind in enumerate(["tshirt", "tshirt", "towel", "tshirt", "towel"]):
             objs.append(ObjSpec(f"cloth_{i}", kind, [cx - 0.05, cy - 0.25, top + 0.05 + 0.06 * i], float(rng.uniform(-1, 1)),
-                                _shirts(split)[i % 2] if kind == "tshirt" else None))
+                                _shirts(split)[i % len(_shirts(split))] if kind == "tshirt" else _towel(split, seed, i)))
     # robot in front of the desk's long side (desk against the west wall: approach from +x)
     robot = {"xy": [float(hi[0]) + 0.75, cy], "yaw": math.pi, "torso": "upright"}
     return SceneSpec(scene_id=f"bed02_{diff}_{seed:03d}" if split == "eval" else f"bed02_{diff}_train_{seed}",

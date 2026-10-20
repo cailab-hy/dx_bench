@@ -94,7 +94,7 @@ def main():
             if step == 0:  # cloth nodes are current after the first step
                 from dxbench.tasks.bed_tasks import aim_observer
 
-                aim_observer(U, task_obj, a.observer_eye)
+                aim_observer(U, task_obj, a.observer_eye, getattr(a, "observer_target", None))
             frames["observer"].append(U.scene["observer"].data.output["rgb"].torch[0, ..., :3].cpu().numpy().astype(np.uint8))
         if task_obj is not None and step % 5 == 0:
             last_eval = task_obj.evaluate(U)[0]

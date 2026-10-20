@@ -164,15 +164,16 @@ class Bed03LaundryTask(BedTaskBase):
     task_id = "BED-03"
 
     def evaluate(self, env) -> list[dict]:
-        clothes = [o.name for o in self.spec.objects if o.kind in CLOTH_KINDS and o.variant != "folded"]
-        folded = [o.name for o in self.spec.objects if o.kind in CLOTH_KINDS and o.variant == "folded"]
+        clothes = [o.name for o in self.spec.objects if o.kind in CLOTH_KINDS and not _is_folded(o)]
+        folded = [o.name for o in self.spec.objects if o.kind in CLOTH_KINDS and _is_folded(o)]
         dis = [o.name for o in self.spec.objects if o.kind in ("doll", "book")]
+        bspec = P.basket_spec(next((o.variant for o in self.spec.objects if o.kind == "basket"), None))
         out = []
         for e in range(env.num_envs):
             bp, bq = self.rigid_pose(env, "laundry_basket", e)
             out.append(P.evaluate_bed03({c: self.nodes(env, c, e) for c in clothes},
                                         {d: self.rigid_pose(env, d, e) for d in dis}, bp, bq,
-                                        folded={c: self.nodes(env, c, e) for c in folded}))
+                                        folded={c: self.nodes(env, c, e) for c in folded}, spec=bspec))
         return out
 
 
@@ -209,10 +210,15 @@ class Bed02FoldTask(BedTaskBase):
 
     @staticmethod
     def _flat_dims(o):
-        """Flat (long, short) size of the garment variant (m): towels 0.7 x 0.45 / small 0.5 x 0.3, T-shirt 0.93 x 0.66
-        scaled 0.85 / 1.0 / 1.15 for s / m / l variants (assets/make_objects.py)."""
+        """Flat (long, short) size of the garment variant (m). Real products (D-36): towel 0.8 x 0.4, M(95) T-shirt
+        0.75 (cuff to cuff) x 0.625. Stage-3 variants: towels 0.7 x 0.45 / small 0.5 x 0.3, T-shirt 0.93 x 0.66
+        scaled 0.85 / 1.0 / 1.15 for s / m / l (assets/make_objects.py)."""
         if o.kind == "towel":
+            if _towel_color(o) is not None:
+                return O.TOWEL_SIZE
             return (0.5, 0.3) if o.variant == "small" else (0.7, 0.45)
+        if o.kind == "tshirt" and (o.variant or "").startswith("m95_"):
+            return (0.75, 0.625)
         if o.kind == "tshirt":
             k = {"s": 0.85, "m": 1.0, "l": 1.15}.get((o.variant or "m_")[0], 1.0)
             return (0.93 * k, 0.66 * k)
@@ -261,6 +267,16 @@ TASKS = {"BED-01": (Bed01MakeBedTask, 240.0), "BED-02": (Bed02FoldTask, 240.0), 
 
 
 # ------------------------------------------------------------------------------------------ assets from spec
+def _is_folded(o) -> bool:
+    return (o.variant or "").startswith("folded")
+
+
+def _towel_color(o) -> str | None:
+    """TOWEL_COLORS key of a towel variant ("10_lavender" or "folded:10_lavender"), None for the stage-3 towels."""
+    c = (o.variant or "").split(":")[-1]
+    return c if c in O.TOWEL_COLORS else None
+
+
 def build_assets(spec: SceneSpec) -> list:
     assets = []
     for o in spec.objects:
@@ -268,7 +284,7 @@ def build_assets(spec: SceneSpec) -> list:
         if o.kind == "tshirt":
             assets.append(O.tshirt(o.name, o.variant or "m_blue", xyz, yaw))
         elif o.kind == "towel":
-            assets.append(O.towel(o.name, xyz, yaw, small=(o.variant == "small")))
+            assets.append(O.towel(o.name, xyz, yaw, small=(o.variant == "small"), color=_towel_color(o)))
         elif o.kind == "sock":
             assets.append(O.sock(o.name, xyz, yaw))
         elif o.kind == "duvet":
@@ -276,7 +292,7 @@ def build_assets(spec: SceneSpec) -> list:
         elif o.kind == "pillow":
             assets.append(O.pillow(o.name, xyz, yaw))
         elif o.kind == "basket":
-            assets.append(O.basket(o.name, xyz, yaw))
+            assets.append(O.basket(o.name, xyz, yaw, o.variant))
         elif o.kind == "doll":
             assets.append(O.doll(o.name, xyz, yaw))
         elif o.kind == "book":
@@ -316,7 +332,8 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
             if cloth and not args_cli.no_assist:
                 if args_cli.grasp_assist == "pad":
                     add_pad_grasp(env_cfg, cloth, squeeze=args_cli.pad_squeeze, tip_margin=args_cli.pad_tip_margin,
-                                  capture_c=args_cli.pad_capture_c)
+                                  capture_c=args_cli.pad_capture_c,
+                                  support_cloths=[o.name for o in spec.objects if o.kind == "duvet"])  # D-37
                 else:
                     add_cloth_assist(env_cfg, cloth, radius=args_cli.assist_radius)
             if cloth:
@@ -326,7 +343,8 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
                 from isaaclab.sensors import CameraCfg
 
                 env_cfg.scene.observer = CameraCfg(
-                    prim_path="{ENV_REGEX_NS}/observer", update_period=0.0, width=960, height=540, data_types=["rgb"],
+                    prim_path="{ENV_REGEX_NS}/observer", update_period=0.0, width=args_cli.observer_res[0],
+                    height=args_cli.observer_res[1], data_types=["rgb"],
                     spawn=sim_utils.PinholeCameraCfg(focal_length=16.0, clipping_range=(0.05, 20.0)))
             return env_cfg
 
@@ -352,8 +370,11 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
                             help="pad assist: catch only cloth within this distance (m) of the closing midplane")
         parser.add_argument("--episode_s", type=float, default=None)
         parser.add_argument("--observer", action="store_true", help="add a third-person camera (needs --video)")
-        parser.add_argument("--observer_eye", type=float, nargs=3, default=(1.3, 1.3, 0.9),
-                            help="observer eye offset (m, world) from its target (the garments on the desk / floor)")
+        parser.add_argument("--observer_res", type=int, nargs=2, default=(960, 540))
+        parser.add_argument("--observer_target", type=float, nargs=3, default=None,
+                            help="observer look-at point (m, env frame) instead of the task default")
+        parser.add_argument("--observer_eye", type=float, nargs=3, default=None,
+                            help="observer eye offset (m, world) from its target; default per task (OBSERVER_EYE)")
 
 
 class DxBed01Environment(_DxBedEnvironmentBase):
@@ -371,15 +392,30 @@ class DxBed03Environment(_DxBedEnvironmentBase):
     task_key = "BED-03"
 
 
-def aim_observer(U, task, eye_offset):
-    """Point the `observer` camera at the garments (centroid of all cloth nodes, 10 cm up), from `eye_offset`."""
+OBSERVER_EYE = {"BED-01": (1.6, -2.2, 1.9), "BED-02": (1.2, -1.4, 1.1), "BED-03": (3.3, -0.9, 1.6)}
+
+
+def aim_observer(U, task, eye_offset=None, target=None):
+    """Point the `observer` camera from `eye_offset` (default: OBSERVER_EYE of the task) at the garments (BED-02: cloth
+    centroid, 10 cm up) or, for the room-scale tasks, at the middle of the garments, the basket and the robot."""
     import torch
 
+    tid = getattr(task, "task_id", None)
+    eye_offset = eye_offset or OBSERVER_EYE.get(tid, (1.3, 1.3, 0.9))
     pts = [U.scene[c].data.nodal_pos_w.torch[0] for c in task.cloth_names] if task.cloth_names else []
     if pts:
         tgt = torch.cat(pts).mean(0, keepdim=True)
     else:
         tgt = U.scene["robot"].data.root_link_pos_w.torch[:1].clone()
-    tgt[:, 2] += 0.10
+    if tid in ("BED-01", "BED-03"):
+        keys = [tgt, U.scene["robot"].data.root_link_pos_w.torch[:1]]
+        if "laundry_basket" in U.scene.keys():
+            keys.append(U.scene["laundry_basket"].data.root_link_pos_w.torch[:1])
+        tgt = torch.cat(keys).mean(0, keepdim=True)
+        tgt[:, 2] = 0.35
+    else:
+        tgt[:, 2] += 0.10
+    if target is not None:
+        tgt = U.scene.env_origins[:1] + torch.tensor([list(target)], device=tgt.device, dtype=tgt.dtype)
     eye = tgt + torch.tensor([list(eye_offset)], device=tgt.device, dtype=tgt.dtype)
     U.scene["observer"].set_world_poses_from_view(eye, tgt)

@@ -127,3 +127,14 @@ def test_geometry_helpers():
     l, s = P.obb_extent_xy(sheet(0, 0, 0, 0.3, 0.2)[:, :2] @ np.array([[0.8, -0.6], [0.6, 0.8]]))
     assert l == pytest.approx(0.3, abs=1e-6) and s == pytest.approx(0.2, abs=1e-6)
     assert P.projected_area(sheet(0, 0, 0, 0.5, 0.5, 60)[:, :2]) == pytest.approx(0.25, rel=0.15)
+
+
+def test_bed03_tapered_gray_basket():
+    # real basket (D-36): interior narrows from 23.7 x 17.2 cm (half, rim) to 18.2 x 13.2 cm (half, floor)
+    spec = P.BASKET_GRAY
+    q = (0.0, 0.0, 0.0, 1.0)
+    assert P.point_in_basket((0.22, 0.0, 0.35), (0, 0, 0), q, spec)      # near the rim: inside
+    assert not P.point_in_basket((0.22, 0.0, 0.03), (0, 0, 0), q, spec)  # same x at the floor: outside the taper
+    assert not P.point_in_basket((0.0, 0.20, 0.2), (0, 0, 0), q, spec)
+    blob = np.c_[np.random.default_rng(0).uniform(-0.15, 0.15, (200, 2)), np.full(200, 0.05)]
+    assert P.cloth_in_basket(blob, (0, 0, 0), q, spec)
