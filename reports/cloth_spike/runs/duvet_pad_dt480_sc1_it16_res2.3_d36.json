@@ -1,0 +1,83 @@
+{
+  "run": "duvet_pad_dt480_sc1_it16_res2.3_d36",
+  "args": {
+    "test": "duvet",
+    "grip": "pad",
+    "dt": 480,
+    "duration": 30.0,
+    "cameras": false,
+    "self_collision": 1,
+    "res_cm": 2.3,
+    "torso": null,
+    "thickness": null,
+    "friction": null,
+    "cloth_iters": 16,
+    "assist_r": 0.05,
+    "pin_mode": "velocity",
+    "assist_filter": 1,
+    "pin_gain": 1.0,
+    "tag": "d36",
+    "xr": false,
+    "device": "cuda:0",
+    "visualizer": [],
+    "cpu": false,
+    "verbose": false,
+    "info": false,
+    "deterministic": false,
+    "kit_args": "",
+    "anim_recording_enabled": false,
+    "anim_recording_start_time": 0,
+    "anim_recording_stop_time": 10,
+    "headless": true,
+    "hide_ui": true,
+    "create_new_stage": false,
+    "physics_gpu": 0
+  },
+  "info": {
+    "num_nodes": 4225,
+    "grasp_point": [
+      0.5377086687088013,
+      -0.42012268424034116,
+      0.563999966621399
+    ],
+    "ik_err_max_m": 2.9503064070013352e-05,
+    "ik_err_max_rad": 0.0,
+    "tcp_at_grasp": [
+      0.5394992232322693,
+      -0.42010945081710815,
+      0.5619576573371887
+    ],
+    "tcp_grasp_err_m": 0.0027161233592778444,
+    "pad_capture": {
+      "half_gap": 0.04928923398256302,
+      "tip_to_cloth": -0.011605499312281609,
+      "nodes": 2
+    },
+    "finger_gap_m": 0.030281322076916695,
+    "grasped_nodes": 20,
+    "nearest_node_m": 0.015929989516735077,
+    "drift_end_mean_m": 0.07843658328056335,
+    "drift_end_median_m": 0.07819973677396774,
+    "drift_max_m": 0.18350382149219513,
+    "drift_mean_m": 0.1655893176794052,
+    "tcp_travel_m": 0.4994577467441559,
+    "target_nodes_travel_m": 0.40210700035095215,
+    "finite": true,
+    "max_node_speed_after_manip": 5.165162563323975,
+    "max_extent_m": 1.4307395219802856,
+    "manip_time_s": 12.099999999999474,
+    "sim_time_s": 30.10000000001047,
+    "step_wall_s": 433.22937499218096,
+    "rtf": 0.06947820655179193,
+    "snapshots": [],
+    "pad_out_max_m": 0.15891079604625702,
+    "pad_out_mean_m": 0.04200444132741501
+  },
+  "criteria": {
+    "grasp_hold(mean drift<=2cm)": false,
+    "stable_60s": false,
+    "rtf>=0.5": false
+  },
+  "wall_total_s": 441.5588262081146,
+  "pass": false
+}
