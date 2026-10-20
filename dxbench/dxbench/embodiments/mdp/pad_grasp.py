@@ -234,7 +234,7 @@ RBY1_HANDS = [HandSpec(body=f"ee_{side}", tip_offset=(0.0, 0.0, -0.1355),
 
 
 def add_pad_grasp(env_cfg, cloth_names: list[str], squeeze: float = 0.0, tip_margin: float = 0.004,
-                  capture_c: float | None = None):
+                  capture_c: float | None = 0.025):  # D-35
     """Call from an env_cfg_callback (RB-Y1): registers the term as `cloth_assist` (oracles read `.grasped` there)
     plus the hand/cloth prestartup filter of `cloth_assist` (D-19 links)."""
     from isaaclab.managers import EventTermCfg

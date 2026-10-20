@@ -348,7 +348,7 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
                                  "cylinder: cloth_assist (radius around the TCP axis, D-U11)")
         parser.add_argument("--pad_squeeze", type=float, default=0.0)  # D-34: 0.7 let pinned nodes drift up to 3 cm
         parser.add_argument("--pad_tip_margin", type=float, default=0.004)
-        parser.add_argument("--pad_capture_c", type=float, default=None,
+        parser.add_argument("--pad_capture_c", type=float, default=0.025,  # D-35
                             help="pad assist: catch only cloth within this distance (m) of the closing midplane")
         parser.add_argument("--episode_s", type=float, default=None)
         parser.add_argument("--observer", action="store_true", help="add a third-person camera (needs --video)")

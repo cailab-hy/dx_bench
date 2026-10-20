@@ -62,5 +62,5 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - Arena 기록 HDF5 파일명은 초 단위 타임스탬프 → 같은 초에 시작한 프로세스끼리 파일 잠금 충돌. `ArenaRuntime`이 프로세스별 이름을 준다.
 - AppLauncher에 `--device`(cuda)가 있으니 스크립트 인자로 `--device`를 쓰지 말 것(원격조작은 `--teleop_device`).
 - Isaac Lab `Isaac-Lift-*-Franka` 예제는 중력 커리큘럼(−1e-4 → −9.81, 10k RL step)이 있어 상태머신으로 짧게 돌리면 무중력이다 → `curriculum.gravity`·`events.variable_gravity`를 끌 것.
-- 보조 잡기 기본은 `pad_grasp`(D-34): 손끝이 천에서 4 mm 안이어야 잡힌다. oracle·원격조작은 천에 닿을 때까지 내려갈 것(`oracle_bed03.pinch_dz`). 잡기 기록은 `result.json`의 `grasp_stats`.
+- 보조 잡기 기본은 `pad_grasp`(D-34/35): 손끝이 천에서 4 mm 안, 닫히는 방향 가운데 ±2.5 cm 안의 천만 잡힌다. oracle·원격조작은 천에 닿을 때까지 내려갈 것(`oracle_bed03.pinch_dz`). 잡기 기록은 `result.json`의 `grasp_stats`.
 - 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.
