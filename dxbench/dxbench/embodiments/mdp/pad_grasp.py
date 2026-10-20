@@ -113,7 +113,8 @@ class PadGraspAction(ActionTerm):
             for name in c.cloth_names:
                 nodes = _T(self._env.scene[name].data.nodal_pos_w)[e]
                 loc = (nodes - o[e, h]) @ G[e, h]  # (V,3) w, c, a
-                m = ((loc[:, 0].abs() <= hs.pad_w / 2 + c.margin_w) & (loc[:, 1].abs() <= half[e, h] + c.margin_c)
+                c_cap = half[e, h] + c.margin_c if c.capture_c is None else min(float(half[e, h]) + c.margin_c, c.capture_c)
+                m = ((loc[:, 0].abs() <= hs.pad_w / 2 + c.margin_w) & (loc[:, 1].abs() <= c_cap)
                      & (loc[:, 2] >= -hs.pad_h) & (loc[:, 2] <= c.tip_margin))
                 # top cloth surface under the pads relative to the fingertips (topmost node in the w/c footprint that is
                 # not above the pads; > 0 = cloth below the tips, < 0 = tips pressed into the cloth)
@@ -206,6 +207,7 @@ class PadGraspActionCfg(ActionTermCfg):
     min_nodes: int = 1
     snap_s: float = 0.2
     squeeze: float = 0.0  # fraction of the closing-direction spread removed (see module docstring)
+    capture_c: float | None = None  # only catch nodes within this distance of the closing midplane (None: whole gap)
     gain: float = 1.0
 
 
@@ -231,7 +233,8 @@ RBY1_HANDS = [HandSpec(body=f"ee_{side}", tip_offset=(0.0, 0.0, -0.1355),
               for i, (side, s) in enumerate((("right", "r"), ("left", "l")))]
 
 
-def add_pad_grasp(env_cfg, cloth_names: list[str], squeeze: float = 0.0, tip_margin: float = 0.004):
+def add_pad_grasp(env_cfg, cloth_names: list[str], squeeze: float = 0.0, tip_margin: float = 0.004,
+                  capture_c: float | None = None):
     """Call from an env_cfg_callback (RB-Y1): registers the term as `cloth_assist` (oracles read `.grasped` there)
     plus the hand/cloth prestartup filter of `cloth_assist` (D-19 links)."""
     from isaaclab.managers import EventTermCfg
@@ -240,7 +243,7 @@ def add_pad_grasp(env_cfg, cloth_names: list[str], squeeze: float = 0.0, tip_mar
 
     env_cfg.actions.cloth_assist = PadGraspActionCfg(cloth_names=list(cloth_names), gripper_term="gripper",
                                                      hands=RBY1_HANDS, squeeze=squeeze, tip_margin=tip_margin,
-                                                     snap_s=0.5 if squeeze > 0 else 0.2)
+                                                     snap_s=0.5 if squeeze > 0 else 0.2, capture_c=capture_c)
     env_cfg.events.filter_finger_cloth = EventTermCfg(func=filter_finger_cloth_collisions, mode="prestartup",
                                                       params={"cloth_names": list(cloth_names)})
     return env_cfg

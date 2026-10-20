@@ -315,7 +315,8 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
             env_cfg = base_cb(env_cfg)
             if cloth and not args_cli.no_assist:
                 if args_cli.grasp_assist == "pad":
-                    add_pad_grasp(env_cfg, cloth, squeeze=args_cli.pad_squeeze, tip_margin=args_cli.pad_tip_margin)
+                    add_pad_grasp(env_cfg, cloth, squeeze=args_cli.pad_squeeze, tip_margin=args_cli.pad_tip_margin,
+                                  capture_c=args_cli.pad_capture_c)
                 else:
                     add_cloth_assist(env_cfg, cloth, radius=args_cli.assist_radius)
             if cloth:
@@ -347,6 +348,8 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
                                  "cylinder: cloth_assist (radius around the TCP axis, D-U11)")
         parser.add_argument("--pad_squeeze", type=float, default=0.0)  # D-34: 0.7 let pinned nodes drift up to 3 cm
         parser.add_argument("--pad_tip_margin", type=float, default=0.004)
+        parser.add_argument("--pad_capture_c", type=float, default=None,
+                            help="pad assist: catch only cloth within this distance (m) of the closing midplane")
         parser.add_argument("--episode_s", type=float, default=None)
         parser.add_argument("--observer", action="store_true", help="add a third-person camera (needs --video)")
         parser.add_argument("--observer_eye", type=float, nargs=3, default=(1.3, 1.3, 0.9),
