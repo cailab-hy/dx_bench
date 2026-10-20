@@ -52,6 +52,16 @@ def _T(x):
     return wp.to_torch(x) if isinstance(x, wp.array) else x
 
 
+def pinch_dz(U) -> float:
+    """TCP height above the cloth top when closing. The TCP is 3.1 cm above the fingertips. The cylinder assist
+    (cloth_assist) caught cloth up to 5 cm under the TCP, so the fingertips stopped 8 mm above it; the pad assist
+    (pad_grasp) only catches cloth within 4 mm of the fingertips, so they go down onto it (2 mm in)."""
+    from dxbench.embodiments.mdp.pad_grasp import PadGraspAction
+
+    term = U.action_manager.get_term("cloth_assist")
+    return 0.031 - 0.002 if isinstance(term, PadGraspAction) else 0.031 + 0.008
+
+
 def wrap(a):
     return (a + math.pi) % (2 * math.pi) - math.pi
 
@@ -397,7 +407,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             c, n = self._cloth_xyz(U, self.target)
             near = n[np.argsort(np.linalg.norm(n[:, :2] - c[:2], axis=1))[:30]]
             top = float(near[:, 2].max())
-            tb = self._to_base(U, [c[0], c[1], top + 0.031 + 0.008])
+            tb = self._to_base(U, [c[0], c[1], top + pinch_dz(U)])
             a[0:6], err = self._servo(observation, tb, max_dp=0.012)
             self.last_err = err
             if err < 0.012 or self.t_phase > 90:

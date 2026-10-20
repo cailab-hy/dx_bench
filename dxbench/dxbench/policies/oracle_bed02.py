@@ -28,9 +28,10 @@ import torch
 from isaaclab_arena.assets.register import register_policy
 from isaaclab_arena.policy.policy_base import PolicyBase, PolicyCfg
 
-from dxbench.policies.oracle_bed03 import BASE_FRONT_X, Bed03OraclePolicy, _T
+from dxbench.policies.oracle_bed03 import BASE_FRONT_X, Bed03OraclePolicy, _T, pinch_dz
 
-GRIP_DZ = 0.031 + 0.008   # TCP height above the cloth surface when pinching (fingertips 8 mm above)
+# TCP height above the cloth surface when pinching: oracle_bed03.pinch_dz (fingertips 8 mm above for the cylinder
+# assist, 2 mm into the cloth for the pad assist)
 ARM = {"right": (0, 12), "left": (6, 13)}  # action offset of the 6-D arm delta, gripper index
 
 
@@ -153,8 +154,9 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             arms = [(s_, c[:2] + u * uu + v * ve, c[:2] + u * uu + v * ve + shift) for s_, uu, ve in ends]
         out = []
         for side, pick, put in arms:
-            z_put = local_top(put) + 0.012 + GRIP_DZ
-            out.append({"side": side, "pick": np.r_[pick, local_top(pick) + GRIP_DZ], "put": np.r_[put, z_put]})
+            grip_dz = pinch_dz(U)
+            z_put = local_top(put) + 0.012 + grip_dz
+            out.append({"side": side, "pick": np.r_[pick, local_top(pick) + grip_dz], "put": np.r_[put, z_put]})
         return {"move": move, "label": label, "arms": out}
 
     # ------------------------------------------------------------------ main

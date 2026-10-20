@@ -56,6 +56,7 @@ N=21 P=3 STEPS=20000 tools/stage45.sh
 | D-U11 보조 잡기 반경 5 → 2.5 cm | Isaac Sim 천 레포 조사(`docs/notes/cloth_grasp_survey.md`), oracle 잡기 확인·재접근·건너뛰기(D-29) | **BED-03 Easy oracle 8/10**(새 조건) |
 | D-U8 BED-02 수건 재질 | 수건 영률 1e5(D-28, `reports/towel_fold/REPORT.md`), 수건 장면 110개 천 상태 재생성, 양손 반 접기(D-30), 쌓는 자리 이동·양손 쌓기(D-32, 사용자 선택 ③) | oracle 최고 0.7에서 **중단**(D-33) → 사람 데모 제안 |
 | D-U9 BED-01 | 사람 원격조작으로 나중에 | — |
+| D-U12 잡기 조건 엄격화 (10-20) | LeIsaac·Lightwheel·Isaac Lab Franka 천 예제 조사·영상, Franka에서 패드 상자 보조 잡기 재현, RB-Y1 BED-02 oracle로 squeeze 0.7 vs 0 비교 → `reports/pad_grasp/REPORT.md` | **기본 잡기 = pad, squeeze 0**(D-34). BED-03 oracle 재확인과 데모 재수집 필요 |
 | D-U10 데모 확대 + ACT·SmolVLA 동시 | 학습 장면 100개, 새 조건 oracle 데모 92개(`data/raw/bed03_oracle_v2`) → ACT 100k + SmolVLA 20k 동시 학습 → 평가 | **ACT 0/10, SmolVLA 0/10**(학습 장면에서도 0/3). 팔·몸통은 v1보다 2–4배 정확해졌지만 베이스 이동을 못 배움 → `reports/stage_v2/REPORT.md` |
 
 ## 상태 요약

@@ -7,7 +7,8 @@
 A scene JSON (dxbench.tasks.scene_spec) fixes the objects, cloth states, robot start and language. The DX care-room
 background keeps its furniture; its own blanket / pillow / desk T-shirt are deactivated before the simulation
 starts and the benchmark garments are spawned as Arena deformables (so the task can read and reset them).
-Grasping cloth uses the assisted grasp (embodiments/mdp/cloth_assist.py, DECISIONS D-4/D-5).
+Grasping cloth uses the assisted grasp: embodiments/mdp/pad_grasp.py by default (D-34), cloth_assist.py with
+--grasp_assist cylinder (DECISIONS D-4/D-5/D-U11).
 Scores: dxbench.tasks.predicates (pure numpy, unit-tested).
 """
 from __future__ import annotations
@@ -35,6 +36,7 @@ import dxbench.embodiments.rby1  # noqa: F401
 from dxbench.assets import objects as O
 from dxbench.assets.scenes import replace_care_room_floor
 from dxbench.embodiments.mdp.cloth_assist import add_base_cloth_filter, add_cloth_assist
+from dxbench.embodiments.mdp.pad_grasp import add_pad_grasp
 from dxbench.environments.rby1_envs import physics_callback
 from dxbench.paths import CARE_FURNITURE, REPO
 from dxbench.tasks import predicates as P
@@ -312,7 +314,10 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         def cb(env_cfg):
             env_cfg = base_cb(env_cfg)
             if cloth and not args_cli.no_assist:
-                add_cloth_assist(env_cfg, cloth, radius=args_cli.assist_radius)
+                if args_cli.grasp_assist == "pad":
+                    add_pad_grasp(env_cfg, cloth, squeeze=args_cli.pad_squeeze, tip_margin=args_cli.pad_tip_margin)
+                else:
+                    add_cloth_assist(env_cfg, cloth, radius=args_cli.assist_radius)
             if cloth:
                 add_base_cloth_filter(env_cfg, cloth)
             return env_cfg
@@ -329,7 +334,12 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         parser.add_argument("--physics_hz", type=int, default=480)
         parser.add_argument("--untiled_cameras", action="store_true")
         parser.add_argument("--no_assist", action="store_true", help="disable the assisted cloth grasp")
-        parser.add_argument("--assist_radius", type=float, default=0.025)  # D-U11
+        parser.add_argument("--assist_radius", type=float, default=0.025)  # D-U11 (cylinder)
+        parser.add_argument("--grasp_assist", default="pad", choices=["cylinder", "pad"],  # D-34
+                            help="pad: pad_grasp (only cloth between the pads, tips <= 4 mm from it); "
+                                 "cylinder: cloth_assist (radius around the TCP axis, D-U11)")
+        parser.add_argument("--pad_squeeze", type=float, default=0.0)  # D-34: 0.7 let pinned nodes drift up to 3 cm
+        parser.add_argument("--pad_tip_margin", type=float, default=0.004)
         parser.add_argument("--episode_s", type=float, default=None)
 
 

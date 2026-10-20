@@ -134,6 +134,12 @@ def main():
            "interventions": 0, "safety": {"robot_tilt_max_deg": tilt_max, "robot_tipped": tilt_max > 10.0},
            "policy_phase_end": getattr(policy, "phase", None), "policy_plan_log": getattr(policy, "plan_log", None),
            "policy_done": getattr(policy, "done_clothes", None)}
+    try:  # pad assist (pad_grasp): per-grasp nodes, fingertip-cloth gap, how far the pinned nodes left the pads
+        ca = U.action_manager.get_term("cloth_assist")
+        if hasattr(ca, "stats"):
+            res["grasp_stats"] = ca.stats
+    except (KeyError, ValueError):
+        pass
     (out / "result.json").write_text(json.dumps(res, indent=1, default=float))
     if frames is not None and frames["head"]:
         import imageio
