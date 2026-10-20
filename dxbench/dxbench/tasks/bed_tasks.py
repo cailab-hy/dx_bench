@@ -320,6 +320,13 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
                     add_cloth_assist(env_cfg, cloth, radius=args_cli.assist_radius)
             if cloth:
                 add_base_cloth_filter(env_cfg, cloth)
+            if args_cli.observer:  # third-person RTX camera; run_episode aims it (aim_observer) and saves observer.mp4
+                import isaaclab.sim as sim_utils
+                from isaaclab.sensors import CameraCfg
+
+                env_cfg.scene.observer = CameraCfg(
+                    prim_path="{ENV_REGEX_NS}/observer", update_period=0.0, width=960, height=540, data_types=["rgb"],
+                    spawn=sim_utils.PinholeCameraCfg(focal_length=16.0, clipping_range=(0.05, 20.0)))
             return env_cfg
 
         return IsaacLabArenaEnvironment(name=self.name, embodiment=emb,
@@ -341,6 +348,9 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         parser.add_argument("--pad_squeeze", type=float, default=0.0)  # D-34: 0.7 let pinned nodes drift up to 3 cm
         parser.add_argument("--pad_tip_margin", type=float, default=0.004)
         parser.add_argument("--episode_s", type=float, default=None)
+        parser.add_argument("--observer", action="store_true", help="add a third-person camera (needs --video)")
+        parser.add_argument("--observer_eye", type=float, nargs=3, default=(1.3, 1.3, 0.9),
+                            help="observer eye offset (m, world) from its target (the garments on the desk / floor)")
 
 
 class DxBed01Environment(_DxBedEnvironmentBase):
@@ -356,3 +366,17 @@ class DxBed02Environment(_DxBedEnvironmentBase):
 class DxBed03Environment(_DxBedEnvironmentBase):
     name = "dx_bed03"
     task_key = "BED-03"
+
+
+def aim_observer(U, task, eye_offset):
+    """Point the `observer` camera at the garments (centroid of all cloth nodes, 10 cm up), from `eye_offset`."""
+    import torch
+
+    pts = [U.scene[c].data.nodal_pos_w.torch[0] for c in task.cloth_names] if task.cloth_names else []
+    if pts:
+        tgt = torch.cat(pts).mean(0, keepdim=True)
+    else:
+        tgt = U.scene["robot"].data.root_link_pos_w.torch[:1].clone()
+    tgt[:, 2] += 0.10
+    eye = tgt + torch.tensor([list(eye_offset)], device=tgt.device, dtype=tgt.dtype)
+    U.scene["observer"].set_world_poses_from_view(eye, tgt)

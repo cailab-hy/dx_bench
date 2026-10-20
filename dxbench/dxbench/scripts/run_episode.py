@@ -69,6 +69,9 @@ def main():
 
         rec = EpisodeRecorder.from_env(U, a.record, policy_name=a.policy, scene=getattr(a, "scene", None))
     frames = {k: [] for k in ("head", "left_wrist", "right_wrist")} if a.video else None
+    observer = frames is not None and getattr(a, "observer", False) and "observer" in U.scene.keys()
+    if observer:
+        frames["observer"] = []
     max_steps = a.max_steps or int(U.max_episode_length)
     t0 = time.time()
     first_reach: dict[str, int] = {}
@@ -87,6 +90,12 @@ def main():
                 key = f"{k}_rgb"
                 if key in obs["camera_obs"]:
                     frames[k].append(obs["camera_obs"][key][0].cpu().numpy()[..., :3].astype(np.uint8))
+        if observer:
+            if step == 0:  # cloth nodes are current after the first step
+                from dxbench.tasks.bed_tasks import aim_observer
+
+                aim_observer(U, task_obj, a.observer_eye)
+            frames["observer"].append(U.scene["observer"].data.output["rgb"].torch[0, ..., :3].cpu().numpy().astype(np.uint8))
         if task_obj is not None and step % 5 == 0:
             last_eval = task_obj.evaluate(U)[0]
             for k, v in last_eval["stages"].items():
