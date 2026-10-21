@@ -27,6 +27,7 @@ ap.add_argument("--thickness", type=float, default=0.0015)
 ap.add_argument("--bend_damping", type=float, default=0.1)
 ap.add_argument("--hz", type=int, default=480)
 ap.add_argument("--cases", default="corner,center,drag")
+ap.add_argument("--video", action="store_true", help="record each case (top-down | oblique) at 15 fps")
 ap.add_argument("--tag", default="base")
 AppLauncher.add_app_launcher_args(ap)
 args = ap.parse_args()
@@ -82,7 +83,7 @@ def build():
         light = AssetBaseCfg(prim_path="/World/light", spawn=sim_utils.DomeLightCfg(intensity=2500.0))
         desk = AssetBaseCfg(
             prim_path="{ENV_REGEX_NS}/Desk",
-            spawn=sim_utils.CuboidCfg(size=(1.2, 1.0, TOP), collision_props=sim_utils.CollisionPropertiesCfg(),
+            spawn=sim_utils.CuboidCfg(size=(1.8, 1.2, TOP), collision_props=sim_utils.CollisionPropertiesCfg(),
                                       visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.55, 0.55, 0.5)),
                                       physics_material=sim_utils.RigidBodyMaterialCfg(
                                           static_friction=args.mu, dynamic_friction=0.85 * args.mu)),
@@ -91,6 +92,9 @@ def build():
                                     init_state=DeformableObjectCfg.InitialStateCfg(pos=(0.0, 0.0, TOP + 0.005)))
         cam = CameraCfg(prim_path="{ENV_REGEX_NS}/cam", update_period=0.0, width=720, height=720, data_types=["rgb"],
                         spawn=sim_utils.PinholeCameraCfg(focal_length=18.0, clipping_range=(0.05, 5.0)),
+                        renderer_cfg=IsaacRtxRendererCfg())
+        top = CameraCfg(prim_path="{ENV_REGEX_NS}/top", update_period=0.0, width=720, height=720, data_types=["rgb"],
+                        spawn=sim_utils.PinholeCameraCfg(focal_length=14.0, clipping_range=(0.05, 5.0)),
                         renderer_cfg=IsaacRtxRendererCfg())
 
     sim = sim_utils.SimulationContext(sim_utils.SimulationCfg(device=args.device, dt=DT, render_interval=32))
@@ -103,7 +107,13 @@ def main():
     sim, scene, density = build()
     towel = scene["towel"]
     cam = scene["cam"]
+    top = scene["top"]
     o = scene.env_origins[0]
+    # top-down like the phone video (camera ~0.9 m above the desk, towel long axis vertical in the image)
+    top.set_world_poses_from_view((o + torch.tensor([0.05, 0.0, TOP + 0.95], device=o.device))[None],
+                                  (o + torch.tensor([0.0, 0.0, TOP], device=o.device))[None])
+    frames = []
+    every = max(1, round(args.hz / 15))
     # oblique view (the video is top-down, but the lifted drape only reads from the side)
     cam.set_world_poses_from_view((o + torch.tensor([0.75, -0.85, TOP + 0.65], device=o.device))[None],
                                   (o + torch.tensor([0.0, 0.0, TOP + 0.12], device=o.device))[None])
@@ -149,7 +159,12 @@ def main():
             prev = tgt.clone()
             vel[0, ids] = (tgt + o - pos[0, ids]) / DT + v_ff
             towel.write_nodal_velocity_to_sim_index(vel)
-            step(1, render=(k == steps + int(hold / DT) - 1))
+            rec = args.video and k % every == 0
+            step(1, render=rec or (k == steps + int(hold / DT) - 1))
+            if rec:
+                a = T(top.data.output["rgb"])[0, ..., :3].cpu().numpy().astype(np.uint8)
+                b = T(cam.data.output["rgb"])[0, ..., :3].cpu().numpy().astype(np.uint8)
+                frames.append(np.concatenate([a, b], axis=1))
 
     def snap(name):
         img = T(cam.data.output["rgb"])[0, ..., :3].cpu().numpy().astype(np.uint8)
@@ -186,6 +201,11 @@ def main():
                                   "extent_x": float(n[:, 0].max() - n[:, 0].min()),
                                   "max_z": float(n[:, 2].max() - TOP)}
         snap(case)
+        if args.video and frames:
+            import imageio
+
+            imageio.mimsave(OUT / f"{case}.mp4", frames, fps=15, codec="libx264", quality=8, macro_block_size=1)
+            frames.clear()
         print(f"[towel_match] {args.tag} {case}: {res['cases'][case]}", flush=True)
     (OUT / "result.json").write_text(json.dumps(res, indent=1))
     print(f"[towel_match] wrote {OUT}", flush=True)
