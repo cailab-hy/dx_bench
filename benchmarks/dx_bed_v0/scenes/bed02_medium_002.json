@@ -9,7 +9,8 @@
    19.07
   ],
   "yaw": 3.141592653589793,
-  "torso": "upright"
+  "torso": "upright",
+  "head_pitch": 0.6
  },
  "objects": [
   {
@@ -21,7 +22,7 @@
     0.8050000238418579
    ],
    "yaw": 1.2847308878940762,
-   "variant": "m95_green",
+   "variant": "m95_wine",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_medium_002_cloth_0.npz"
   }
  ],

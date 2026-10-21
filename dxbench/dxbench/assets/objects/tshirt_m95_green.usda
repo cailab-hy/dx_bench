@@ -69,14 +69,14 @@ def Xform "TShirt" (
         )
         {
             float omniphysics:density = 143.70908
-            float omniphysics:dynamicFriction = 0.6
+            float omniphysics:dynamicFriction = 0.75
             float omniphysics:poissonsRatio = 0.25
-            float omniphysics:staticFriction = 0.72
+            float omniphysics:staticFriction = 0.9
             float omniphysics:surfaceBendStiffness = 0
             float omniphysics:surfaceShearStiffness = 0
             float omniphysics:surfaceStretchStiffness = 0
             float omniphysics:surfaceThickness = 0.0015
-            float omniphysics:youngsModulus = 1000000
+            float omniphysics:youngsModulus = 100000
             float physxDeformableMaterial:bendDamping = 0.1
             float physxDeformableMaterial:elasticityDamping = 0.1
         }

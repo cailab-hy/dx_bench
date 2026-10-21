@@ -72,9 +72,12 @@ def _sel(table: dict, names: list[str]) -> dict:
     return {k: v for k, v in table.items() if any(re.fullmatch(k, n) for n in names)}
 
 
-def default_joint_pos(torso: str = "upright", arms: str = "ready", gripper_open: float = 1.0) -> dict[str, float]:
-    """Explicit per-joint initial positions (no overlapping regex keys)."""
+def default_joint_pos(torso: str = "upright", arms: str = "ready", gripper_open: float = 1.0,
+                      head_pitch: float = 0.0) -> dict[str, float]:
+    """Explicit per-joint initial positions (no overlapping regex keys). head_pitch: head_1 (rad, + looks down); no
+    action drives the head, so it holds this for the whole episode."""
     q = {n: 0.0 for n in CPP_JOINT_NAMES}
+    q["head_1"] = head_pitch
     t1, t2, t3 = TORSO_PRESETS[torso]
     q.update({"torso_1": t1, "torso_2": t2, "torso_3": t3})
     if arms == "ready":
@@ -85,7 +88,7 @@ def default_joint_pos(torso: str = "upright", arms: str = "ready", gripper_open:
 
 
 def make_rby1_cfg(preset: str = "tuned", usd_path: str | None = None, torso: str = "upright",
-                  arms: str = "ready", self_collision: bool = False) -> ArticulationCfg:
+                  arms: str = "ready", self_collision: bool = False, head_pitch: float = 0.0) -> ArticulationCfg:
     actuators = {}
     for g, names in GROUPS.items():
         if g == "wheels":
@@ -114,7 +117,7 @@ def make_rby1_cfg(preset: str = "tuned", usd_path: str | None = None, torso: str
             articulation_props=sim_utils.ArticulationRootPropertiesCfg(
                 enabled_self_collisions=self_collision, solver_position_iteration_count=4,
                 solver_velocity_iteration_count=1)),
-        init_state=ArticulationCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0), joint_pos=default_joint_pos(torso, arms)),
+        init_state=ArticulationCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0), joint_pos=default_joint_pos(torso, arms, head_pitch=head_pitch)),
         soft_joint_pos_limit_factor=1.0,
         actuators=actuators,
     )

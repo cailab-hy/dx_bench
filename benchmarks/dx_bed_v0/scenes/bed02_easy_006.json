@@ -9,7 +9,8 @@
    19.07
   ],
   "yaw": 3.141592653589793,
-  "torso": "upright"
+  "torso": "upright",
+  "head_pitch": 0.6
  },
  "objects": [
   {
@@ -21,7 +22,7 @@
     0.7300000238418579
    ],
    "yaw": 1.5184232227130479,
-   "variant": "10_lavender",
+   "variant": "13_sandbeige",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_easy_006_cloth_0.npz"
   }
  ],

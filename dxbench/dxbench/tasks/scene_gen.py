@@ -23,6 +23,7 @@ SHIRTS = ("m95_blue", "m95_wine", "m95_green")
 TOWELS = ("01_charcoalgray", "05_coolgray", "06_white", "07_oatmeal", "08_lightpink", "09_ivory", "10_lavender",
           "11_applegreen", "12_skyblue", "13_sandbeige")
 BASKET_VARIANT = "gray"
+HEAD_PITCH_DESK = 0.6  # rad, BED-02 head camera tilt (D-40)
 _COLOR_SALT = 54321
 
 
@@ -94,6 +95,33 @@ def gen_bed03(diff: str, seed: int, split: str) -> SceneSpec:
                      language=language("BED-03"))
 
 
+def gen_bed03_near(diff: str, seed: int, split: str) -> SceneSpec:
+    """BED-03 "near" (D-39): the easy layout of the same seed, but the robot starts NEAR_DIST in front of the first
+    garment, facing it - pick + a short drive + put, so manipulation is learned / scored without the 4-5 m search.
+    The start is on the garment's side towards the original start, rotated around the garment until the floor is
+    free (robot footprint 0.45 m + margin)."""
+    spec = gen_bed03("easy", seed, split)
+    L = load_layout()
+    g = next(o for o in spec.objects if o.kind in ("tshirt", "towel"))
+    b = next(o for o in spec.objects if o.kind == "basket")
+    gx, gy = g.xyz[0], g.xyz[1]
+    a0 = math.atan2(CARE_SPAWN[1] - gy, CARE_SPAWN[0] - gx)
+    others = [((o.xyz[0], o.xyz[1]), 0.55) for o in spec.objects if o is not g and o.kind in ("tshirt", "towel", "sock")]
+    others.append(((b.xyz[0], b.xyz[1]), 0.65))
+    for k in range(24):
+        a = a0 + (k + 1) // 2 * (math.pi / 12) * (1 if k % 2 else -1)
+        x, y = gx + NEAR_DIST * math.cos(a), gy + NEAR_DIST * math.sin(a)
+        if free_floor_ok((x, y), L, 0.5, extra=others):
+            break
+    spec.robot = {"xy": [float(x), float(y)], "yaw": math.atan2(gy - y, gx - x), "torso": "upright"}
+    spec.difficulty = "near"
+    spec.scene_id = f"bed03_near_{seed:03d}" if split == "eval" else f"bed03_near_train_{seed}"
+    return spec
+
+
+NEAR_DIST = 0.75  # robot base origin to the first garment (m)
+
+
 def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
     rng = np.random.default_rng(seed)
     L = load_layout()
@@ -116,9 +144,10 @@ def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
         for i, kind in enumerate(["tshirt", "tshirt", "towel", "tshirt", "towel"]):
             objs.append(ObjSpec(f"cloth_{i}", kind, [cx - 0.05, cy - 0.25, top + 0.05 + 0.06 * i], float(rng.uniform(-1, 1)),
                                 _shirts(split, seed)[i] if kind == "tshirt" else _towel(split, seed, i)))
-    # robot in front of the desk's long side (desk against the west wall: approach from +x). Starts leaning
-    # (2026-10-21): upright, the head camera looks over the desk and sees neither the desk top nor the garment.
-    robot = {"xy": [float(hi[0]) + 0.75, cy], "yaw": math.pi, "torso": "lean"}
+    # robot in front of the desk's long side (desk against the west wall: approach from +x). Head pitched down
+    # (2026-10-21): level, the head camera looks over the desk and sees neither the desk top nor the garment; a
+    # leaning start instead put the READY arms onto the desk and the towel.
+    robot = {"xy": [float(hi[0]) + 0.75, cy], "yaw": math.pi, "torso": "upright", "head_pitch": HEAD_PITCH_DESK}
     return SceneSpec(scene_id=f"bed02_{diff}_{seed:03d}" if split == "eval" else f"bed02_{diff}_train_{seed}",
                      task="BED-02", difficulty=diff, seed=seed, robot=robot, objects=objs, language=language("BED-02"))
 
@@ -153,7 +182,8 @@ GEN = {"BED-01": gen_bed01, "BED-02": gen_bed02, "BED-03": gen_bed03}
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--task", required=True, choices=list(GEN))
-    ap.add_argument("--difficulty", required=True, choices=["easy", "medium", "hard"])
+    ap.add_argument("--difficulty", required=True, choices=["easy", "medium", "hard", "near"],
+                    help="near: BED-03 only, the easy layout with the robot in front of the first garment (D-39)")
     ap.add_argument("--n", type=int, default=10)
     ap.add_argument("--seed0", type=int, default=0)
     ap.add_argument("--split", default="eval", choices=["eval", "train"])
@@ -161,7 +191,7 @@ def main():
     a = ap.parse_args()
     out = Path(a.out)
     for s in range(a.seed0, a.seed0 + a.n):
-        spec = GEN[a.task](a.difficulty, s, a.split)
+        spec = (gen_bed03_near if a.difficulty == "near" else GEN[a.task])(a.difficulty, s, a.split)
         spec.to_json(out / f"{spec.scene_id}.json")
         assert all(free_floor_ok(o.xyz[:2], load_layout(), 0.6) or o.xyz[2] > 0.1 or o.kind in ("duvet", "pillow")
                    for o in spec.objects if o.kind not in ("basket",)) or a.task != "BED-03"

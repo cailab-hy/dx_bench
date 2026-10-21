@@ -9,7 +9,8 @@
    19.07
   ],
   "yaw": 3.141592653589793,
-  "torso": "upright"
+  "torso": "upright",
+  "head_pitch": 0.6
  },
  "objects": [
   {
@@ -45,7 +46,7 @@
     0.895000023841858
    ],
    "yaw": 0.551371380490387,
-   "variant": "10_lavender",
+   "variant": "07_oatmeal",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_007_cloth_2.npz"
   },
   {
@@ -69,7 +70,7 @@
     1.015000023841858
    ],
    "yaw": -0.39966743017754913,
-   "variant": "10_lavender",
+   "variant": "11_applegreen",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_007_cloth_4.npz"
   }
  ],

@@ -288,7 +288,7 @@ def build_assets(spec: SceneSpec) -> list:
         elif o.kind == "sock":
             assets.append(O.sock(o.name, xyz, yaw))
         elif o.kind == "duvet":
-            assets.append(O.rect_cloth(o.name, (1.5, 1.4), xyz, yaw, rgb=(0.85, 0.9, 0.95)))
+            assets.append(O.duvet(o.name, xyz, yaw))
         elif o.kind == "pillow":
             assets.append(O.pillow(o.name, xyz, yaw))
         elif o.kind == "basket":
@@ -318,7 +318,8 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         yaw = float(spec.robot.get("yaw", 0.0))
         emb = self.asset_registry.get_asset_by_name(args_cli.embodiment)(
             enable_cameras=bool(getattr(args_cli, "enable_cameras", False)), preset=args_cli.gains,
-            torso=spec.robot.get("torso", "upright"), use_tiled_camera=not args_cli.untiled_cameras,
+            torso=spec.robot.get("torso", "upright"), head_pitch=float(spec.robot.get("head_pitch", 0.0)),
+            use_tiled_camera=not args_cli.untiled_cameras,
             initial_pose=Pose(position_xyz=(x, y, 0.0), rotation_xyzw=(0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2))))
         task_cls, ep_len = TASKS[spec.task]
         task = task_cls(spec, args_cli.episode_s or ep_len)

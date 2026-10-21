@@ -60,7 +60,8 @@ def tshirt(name: str, variant: str = "m_blue", xyz=(0.0, 0.0, 0.0), yaw: float =
 
 def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, rgb=(0.9, 0.85, 0.6),
                spacing_m: float = 0.023, iters: int = 16, self_collision: bool = True,
-               youngs_modulus: float = 1.0e6, density: float = 120.0, friction: tuple = (0.72, 0.6)) -> DeformableObject:
+               youngs_modulus: float = 1.0e6, density: float = 120.0, friction: tuple = (0.72, 0.6),
+               thickness: float = CLOTH_THICKNESS, poisson: float = 0.25) -> DeformableObject:
     import math
 
     diag = math.hypot(*size)
@@ -70,7 +71,7 @@ def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.
                                                                self_collision=self_collision),
         physics_material=sim_utils.PhysxSurfaceDeformableBodyMaterialCfg(
             density=density, static_friction=friction[0], dynamic_friction=friction[1], youngs_modulus=youngs_modulus,
-            poissons_ratio=0.25, surface_thickness=CLOTH_THICKNESS, bend_damping=0.1, elasticity_damping=0.1),
+            poissons_ratio=poisson, surface_thickness=thickness, bend_damping=0.1, elasticity_damping=0.1),
         collision_props=[PhysxCollisionCfg(contact_offset=0.008, rest_offset=0.002)],
         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=rgb))
     return DeformableObject(name=name, spawner_cfg=cfg, initial_pose=_pose(xyz, yaw))
@@ -89,6 +90,14 @@ def towel(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, small: bool = False,
                           youngs_modulus=TOWEL_YOUNGS, density=TOWEL_GSM / 1000.0 / CLOTH_THICKNESS, friction=(0.9, 0.75))
     return rect_cloth(name, (0.5, 0.3) if small else (0.7, 0.45), xyz, yaw, rgb=(0.95, 0.9, 0.7),
                       youngs_modulus=TOWEL_YOUNGS)
+
+
+def duvet(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
+    """The lab bed's blanket as in the DX twin (Bed.usda `Blanket` + `BlanketPhysics`, D-39): 1.5 x 1.4 m, density 100,
+    2 mm, E 1e6, nu 0.3, friction 0.6 / 0.5, white sheet colour. 2.3 cm nodes (the DX mesh has 3.5 cm; stage 1 needed
+    2.3 cm to grasp)."""
+    return rect_cloth(name, (1.5, 1.4), xyz, yaw, rgb=(0.8879, 0.8879, 0.8714), density=100.0, thickness=0.002,
+                      youngs_modulus=1.0e6, poisson=0.3, friction=(0.6, 0.5))
 
 
 def sock(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
@@ -117,5 +126,5 @@ def pillow(name: str = "pillow", xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> Defor
         physics_material=sim_utils.DeformableBodyMaterialCfg(youngs_modulus=4000.0, poissons_ratio=0.3, density=35.0,
                                                              static_friction=0.7, dynamic_friction=0.6),
         collision_props=[PhysxCollisionCfg(contact_offset=0.01, rest_offset=0.002)],
-        visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.95, 0.95, 0.97)))
+        visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.9047, 0.9047, 0.8879)))  # DX pillow_3
     return DeformableObject(name=name, spawner_cfg=cfg, initial_pose=_pose(xyz, yaw))

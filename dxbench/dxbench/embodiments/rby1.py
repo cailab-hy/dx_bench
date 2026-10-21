@@ -110,6 +110,8 @@ class RBY1EventCfg:
     reset_robot_joints = EventTerm(func=lab_mdp.reset_joints_by_offset, mode="reset",
                                    params={"position_range": (0.0, 0.0), "velocity_range": (0.0, 0.0),
                                            "asset_cfg": SceneEntityCfg("robot")})
+    # no action drives the head: its PD target stayed 0 and a pitched start pose (BED-02, D-40) sprang back level
+    hold_head = EventTerm(func=A.hold_joints_at_default, mode="reset", params={"joint_names": ["head_0", "head_1"]})
 
 
 class _RBY1Base(EmbodimentBase):
@@ -117,10 +119,10 @@ class _RBY1Base(EmbodimentBase):
 
     def __init__(self, enable_cameras: bool = False, initial_pose=None, concatenate_observation_terms: bool = False,
                  arm_mode=None, preset: str = "tuned", torso: str = "upright", use_tiled_camera: bool = True,
-                 usd_path: str | None = None, **kwargs):
+                 usd_path: str | None = None, head_pitch: float = 0.0, **kwargs):
         super().__init__(enable_cameras, initial_pose, concatenate_observation_terms, arm_mode, **kwargs)
         self.scene_config = RBY1SceneCfg()
-        self.scene_config.robot = make_rby1_cfg(preset=preset, torso=torso, usd_path=usd_path)
+        self.scene_config.robot = make_rby1_cfg(preset=preset, torso=torso, usd_path=usd_path, head_pitch=head_pitch)
         self.camera_config = RBY1CameraCfg()
         self.camera_config.set_use_tiled_camera(use_tiled_camera)
         self.observation_config = RBY1ObservationsCfg()

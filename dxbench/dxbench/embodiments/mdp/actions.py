@@ -324,3 +324,15 @@ class HomingDiffIKAction(DifferentialInverseKinematicsAction):
 class HomingDiffIKActionCfg(DifferentialInverseKinematicsActionCfg):
     class_type: type[ActionTerm] = HomingDiffIKAction
     home_rad_s: float = 0.8
+
+
+def hold_joints_at_default(env, env_ids, joint_names, asset_name: str = "robot"):
+    """Reset event: set the PD position target of joints no action term drives (the head) to their default
+    (initial) position, so they hold the start pose instead of returning to 0."""
+    asset = env.scene[asset_name]
+    ids = asset.find_joints(list(joint_names), preserve_order=True)[0]
+    q = asset.data.default_joint_pos
+    q = q.torch if hasattr(q, "torch") else q
+    env_ids = torch.arange(env.num_envs, device=env.device) if env_ids is None else env_ids
+    asset.set_joint_position_target_index(target=q[env_ids][:, ids], joint_ids=ids, env_ids=env_ids)
+

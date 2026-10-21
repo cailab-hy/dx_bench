@@ -249,7 +249,8 @@ def make_basket_real(spec=None, name="laundry_basket_gray"):
 # Short-sleeve T-shirt M(95) (Coupang 9705760403): chest half 49, length 62.5, shoulder 42, sleeve 19 cm, cotton 100 %.
 TEE_REAL = {"chest_half": 0.49, "length": 0.625, "shoulder": 0.42, "sleeve": 0.19, "neck": 0.18,
             "armhole": 0.235, "shoulder_drop": 0.04, "sleeve_angle_deg": 30.0, "cuff": 0.165,
-            "mass": 0.140}  # real tee weighed 140 g (user, 2026-10-21); density = mass / (thickness x mesh area)
+            "mass": 0.140,  # real tee weighed 140 g (user, 2026-10-21); density = mass / (thickness x mesh area)
+            "youngs": 1.0e5, "friction": (0.9, 0.75)}  # = towel until the tee is measured (D-39)
 TEE_COLORS = {"blue": "#2e4880", "wine": "#623944", "green": "#374a4a"}  # 유니미스 30수 무지 반팔티 photos (sRGB)
 
 
@@ -360,6 +361,10 @@ def make_real_tshirts(colors=None, spec=None):
                 area += 0.5 * np.linalg.norm(np.cross(P[F[:, 1]] - P[F[:, 0]], P[F[:, 2]] - P[F[:, 0]]), axis=1).sum()
         for prim in mats:
             prim.GetAttribute("omniphysics:density").Set(float(t["mass"] / (thick * area)))
+            # same bending stiffness / friction as the towel for now (user 2026-10-21, D-39): E 1e5, mu 0.9 / 0.75
+            prim.GetAttribute("omniphysics:youngsModulus").Set(float(t["youngs"]))
+            prim.GetAttribute("omniphysics:staticFriction").Set(float(t["friction"][0]))
+            prim.GetAttribute("omniphysics:dynamicFriction").Set(float(t["friction"][1]))
         new.customLayerData = {"source": str(src), "product": "M(95) short-sleeve tee, cotton 100 %",
                                "mass_kg": float(t["mass"]), "color_srgb": hexc, "thickness": float(thick or 0)}
         new.Save()
