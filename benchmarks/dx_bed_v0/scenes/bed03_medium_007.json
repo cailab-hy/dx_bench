@@ -74,13 +74,19 @@
   }
  ],
  "lighting": {
-  "blinds": "up",
-  "room_lights": "on"
+  "blinds": "down",
+  "lighting": "day",
+  "intensity": 1.0
  },
  "language": {
-  "high": "Put the clothes in the laundry basket.",
+  "high": "Can you put the dirty clothes in the basket?",
   "high_alternatives": [
-   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918"
+   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918",
+   "Pick up the clothes from the floor and put them in the basket.",
+   "Tidy up the laundry on the floor.",
+   "Collect the clothes into the laundry basket.",
+   "Can you put the dirty clothes in the basket?",
+   "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918"
   ],
   "subtasks": [
    "look for clothes",

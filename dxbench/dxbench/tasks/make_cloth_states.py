@@ -24,6 +24,11 @@ def _args(p):
     p.add_argument("--scenes", nargs="+", required=True)
     p.add_argument("--states", required=True)
     p.add_argument("--settle_s", type=float, default=4.0)
+    # BED-02 (2026-10-21): dropping while the 5-garment heap was still landing left a slope the top towel slid down,
+    # off the desk front, in 10/10 hard states; landing 2 s first keeps every garment on the desk
+    p.add_argument("--presettle_s", type=float, default=2.0, help="BED-02: let the spawned heap land before the drop")
+    p.add_argument("--desk_lift", type=float, default=0.30, help="BED-02 drop height (m)")
+    p.add_argument("--salt", type=int, default=0, help="new crumple draw (make_states.sh retries a rejected state)")
 
 
 def shape_nodes(nodes: np.ndarray, kind: str, difficulty: str, task: str, rng: np.random.Generator) -> np.ndarray:
@@ -36,7 +41,7 @@ def shape_nodes(nodes: np.ndarray, kind: str, difficulty: str, task: str, rng: n
         top = n[:, ax] > fold
         n[top, ax] = 2 * fold - n[top, ax]
         n[top, 2] += 0.04 + 0.02 * (n[top, ax] - n[top, ax].min()) / max(1e-6, np.ptp(n[top, ax]))
-    elif difficulty in ("medium", "hard") and kind in ("tshirt", "towel", "duvet"):
+    elif difficulty in ("medium", "hard") and kind == "duvet":
         # crumple: shrink towards the centre and add a smooth random height field
         s = rng.uniform(0.55, 0.8)
         n[:, :2] = c[:2] + (n[:, :2] - c[:2]) * s
@@ -47,6 +52,22 @@ def shape_nodes(nodes: np.ndarray, kind: str, difficulty: str, task: str, rng: n
     return n
 
 
+TRACE = bool(os.environ.get("DX_STATES_TRACE"))
+
+
+def _trace(U, spec, tag):
+    """Debug (DX_STATES_TRACE=1): garment centroids, lowest node and distance to the nearest robot body."""
+    bodies = U.scene["robot"].data.body_pos_w.torch[0]
+    out = []
+    for o in spec.objects:
+        if o.kind in ("tshirt", "towel"):
+            n = U.scene[o.name].data.nodal_pos_w.torch[0]
+            d = (n[:, None, :] - bodies[None]).norm(dim=-1).min().item()
+            c = (n.mean(dim=0) - U.scene.env_origins[0]).tolist()
+            out.append(f"{o.name} c=({c[0]:.2f},{c[1]:.2f},{c[2]:.2f}) zmin={n[:, 2].min().item():.2f} robot={d:.2f}")
+    print(f"[trace] {tag}: " + " | ".join(out), flush=True)
+
+
 def main():
     rt = ArenaRuntime(add_args=_args, argv=None)
     a = rt.args
@@ -54,7 +75,7 @@ def main():
     import torch
 
     from dxbench.paths import REPO
-    from dxbench.tasks.scene_spec import SceneSpec
+    from dxbench.tasks.scene_spec import SceneSpec, load_layout
 
     out_dir = (REPO / a.states) if not os.path.isabs(a.states) else a.states
     os.makedirs(out_dir, exist_ok=True)
@@ -70,7 +91,7 @@ def main():
     env = rt.make_env()
     U = env.unwrapped
     env.reset()
-    rng = np.random.default_rng(spec.seed + 12345)
+    rng = np.random.default_rng(spec.seed + 12345 + 7919 * a.salt)
     for o in spec.objects:
         if o.kind not in ("tshirt", "towel", "sock", "duvet"):
             continue
@@ -86,9 +107,66 @@ def main():
     act = torch.zeros(U.num_envs, 24, device=U.device)
     act[:, :14] = torch.tensor([[READY_ARMS.get(n, 0.0) for n in ARM_R + ARM_L]], device=U.device)
     act[:, 14:16] = 1.0
-    steps = int(a.settle_s * 15)
-    for _ in range(steps):
+    # medium / hard garments (D-41, 2026-10-21): a dropped-laundry heap. One random point is pulled up 45 cm (drifting
+    # sideways) over 1 s with velocity pins written every physics step, then released to fall for 0.5 s. The old
+    # shrink + bump field relaxed back to ~98 % flat; laying random folds by hand jittered (> 4 m/s after 8 s).
+    if spec.task == "BED-02" and a.presettle_s > 0:
+        for _ in range(int(a.presettle_s * 15)):
+            env.step(act)
+    drops = []
+    if spec.difficulty in ("medium", "hard"):
+        for o in spec.objects:
+            if o.kind in ("tshirt", "towel") and not (o.variant or "").startswith("folded"):
+                n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
+                c0 = n0.mean(dim=0)
+                if spec.task == "BED-02":
+                    # on the desk: lift a point near the middle 30 cm and drift <= 5 cm towards the desk interior (-x,
+                    # the robot is on the +x side), so the garment falls onto itself, not over the front edge
+                    near = torch.nonzero((n0[:, :2] - c0[:2]).norm(dim=-1) < 0.10).flatten()
+                    k = int(near[int(rng.integers(len(near)))])
+                    drift = torch.as_tensor([-abs(rng.normal(0, 0.03)), rng.normal(0, 0.02)], device=U.device,
+                                            dtype=n0.dtype)
+                    lift = a.desk_lift
+                else:
+                    k = int(rng.integers(len(n0)))
+                    drift = torch.as_tensor(rng.normal(0, 0.08, 2), device=U.device, dtype=n0.dtype)
+                    lift = 0.45
+                ids = torch.nonzero((n0 - n0[k]).norm(dim=-1) < 0.03).flatten()
+                drops.append((o.name, ids, n0[ids].clone(), drift, lift))
+    if drops:
+        sim, dt = U.sim, U.physics_dt
+        n_lift, n_fall = int(1.0 / dt), int(0.5 / dt)
+        for i in range(n_lift + n_fall):
+            if i < n_lift:
+                s_ = (i + 1) / n_lift
+                for name, ids, p0, drift, lift in drops:
+                    obj = U.scene[name]
+                    pos = obj.data.nodal_pos_w.torch
+                    vel = obj.data.nodal_vel_w.torch.clone()
+                    tgt = p0.clone()
+                    tgt[:, :2] += drift * s_
+                    tgt[:, 2] += lift * s_
+                    vel[0, ids] = (tgt - pos[0, ids]) / dt
+                    obj.write_nodal_velocity_to_sim_index(vel)
+            U.scene.write_data_to_sim()
+            sim.step(render=False)
+            U.scene.update(dt)
+            if TRACE and i % 48 == 0:
+                _trace(U, spec, f"drop {i * dt:.2f}s")
+    steps = int((a.settle_s + (2.0 if drops else 0.0)) * 15)  # a dropped heap keeps collapsing for ~5 s
+    for k in range(steps):
         env.step(act)
+        if TRACE and k % 3 == 0:
+            _trace(U, spec, f"settle {k / 15:.2f}s")
+    if spec.task == "BED-02":
+        # BED-02 is folding on the desk: a garment that slid off it while the heap collapsed is no start state
+        desk_z = float(load_layout()["parts_aabb"]["CareDesk"][1][2])
+        off = {o.name: float((((U.scene[o.name].data.nodal_pos_w.torch[0] - U.scene.env_origins[0])[:, 2])
+                              < desk_z - 0.05).float().mean()) for o in spec.objects if o.kind in ("tshirt", "towel")}
+        if max(off.values()) > 0.05:
+            print(f"[states-reject] {spec.scene_id} salt {a.salt}: fraction below the desk top {off}")
+            rt.close()
+            return
     report = {}
     for o in spec.objects:
         if o.kind not in ("tshirt", "towel", "sock", "duvet"):

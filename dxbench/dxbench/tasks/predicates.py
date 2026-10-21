@@ -201,6 +201,75 @@ def evaluate_bed02(nodes: np.ndarray, spec: FoldSpec, keypoints: dict[str, np.nd
             "score": float(score), "success": bool(all(folds) and on_stack and size_ok), "failure": None}
 
 
+# fold lines in the garment's flat rest frame (u = local x, v = local y of the spawned flat mesh), D-41:
+#   towel 0.8 x 0.4 (x long): half = long edges together (v = 0), right / left = each end onto the centre (u = +-L/4)
+#   M(95) tee (x across, y hem -> collar): left / right = side folds at u = -+chest/4, half = hem onto collar (v = 0)
+FOLD_LINES = {"towel": {"fold_left": (0, -0.20), "fold_right": (0, 0.20), "fold_half": (1, 0.0)},
+              "tshirt": {"fold_left": (0, -0.1225), "fold_right": (0, 0.1225), "fold_half": (1, 0.0)}}
+# flat projected area as `projected_area` counts it (2 cm cells; 2.3 cm nodes leave some cells empty), measured on the
+# settled flat states (BED-02 easy towel, BED-03 easy tee), 2026-10-21
+REST_AREA = {"towel": 0.288, "tshirt": 0.351}
+
+
+def rest_uv(rest_xyz: np.ndarray, spawn_xy, spawn_yaw: float) -> np.ndarray:
+    """Flat rest positions (world, as spawned) -> garment frame (u, v)."""
+    c, s = np.cos(-spawn_yaw), np.sin(-spawn_yaw)
+    d = np.asarray(rest_xyz)[:, :2] - np.asarray(spawn_xy)[:2]
+    return np.c_[c * d[:, 0] - s * d[:, 1], s * d[:, 0] + c * d[:, 1]]
+
+
+def fold_done(nodes: np.ndarray, uv: np.ndarray, axis: int, c: float, tol: float = 0.05, frac: float = 0.6,
+              band: float = 0.05) -> bool:
+    """A fold along the rest line uv[axis] = c is done when the cloth on one side lies on its mirror image: for nodes
+    more than `band` from the line, the node at the mirrored rest position is within `tol` (3D) for >= `frac` of the
+    pairs. Topological, so crumpling (which shrinks the extent but keeps mirror pairs far apart) does not count, and
+    earlier folds stay counted after later ones (D-41; the old extent proxy called crumpled garments folded)."""
+    from scipy.spatial import cKDTree
+
+    side = uv[:, axis] - c
+    a = np.nonzero(side > band)[0]
+    if len(a) < 10:
+        return False
+    m = uv[a].copy()
+    m[:, axis] = 2 * c - m[:, axis]
+    d_rest, j = cKDTree(uv).query(m)
+    ok = d_rest < 0.02  # the mirrored point exists on the garment
+    if ok.sum() < 10:
+        return False
+    d = np.linalg.norm(nodes[a[ok]] - nodes[j[ok]], axis=1)  # 3D: a garment hanging off the desk collapses in xy
+    return bool((d < tol).mean() >= frac)
+
+
+def evaluate_bed02_garments(garments: list[dict], spec: FoldSpec) -> dict:
+    """D-41 BED-02 score over all garments (mean). Each garment dict: name, kind, nodes (V,3), uv (V,2) rest frame,
+    start_flat (bool), start_centroid (2,). Per garment: flatten 0.3 (only when it started crumpled - a flat start
+    re-weights folds / stack to sum to 1), folds 0.15 each (topological `fold_done`), on the stack 0.25 = any fold
+    done + centroid within stack_radius of the stack spot + moved >= 8 cm from its start + resting on the desk.
+    Success: every garment has all three folds and is on the stack."""
+    stages, scores, succ = {}, [], []
+    multi = len(garments) > 1
+    for g in garments:
+        n, kind = g["nodes"], g["kind"]
+        flattened = projected_area(n[:, :2]) >= 0.8 * REST_AREA[kind]
+        folds = {k: fold_done(n, g["uv"], ax, c) for k, (ax, c) in FOLD_LINES[kind].items()}
+        centre = n[:, :2].mean(axis=0)
+        moved = float(np.linalg.norm(centre - np.asarray(g["start_centroid"])[:2])) >= 0.08
+        on_stack = bool(any(folds.values()) and moved and n[:, 2].min() >= spec.table_z - 0.02
+                        and np.linalg.norm(centre - np.asarray(spec.stack_center)) <= spec.stack_radius)
+        flat_flag = flattened or any(folds.values())
+        if g["start_flat"]:
+            score = (0.15 * sum(folds.values()) + 0.25 * on_stack) / 0.7
+        else:
+            score = 0.3 * flat_flag + 0.15 * sum(folds.values()) + 0.25 * on_stack
+        sfx = f"/{g['name']}" if multi else ""
+        stages.update({f"flatten{sfx}": bool(flat_flag), **{f"{k}{sfx}": v for k, v in folds.items()},
+                       f"on_stack{sfx}": on_stack})
+        scores.append(score)
+        succ.append(all(folds.values()) and on_stack)
+    return {"stages": stages, "score": float(np.mean(scores)) if scores else 0.0, "success": bool(succ and all(succ)),
+            "failure": None}
+
+
 # ------------------------------------------------------------------------------------------ BED-01 make bed
 @dataclass
 class BedSpec:
@@ -210,14 +279,20 @@ class BedSpec:
     headboard_center: tuple  # world xy where the pillow should sit (headboard side, centred)
     long_axis: int = 1       # 0: x, 1: y — the bed length axis (DX bed: along y)
     floor_z: float = 0.0
+    cover_head_gap: float = 0.0  # D-41: the duvet covers the mattress up to this far from the head end (pillow zone)
+    floor_frac: float = 0.3      # D-41: failure when this fraction of the duvet lies on the floor
 
 
 def evaluate_bed01(duvet: np.ndarray, pillow_pos, pillow_initial_pos, spec: BedSpec,
                    pillow_was_moved: bool | None = None) -> dict:
-    """Weights: pillow cleared 0.1, duvet covers >= 90 % of the mattress top 0.5, left/right overhang difference
-    <= 15 cm 0.2, pillow within 20 cm of the headboard centre 0.2. Failure: duvet touching the floor."""
-    cov = grid_coverage(duvet, spec.mattress_min, spec.mattress_max, spec.mattress_top_z - 0.03,
-                        spec.mattress_top_z + 0.25)
+    """Weights: pillow cleared 0.1, duvet covers >= 90 % of the mattress top except the pillow zone 0.5, left/right
+    overhang difference <= 15 cm 0.2, pillow back within 20 cm of the headboard centre after having been moved 0.2.
+    Failure: >= floor_frac of the duvet on the floor. D-41: the 1.5 x 1.4 m duvet covers at most 79 % of the whole
+    1.88 m mattress (the DX blanket stops 0.45 m short of the head), the pillow scored 'placed' before it was ever
+    touched, and one duvet corner brushing the floor ended the episode."""
+    hi = list(spec.mattress_max)
+    hi[spec.long_axis] -= spec.cover_head_gap
+    cov = grid_coverage(duvet, spec.mattress_min, tuple(hi), spec.mattress_top_z - 0.03, spec.mattress_top_z + 0.25)
     covered = cov >= 0.9
     side = 1 - spec.long_axis  # the axis across the bed
     lo, hi = spec.mattress_min[side], spec.mattress_max[side]
@@ -226,9 +301,9 @@ def evaluate_bed01(duvet: np.ndarray, pillow_pos, pillow_initial_pos, spec: BedS
     even = abs(over_lo - over_hi) <= 0.15
     moved = bool(pillow_was_moved) if pillow_was_moved is not None else \
         bool(np.linalg.norm(np.asarray(pillow_pos)[:2] - np.asarray(pillow_initial_pos)[:2]) > 0.3)
-    placed = bool(np.linalg.norm(np.asarray(pillow_pos)[:2] - np.asarray(spec.headboard_center)) <= 0.20
+    placed = bool(moved and np.linalg.norm(np.asarray(pillow_pos)[:2] - np.asarray(spec.headboard_center)) <= 0.20
                   and pillow_pos[2] >= spec.mattress_top_z - 0.02)
-    touching_floor = bool(duvet[:, 2].min() <= spec.floor_z + 0.03)
+    touching_floor = bool((duvet[:, 2] <= spec.floor_z + 0.03).mean() >= spec.floor_frac)
     score = 0.1 * moved + 0.5 * covered + 0.2 * (even and covered) + 0.2 * placed
     return {"stages": {"pillow_cleared": moved, "duvet_spread": covered, "duvet_even": bool(even and covered),
                        "pillow_placed": placed}, "coverage": cov, "overhang": (over_lo, over_hi),
@@ -245,13 +320,21 @@ class TaskText:
 
 
 TEXT = {
-    "BED-01": TaskText(high=["Make the bed.", "침대 정리해 줘"],
+    # high[0] is the canonical instruction (evaluation easy); the rest are paraphrases drawn by scene_gen.diversify
+    "BED-01": TaskText(high=["Make the bed.", "침대 정리해 줘", "Please make the bed.", "Tidy up the bed.",
+                             "Straighten the duvet and put the pillow back.", "Can you make the bed for me?",
+                             "Spread the blanket over the bed and fix the pillow.", "이불 펴고 베개 정리해 줘"],
                        subtasks=["pick up the pillow", "spread the duvet", "grasp the top corners",
                                  "pull toward the headboard", "smooth the duvet", "place the pillow"]),
-    "BED-02": TaskText(high=["Fold the clothes.", "옷 개어 줘"],
+    "BED-02": TaskText(high=["Fold the clothes.", "옷 개어 줘", "Please fold the laundry on the desk.",
+                             "Fold the clothes on the table.", "Can you fold these clothes?",
+                             "Fold the towels and shirts and stack them.", "책상 위 빨래 개 줘"],
                        subtasks=["pick up a shirt", "flatten the shirt", "align the shirt", "fold the left side",
                                  "fold the right side", "fold in half", "place on the stack"]),
-    "BED-03": TaskText(high=["Put the clothes in the laundry basket.", "방에 있는 옷 정리해 줘"],
+    "BED-03": TaskText(high=["Put the clothes in the laundry basket.", "방에 있는 옷 정리해 줘",
+                             "Pick up the clothes from the floor and put them in the basket.",
+                             "Tidy up the laundry on the floor.", "Collect the clothes into the laundry basket.",
+                             "Can you put the dirty clothes in the basket?", "바닥에 있는 옷 바구니에 넣어 줘"],
                        subtasks=["look for clothes", "go to the shirt", "pick up the shirt", "go to the basket",
                                  "put it in the basket", "carry the basket to the door"]),
 }

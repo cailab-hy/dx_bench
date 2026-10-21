@@ -6,7 +6,7 @@
   "objects": [ {"name": "shirt_0", "kind": "tshirt", "variant": "m_blue", "xyz": [..], "yaw": rad,
                 "cloth_state": "states/bed03_easy_003_shirt_0.npz" | null}, ...
                {"name": "laundry_basket", "kind": "basket", "xyz": [..], "yaw": rad}, ... ],
-  "lighting": {"blinds": "up", "room_lights": "on"},
+  "lighting": {"blinds": "down", "lighting": "day", "intensity": 1.0},  # DX Building variant sets (D-42)
   "language": {"high": "...", "subtasks": [...]}
 }
 Coordinates: DX world frame (Z-up, m). Cloth states hold absolute world node positions after settling.
@@ -23,6 +23,11 @@ import numpy as np
 from dxbench.tasks.predicates import TEXT
 
 LAYOUT = Path(__file__).resolve().parent / "care_room_layout.json"
+
+
+# DX Building variant sets: blinds down | half | up, lighting day | day_sunny | night (| none); intensity scales every
+# light under the building. The default is what the DX care-room file selects (D-42).
+DEFAULT_LIGHTING = {"blinds": "down", "lighting": "day", "intensity": 1.0}
 
 
 @dataclass
@@ -43,7 +48,7 @@ class SceneSpec:
     seed: int
     robot: dict
     objects: list = field(default_factory=list)
-    lighting: dict = field(default_factory=lambda: {"blinds": "up", "room_lights": "on"})
+    lighting: dict = field(default_factory=lambda: dict(DEFAULT_LIGHTING))
     language: dict = field(default_factory=dict)
 
     def to_json(self, path: Path):
@@ -55,6 +60,8 @@ class SceneSpec:
     def from_json(path) -> SceneSpec:
         d = json.loads(Path(path).read_text())
         d["objects"] = [ObjSpec(**o) for o in d["objects"]]
+        if "room_lights" in d.get("lighting", {}):  # pre-D-42 placeholder, never applied
+            d["lighting"] = dict(DEFAULT_LIGHTING)
         return SceneSpec(**d)
 
     def obj(self, name) -> ObjSpec:

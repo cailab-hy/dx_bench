@@ -37,6 +37,29 @@ class DxCareRoom(Background):
                          prim_path=CARE_ROOM_PRIM, reset_nested_physics=False, **kwargs)
 
 
+def apply_care_room_lighting(env, env_ids, lighting: dict | None = None):
+    """Prestartup event (stage edit only, the DX files are untouched): select the DX Building variant sets
+    `blinds` (down | half | up) and `lighting` (day | day_sunny | night | none) and scale every light under the
+    building by `intensity` (scene JSON "lighting", D-42)."""
+    import isaaclab.sim as sim_utils
+    from pxr import Usd, UsdLux
+
+    lighting = lighting or {}
+    building = sim_utils.get_current_stage().GetPrimAtPath(f"{CARE_ROOM_PRIM}/Building")
+    if not building.IsValid():
+        return
+    sets = building.GetVariantSets()
+    for key in ("blinds", "lighting"):
+        if key in lighting and sets.HasVariantSet(key):
+            sets.GetVariantSet(key).SetVariantSelection(str(lighting[key]))
+    scale = float(lighting.get("intensity", 1.0))
+    if scale != 1.0:
+        for prim in Usd.PrimRange(building):
+            if prim.HasAPI(UsdLux.LightAPI):
+                attr = UsdLux.LightAPI(prim).GetIntensityAttr()
+                attr.Set(float(attr.Get()) * scale)
+
+
 CARE_ROOM_FLOOR = "Building/Collision/floor_325"  # DX floor collider: a Cube scaled 29 x 47 x 0.1 m (top at z = 0)
 
 

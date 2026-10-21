@@ -5,10 +5,10 @@
  "seed": 5,
  "robot": {
   "xy": [
-   0.5909999904632569,
-   19.9685
+   0.47789467308492173,
+   19.901484690540197
   ],
-  "yaw": 0.0,
+  "yaw": -0.1449370641741221,
   "torso": "upright"
  },
  "objects": [
@@ -39,12 +39,19 @@
  ],
  "lighting": {
   "blinds": "up",
-  "room_lights": "on"
+  "lighting": "day_sunny",
+  "intensity": 1.1
  },
  "language": {
   "high": "Make the bed.",
   "high_alternatives": [
-   "\uce68\ub300 \uc815\ub9ac\ud574 \uc918"
+   "\uce68\ub300 \uc815\ub9ac\ud574 \uc918",
+   "Please make the bed.",
+   "Tidy up the bed.",
+   "Straighten the duvet and put the pillow back.",
+   "Can you make the bed for me?",
+   "Spread the blanket over the bed and fix the pillow.",
+   "\uc774\ubd88 \ud3b4\uace0 \ubca0\uac1c \uc815\ub9ac\ud574 \uc918"
   ],
   "subtasks": [
    "pick up the pillow",

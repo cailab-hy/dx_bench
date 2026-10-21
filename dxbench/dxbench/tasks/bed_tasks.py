@@ -34,7 +34,7 @@ from isaaclab_arena_environments.example_environment_base import ExampleEnvironm
 import dxbench.assets.scenes  # noqa: F401
 import dxbench.embodiments.rby1  # noqa: F401
 from dxbench.assets import objects as O
-from dxbench.assets.scenes import replace_care_room_floor
+from dxbench.assets.scenes import apply_care_room_lighting, replace_care_room_floor
 from dxbench.embodiments.mdp.cloth_assist import add_base_cloth_filter, add_cloth_assist
 from dxbench.embodiments.mdp.pad_grasp import add_pad_grasp
 from dxbench.environments.rby1_envs import physics_callback
@@ -108,15 +108,19 @@ class BedTaskBase(TaskBase):
     def get_events_cfg(self):
         states = {o.name: str(_resolve(o.cloth_state)) for o in self.spec.objects if o.cloth_state}
 
+        # every term must be a class field: Arena's combine_configclass_instances copies dataclass fields only, so
+        # the old `ev.load_cloth_states = ...` instance attribute was dropped and every episode since stage 3 started
+        # from the spawn shape, not the saved state (found 2026-10-21, D-42). Task events come after the scene's
+        # per-object resets, so the saved nodes overwrite the default ones.
         @configclass
         class _Events:
             deactivate_dx = EventTermCfg(func=deactivate_dx_deformables, mode="prestartup")
+            lighting = EventTermCfg(func=apply_care_room_lighting, mode="prestartup",
+                                    params={"lighting": dict(self.spec.lighting)})
             floor_plane = EventTermCfg(func=replace_care_room_floor, mode="prestartup")
+            load_cloth_states = EventTermCfg(func=load_cloth_states, mode="reset", params={"states": states})
 
-        ev = _Events()
-        if states:
-            ev.load_cloth_states = EventTermCfg(func=load_cloth_states, mode="reset", params={"states": states})
-        return ev
+        return _Events()
 
     def get_termination_cfg(self) -> TaskTerminationCfg:
         return TaskTerminationCfg(
@@ -195,17 +199,48 @@ class Bed02FoldTask(BedTaskBase):
         ys = [o.xyz[1] for o in spec.objects if o.kind in ("towel", "tshirt")]
         cy = float(np.mean(ys)) if ys else 0.5 * float(lo[1] + hi[1])
         self.stack_xy = (float(hi[0] - 0.40), cy)
+        self._uv: dict[str, np.ndarray] = {}
+        self._start: dict[int, dict] = {}
+
+    def _rest_uv(self, env, name):
+        """Flat rest frame (u, v) of a garment's nodes from its spawned (pre-state) mesh; cached, and written to
+        outputs/cache/rest_uv_<kind>.npz for offline audits (tools/predicate_audit.py)."""
+        if name not in self._uv:
+            o = self.spec.obj(name)
+            rest = _T(env.scene[name].data.default_nodal_state_w)[0, :, :3] - env.scene.env_origins[0]
+            uv = P.rest_uv(rest.cpu().numpy(), o.xyz, o.yaw)
+            self._uv[name] = uv
+            try:
+                from dxbench.paths import REPO
+
+                d = REPO / "outputs" / "cache"
+                d.mkdir(parents=True, exist_ok=True)
+                f = d / f"rest_uv_{o.kind}.npz"
+                if not f.exists():
+                    np.savez(f, uv=uv)
+            except OSError:
+                pass
+        return self._uv[name]
 
     def evaluate(self, env) -> list[dict]:
+        """D-41: every garment, topological folds (predicates.evaluate_bed02_garments)."""
+        spec = P.FoldSpec(rest_area=0.0, stack_center=self.stack_xy, table_z=self.table_z)
         out = []
-        target = self.cloth_names[0] if self.cloth_names else None
         for e in range(env.num_envs):
-            nodes = self.nodes(env, target, e)
-            o = self.spec.obj(target)
-            fl = self._flat_dims(o)
-            rest = fl[0] * fl[1] * (0.65 if o.kind == "tshirt" else 1.0)  # T-shirt silhouette fills ~65 % of its bbox
-            spec = P.FoldSpec(rest_area=rest, stack_center=self.stack_xy, table_z=self.table_z)
-            out.append(P.evaluate_bed02(nodes, spec, folds_done=self._fold_flags(nodes, o)))
+            new_ep = e not in self._start or int(env.episode_length_buf[e]) <= 1
+            gs = []
+            for name in self.cloth_names:
+                o = self.spec.obj(name)
+                if o.kind not in P.FOLD_LINES:
+                    continue
+                n = self.nodes(env, name, e)
+                if new_ep:
+                    self._start.setdefault(e, {})[name] = (
+                        P.projected_area(n[:, :2]) >= 0.8 * P.REST_AREA[o.kind], n[:, :2].mean(axis=0))
+                flat0, c0 = self._start[e][name]
+                gs.append({"name": name, "kind": o.kind, "nodes": n, "uv": self._rest_uv(env, name),
+                           "start_flat": flat0, "start_centroid": c0})
+            out.append(P.evaluate_bed02_garments(gs, spec))
         return out
 
     @staticmethod
@@ -244,7 +279,9 @@ class Bed01MakeBedTask(BedTaskBase):
         bed = self.layout["furniture_aabb"]["Bed"]
         self.bed = P.BedSpec(mattress_min=tuple(m[0][:2]), mattress_max=tuple(m[1][:2]), mattress_top_z=float(m[1][2]),
                              headboard_center=(0.5 * (m[0][0] + m[1][0]), float(m[1][1]) - 0.25),
-                             long_axis=1 if (bed[1][1] - bed[0][1]) > (bed[1][0] - bed[0][0]) else 0)
+                             long_axis=1 if (bed[1][1] - bed[0][1]) > (bed[1][0] - bed[0][0]) else 0,
+                             # D-41: cover the mattress up to the DX blanket's head edge (pillow zone left free)
+                             cover_head_gap=float(m[1][1]) - float(self.layout["parts_aabb"]["Bed/Blanket"][1][1]))
         self._pillow0 = None
         self._moved = None
 

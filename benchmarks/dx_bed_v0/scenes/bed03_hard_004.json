@@ -5,10 +5,10 @@
  "seed": 4,
  "robot": {
   "xy": [
-   -2.6,
-   17.7
+   -2.5768087254591197,
+   17.668458824668352
   ],
-  "yaw": 0.48894836563563965,
+  "yaw": 0.638565410692549,
   "torso": "upright"
  },
  "objects": [
@@ -134,13 +134,19 @@
   }
  ],
  "lighting": {
-  "blinds": "up",
-  "room_lights": "on"
+  "blinds": "down",
+  "lighting": "night",
+  "intensity": 1.02
  },
  "language": {
-  "high": "Put the clothes in the laundry basket.",
+  "high": "Tidy up the laundry on the floor.",
   "high_alternatives": [
-   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918"
+   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918",
+   "Pick up the clothes from the floor and put them in the basket.",
+   "Tidy up the laundry on the floor.",
+   "Collect the clothes into the laundry basket.",
+   "Can you put the dirty clothes in the basket?",
+   "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918"
   ],
   "subtasks": [
    "look for clothes",

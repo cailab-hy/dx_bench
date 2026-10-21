@@ -27,13 +27,19 @@
   }
  ],
  "lighting": {
-  "blinds": "up",
-  "room_lights": "on"
+  "blinds": "down",
+  "lighting": "day",
+  "intensity": 1.0
  },
  "language": {
-  "high": "Fold the clothes.",
+  "high": "Fold the towels and shirts and stack them.",
   "high_alternatives": [
-   "\uc637 \uac1c\uc5b4 \uc918"
+   "\uc637 \uac1c\uc5b4 \uc918",
+   "Please fold the laundry on the desk.",
+   "Fold the clothes on the table.",
+   "Can you fold these clothes?",
+   "Fold the towels and shirts and stack them.",
+   "\ucc45\uc0c1 \uc704 \ube68\ub798 \uac1c \uc918"
   ],
   "subtasks": [
    "pick up a shirt",

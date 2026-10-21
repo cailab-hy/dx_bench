@@ -15,7 +15,9 @@ from pathlib import Path
 import numpy as np
 
 from dxbench.paths import CARE_SPAWN
-from dxbench.tasks.scene_spec import ObjSpec, SceneSpec, free_floor_ok, language, load_layout, sample_floor
+from dxbench.tasks.predicates import TEXT
+from dxbench.tasks.scene_spec import (DEFAULT_LIGHTING, ObjSpec, SceneSpec, free_floor_ok, language, load_layout,
+                                      sample_floor)
 
 BASKET_SEP = 1.02   # garment centre to basket centre (m)
 GARMENT_SEP = 0.85  # garment to garment (m)
@@ -25,6 +27,11 @@ TOWELS = ("01_charcoalgray", "05_coolgray", "06_white", "07_oatmeal", "08_lightp
 BASKET_VARIANT = "gray"
 HEAD_PITCH_DESK = 0.6  # rad, BED-02 head camera tilt (D-40)
 _COLOR_SALT = 54321
+_DIVERSE_SALT = 97531
+BLINDS = ("down", "half", "up")
+LIGHTING = ("day", "day_sunny", "night")
+# robot start jitter per task: (xy half range m, yaw half range rad). BED-02 stays small: the desk reach is tight.
+START_JITTER = {"BED-01": (0.15, 0.15), "BED-02": (0.05, 0.10), "BED-03": (0.20, 0.30)}
 
 
 def _color(seed: int, i: int, options: tuple) -> str:
@@ -141,8 +148,12 @@ def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
         objs.append(ObjSpec("cloth_0", "tshirt", [cx - 0.05, cy, top + 0.08], float(rng.uniform(-0.6, 0.6)) + math.pi / 2,
                             _shirts(split, seed)[0]))
     else:
+        # heap long axes along the desk (y, 1.4 m, yaw within 0.25 rad so the towel stays 1 cm inside the front edge)
+        # and 0.6 m from its -y edge (2026-10-21): at cy - 0.25 with any yaw the dropped top towel slid off the edge in
+        # 10/10 hard states
         for i, kind in enumerate(["tshirt", "tshirt", "towel", "tshirt", "towel"]):
-            objs.append(ObjSpec(f"cloth_{i}", kind, [cx - 0.05, cy - 0.25, top + 0.05 + 0.06 * i], float(rng.uniform(-1, 1)),
+            objs.append(ObjSpec(f"cloth_{i}", kind, [cx - 0.05, cy - 0.10, top + 0.05 + 0.06 * i],
+                                float(rng.uniform(-0.25, 0.25)) + math.pi / 2,
                                 _shirts(split, seed)[i] if kind == "tshirt" else _towel(split, seed, i)))
     # robot in front of the desk's long side (desk against the west wall: approach from +x). Head pitched down
     # (2026-10-21): level, the head camera looks over the desk and sees neither the desk top nor the garment; a
@@ -176,6 +187,35 @@ def gen_bed01(diff: str, seed: int, split: str) -> SceneSpec:
                      task="BED-01", difficulty=diff, seed=seed, robot=robot, objects=objs, language=language("BED-01"))
 
 
+def diversify(spec: SceneSpec, split: str) -> SceneSpec:
+    """Instruction paraphrase, blinds / room lighting and robot start jitter (D-42, step 2). Own generator per scene,
+    so layouts and colours stay those of the same seed. Evaluation easy / near stay canonical (comparable with the
+    earlier results); evaluation medium varies the instruction and blinds; hard and every training scene vary all."""
+    level = 2 if split == "train" else {"easy": 0, "near": 0, "medium": 1, "hard": 2}[spec.difficulty]
+    if level == 0:
+        return spec
+    rng = np.random.default_rng([spec.seed, _DIVERSE_SALT, {"BED-01": 1, "BED-02": 2, "BED-03": 3}[spec.task],
+                                 spec.difficulty == "near"])
+    spec.language = dict(spec.language, high=str(rng.choice(TEXT[spec.task].high)))
+    light = dict(DEFAULT_LIGHTING, blinds=str(rng.choice(BLINDS)))
+    if level == 2:
+        light.update(lighting=str(rng.choice(LIGHTING)), intensity=round(float(rng.uniform(0.6, 1.3)), 2))
+    spec.lighting = light
+    if level == 2:
+        dxy, dyaw = START_JITTER[spec.task]
+        if spec.difficulty == "near":
+            dxy, dyaw = 0.08, 0.15
+        L = load_layout()
+        others = [((o.xyz[0], o.xyz[1]), 0.55) for o in spec.objects if o.xyz[2] < 0.1]
+        x0, y0 = spec.robot["xy"]
+        for _ in range(20):
+            x, y = x0 + float(rng.uniform(-dxy, dxy)), y0 + float(rng.uniform(-dxy, dxy))
+            if spec.task != "BED-03" or free_floor_ok((x, y), L, 0.5, extra=others):
+                spec.robot = dict(spec.robot, xy=[x, y], yaw=float(spec.robot["yaw"] + rng.uniform(-dyaw, dyaw)))
+                break
+    return spec
+
+
 GEN = {"BED-01": gen_bed01, "BED-02": gen_bed02, "BED-03": gen_bed03}
 
 
@@ -191,8 +231,15 @@ def main():
     a = ap.parse_args()
     out = Path(a.out)
     for s in range(a.seed0, a.seed0 + a.n):
-        spec = (gen_bed03_near if a.difficulty == "near" else GEN[a.task])(a.difficulty, s, a.split)
-        spec.to_json(out / f"{spec.scene_id}.json")
+        spec = diversify((gen_bed03_near if a.difficulty == "near" else GEN[a.task])(a.difficulty, s, a.split), a.split)
+        f = out / f"{spec.scene_id}.json"
+        if f.exists():  # keep settled cloth states of objects whose spawn did not change
+            old = {o.name: o for o in SceneSpec.from_json(f).objects}
+            for o in spec.objects:
+                p = old.get(o.name)
+                if p and (p.kind, p.xyz, p.yaw, p.variant) == (o.kind, o.xyz, o.yaw, o.variant):
+                    o.cloth_state = p.cloth_state
+        spec.to_json(f)
         assert all(free_floor_ok(o.xyz[:2], load_layout(), 0.6) or o.xyz[2] > 0.1 or o.kind in ("duvet", "pillow")
                    for o in spec.objects if o.kind not in ("basket",)) or a.task != "BED-03"
     print(f"[scene_gen] wrote {a.n} {a.task} {a.difficulty} ({a.split}) scenes to {out}")
