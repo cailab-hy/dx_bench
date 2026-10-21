@@ -2,9 +2,9 @@
 
     python -m dxbench.tasks.scene_gen --task BED-03 --difficulty easy --n 10 --seed0 0 --out benchmarks/dx_bed_v0/scenes
 Evaluation scenes use seeds 0..999 (benchmarks/dx_bed_v0), training / demo scenes 10000+ (data/scenes_train) so
-the two never overlap. Garment variants for evaluation and training are disjoint (OOD split by colour, D-36): the
-real products only - M(95) T-shirt blue / wine for training, green for evaluation; 40 x 80 cm towel in 9 colours for
-training, lavender for evaluation; the gray laundry basket everywhere.
+the two never overlap. Garments are the real products (D-36): M(95) T-shirt in 3 colours, 40 x 80 cm towel in 10
+colours, the gray laundry basket. Colours are drawn per garment from all colours in both splits (D-38, user
+2026-10-21: evaluation mixes colours) with their own generator, so the layouts stay those of the stage-3 seeds.
 """
 from __future__ import annotations
 
@@ -19,21 +19,25 @@ from dxbench.tasks.scene_spec import ObjSpec, SceneSpec, free_floor_ok, language
 
 BASKET_SEP = 1.02   # garment centre to basket centre (m)
 GARMENT_SEP = 0.85  # garment to garment (m)
-TRAIN_SHIRTS = ("m95_blue", "m95_wine")
-EVAL_SHIRTS = ("m95_green",)
-EVAL_TOWEL = "10_lavender"
-TRAIN_TOWELS = ("01_charcoalgray", "05_coolgray", "06_white", "07_oatmeal", "08_lightpink", "09_ivory", "11_applegreen",
-                "12_skyblue", "13_sandbeige")
+SHIRTS = ("m95_blue", "m95_wine", "m95_green")
+TOWELS = ("01_charcoalgray", "05_coolgray", "06_white", "07_oatmeal", "08_lightpink", "09_ivory", "10_lavender",
+          "11_applegreen", "12_skyblue", "13_sandbeige")
 BASKET_VARIANT = "gray"
+_COLOR_SALT = 54321
 
 
-def _shirts(split: str):
-    return TRAIN_SHIRTS if split == "train" else EVAL_SHIRTS
+def _color(seed: int, i: int, options: tuple) -> str:
+    """Colour of garment i of a scene: its own generator (seed, i), no draw from the layout rng."""
+    return options[int(np.random.default_rng([seed, _COLOR_SALT, i]).integers(len(options)))]
+
+
+def _shirts(split: str, seed: int = 0):
+    """Shirt variants indexed by garment number (kept as a sequence for the callers' i % len pattern)."""
+    return tuple(_color(seed, 100 + k, SHIRTS) for k in range(8))
 
 
 def _towel(split: str, seed: int, i: int = 0) -> str:
-    """Towel colour (no rng draw, so the layouts stay those of the stage-3 seeds)."""
-    return TRAIN_TOWELS[(seed + i) % len(TRAIN_TOWELS)] if split == "train" else EVAL_TOWEL
+    return _color(seed, i, TOWELS)
 
 
 def _robot_facing(target_xy, start=CARE_SPAWN[:2]):
@@ -50,7 +54,7 @@ def gen_bed03(diff: str, seed: int, split: str) -> SceneSpec:
     rng = np.random.default_rng(seed)
     L = load_layout()
     robot_disc = [((CARE_SPAWN[0], CARE_SPAWN[1]), 0.9)]
-    shirts = _shirts(split)
+    shirts = _shirts(split, seed)
     n_floor = {"easy": 2, "medium": 3, "hard": 4}[diff]
     # spacing from the garment size: basket half diagonal 0.37 m + large T-shirt radius ~0.55 m + 0.10 m, so no
     # garment settles under the basket (a lifted shirt dragged the basket over, stage 3); garments 0.85 m apart
@@ -107,13 +111,14 @@ def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
                             _towel(split, seed)))
     elif diff == "medium":
         objs.append(ObjSpec("cloth_0", "tshirt", [cx - 0.05, cy, top + 0.08], float(rng.uniform(-0.6, 0.6)) + math.pi / 2,
-                            _shirts(split)[seed % len(_shirts(split))]))
+                            _shirts(split, seed)[0]))
     else:
         for i, kind in enumerate(["tshirt", "tshirt", "towel", "tshirt", "towel"]):
             objs.append(ObjSpec(f"cloth_{i}", kind, [cx - 0.05, cy - 0.25, top + 0.05 + 0.06 * i], float(rng.uniform(-1, 1)),
-                                _shirts(split)[i % len(_shirts(split))] if kind == "tshirt" else _towel(split, seed, i)))
-    # robot in front of the desk's long side (desk against the west wall: approach from +x)
-    robot = {"xy": [float(hi[0]) + 0.75, cy], "yaw": math.pi, "torso": "upright"}
+                                _shirts(split, seed)[i] if kind == "tshirt" else _towel(split, seed, i)))
+    # robot in front of the desk's long side (desk against the west wall: approach from +x). Starts leaning
+    # (2026-10-21): upright, the head camera looks over the desk and sees neither the desk top nor the garment.
+    robot = {"xy": [float(hi[0]) + 0.75, cy], "yaw": math.pi, "torso": "lean"}
     return SceneSpec(scene_id=f"bed02_{diff}_{seed:03d}" if split == "eval" else f"bed02_{diff}_train_{seed}",
                      task="BED-02", difficulty=diff, seed=seed, robot=robot, objects=objs, language=language("BED-02"))
 

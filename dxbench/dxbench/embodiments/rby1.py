@@ -127,6 +127,7 @@ class _RBY1Base(EmbodimentBase):
         self.event_config = RBY1EventCfg()
         self.mimic_env = None
         self.preset = preset
+        self.torso = torso
 
     def get_ee_frame_transformer_names(self) -> list[str]:
         return []
@@ -135,6 +136,8 @@ class _RBY1Base(EmbodimentBase):
         cfg = super().get_action_cfg()
         if self.preset != "tuned":
             cfg.gravity.scale = 0.0
+        if hasattr(getattr(cfg, "torso", None), "initial"):  # preset action starts where the robot spawns
+            cfg.torso.initial = self.torso
         return cfg
 
 

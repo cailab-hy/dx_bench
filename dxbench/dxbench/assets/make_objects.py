@@ -249,7 +249,7 @@ def make_basket_real(spec=None, name="laundry_basket_gray"):
 # Short-sleeve T-shirt M(95) (Coupang 9705760403): chest half 49, length 62.5, shoulder 42, sleeve 19 cm, cotton 100 %.
 TEE_REAL = {"chest_half": 0.49, "length": 0.625, "shoulder": 0.42, "sleeve": 0.19, "neck": 0.18,
             "armhole": 0.235, "shoulder_drop": 0.04, "sleeve_angle_deg": 30.0, "cuff": 0.165,
-            "gsm": 155.0}  # 30수 cotton single jersey ~150-160 g/m2 (not listed; inferred)
+            "mass": 0.140}  # real tee weighed 140 g (user, 2026-10-21); density = mass / (thickness x mesh area)
 TEE_COLORS = {"blue": "#2e4880", "wine": "#623944", "green": "#374a4a"}  # 유니미스 30수 무지 반팔티 photos (sRGB)
 
 
@@ -325,6 +325,7 @@ def make_real_tshirts(colors=None, spec=None):
             if st.GetPrimAtPath(p):
                 st.RemovePrim(p)
         thick = None
+        mats = []
         for prim in st.Traverse():
             for a_ in prim.GetAttributes():
                 tn = a_.GetTypeName()
@@ -349,10 +350,18 @@ def make_real_tshirts(colors=None, spec=None):
                 th = prim.GetAttribute("omniphysics:surfaceThickness").Get()
                 if th:
                     thick = th
-                    # cotton jersey: areal density = GSM; PhysX mass = density x surface thickness x area
-                    prim.GetAttribute("omniphysics:density").Set(float(t["gsm"] / 1000.0 / th))
+                    mats.append(prim)
+        # PhysX mass = density x surface thickness x area (both garment layers of the warped mesh)
+        area = 0.0
+        for prim in st.Traverse():
+            if prim.GetTypeName() == "Mesh" and prim.HasAPI("OmniPhysicsDeformableBodyAPI"):
+                P = np.array(UsdGeom.Mesh(prim).GetPointsAttr().Get(), dtype=float)
+                F = np.array(UsdGeom.Mesh(prim).GetFaceVertexIndicesAttr().Get()).reshape(-1, 3)
+                area += 0.5 * np.linalg.norm(np.cross(P[F[:, 1]] - P[F[:, 0]], P[F[:, 2]] - P[F[:, 0]]), axis=1).sum()
+        for prim in mats:
+            prim.GetAttribute("omniphysics:density").Set(float(t["mass"] / (thick * area)))
         new.customLayerData = {"source": str(src), "product": "M(95) short-sleeve tee, cotton 100 %",
-                               "gsm": float(t["gsm"]), "color_srgb": hexc, "thickness": float(thick or 0)}
+                               "mass_kg": float(t["mass"]), "color_srgb": hexc, "thickness": float(thick or 0)}
         new.Save()
 
 
