@@ -58,6 +58,7 @@ N=21 P=3 STEPS=20000 tools/stage45.sh
 | D-U9 BED-01 | 사람 원격조작으로 나중에 | — |
 | 실제 물체 교체 + 1단계 재확인 (10-21) | 바구니·수건 10색·반팔티 3색을 실제 제품으로 교체(D-36), 장면 190개·평가 천 상태 재생성, 이불에 지지 정점(D-37), BED-03 oracle 잡는 거리 6 cm 당김 | **BED-03 쉬움 oracle 7/10**(0.85). 실패: 가구 옆 수건 도달 2, 작은 바구니에 수건 걸침 1. 학습 장면 상태 99개 남음 → `reports/pad_grasp/REPORT.md` 시험 4 |
 | D-U12 잡기 조건 엄격화 (10-20) | LeIsaac·Lightwheel·Isaac Lab Franka 천 예제 조사·영상, Franka에서 패드 상자 보조 잡기 재현, RB-Y1 BED-02 oracle로 squeeze 0.7 vs 0 비교 → `reports/pad_grasp/REPORT.md` | **기본 잡기 = pad, squeeze 0**(D-34). BED-03 oracle 재확인과 데모 재수집 필요 |
+| 2단계 과제 정의 마무리 (10-21, 진행 중) | 판정 규칙 수정(D-41: BED-02 대칭 짝 접기 판정, BED-01 덮기 영역·베개·바닥 실패), 보통·어려움 옷 초기 상태 = 들었다 떨어뜨린 더미, **천 초기 상태가 에피소드에 안 불려 오던 버그 수정**(D-42, 3단계부터), BED-02 어려움 더미 재배치(수건이 책상 밖으로 떨어짐), 장면 다양화(지시문·블라인드·조명·시작 위치, D-42) | 판정 점검 시작 점수 0(BED-02 어려움 재점검 중). BED-03 쉬움 oracle 재확인 실행 중 |
 | D-U10 데모 확대 + ACT·SmolVLA 동시 | 학습 장면 100개, 새 조건 oracle 데모 92개(`data/raw/bed03_oracle_v2`) → ACT 100k + SmolVLA 20k 동시 학습 → 평가 | **ACT 0/10, SmolVLA 0/10**(학습 장면에서도 0/3). 팔·몸통은 v1보다 2–4배 정확해졌지만 베이스 이동을 못 배움 → `reports/stage_v2/REPORT.md` |
 
 ## 상태 요약

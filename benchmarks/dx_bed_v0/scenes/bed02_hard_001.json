@@ -5,10 +5,10 @@
  "seed": 1,
  "robot": {
   "xy": [
-   -2.692,
-   19.07
+   -2.7133691316653827,
+   19.10006066291013
   ],
-  "yaw": 3.141592653589793,
+  "yaw": 3.1812072471901716,
   "torso": "upright",
   "head_pitch": 0.6
  },
@@ -17,11 +17,11 @@
    "name": "cloth_0",
    "kind": "tshirt",
    "xyz": [
-    -3.742,
-    18.82,
+    -3.842,
+    18.97,
     0.775000023841858
    ],
-   "yaw": 0.023643249400513433,
+   "yaw": 1.576707139145025,
    "variant": "m95_wine",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_0.npz"
   },
@@ -29,11 +29,11 @@
    "name": "cloth_1",
    "kind": "tshirt",
    "xyz": [
-    -3.742,
-    18.82,
+    -3.842,
+    18.97,
     0.835000023841858
    ],
-   "yaw": 0.9009273926518706,
+   "yaw": 1.7960281749578642,
    "variant": "m95_blue",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_1.npz"
   },
@@ -41,11 +41,11 @@
    "name": "cloth_2",
    "kind": "towel",
    "xyz": [
-    -3.742,
-    18.82,
+    -3.842,
+    18.97,
     0.895000023841858
    ],
-   "yaw": -0.7116807745607325,
+   "yaw": 1.3928761331547135,
    "variant": "01_charcoalgray",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_2.npz"
   },
@@ -53,11 +53,11 @@
    "name": "cloth_3",
    "kind": "tshirt",
    "xyz": [
-    -3.742,
-    18.82,
+    -3.842,
+    18.97,
     0.9550000238418579
    ],
-   "yaw": 0.8972988942744877,
+   "yaw": 1.7951210503635184,
    "variant": "m95_blue",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_3.npz"
   },
@@ -65,23 +65,29 @@
    "name": "cloth_4",
    "kind": "towel",
    "xyz": [
-    -3.742,
-    18.82,
+    -3.842,
+    18.97,
     1.015000023841858
    ],
-   "yaw": -0.3763370959790291,
+   "yaw": 1.4767120528001394,
    "variant": "01_charcoalgray",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_001_cloth_4.npz"
   }
  ],
  "lighting": {
-  "blinds": "up",
-  "room_lights": "on"
+  "blinds": "down",
+  "lighting": "night",
+  "intensity": 0.99
  },
  "language": {
-  "high": "Fold the clothes.",
+  "high": "Fold the towels and shirts and stack them.",
   "high_alternatives": [
-   "\uc637 \uac1c\uc5b4 \uc918"
+   "\uc637 \uac1c\uc5b4 \uc918",
+   "Please fold the laundry on the desk.",
+   "Fold the clothes on the table.",
+   "Can you fold these clothes?",
+   "Fold the towels and shirts and stack them.",
+   "\ucc45\uc0c1 \uc704 \ube68\ub798 \uac1c \uc918"
   ],
   "subtasks": [
    "pick up a shirt",

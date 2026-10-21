@@ -62,9 +62,12 @@ def _trace(U, spec, tag):
     for o in spec.objects:
         if o.kind in ("tshirt", "towel"):
             n = U.scene[o.name].data.nodal_pos_w.torch[0]
-            d = (n[:, None, :] - bodies[None]).norm(dim=-1).min().item()
+            dist = (n[:, None, :] - bodies[None]).norm(dim=-1).min(dim=0).values
+            j = int(dist.argmin())
             c = (n.mean(dim=0) - U.scene.env_origins[0]).tolist()
-            out.append(f"{o.name} c=({c[0]:.2f},{c[1]:.2f},{c[2]:.2f}) zmin={n[:, 2].min().item():.2f} robot={d:.2f}")
+            b = (bodies[j] - U.scene.env_origins[0]).tolist()
+            out.append(f"{o.name} c=({c[0]:.2f},{c[1]:.2f},{c[2]:.2f}) zmin={n[:, 2].min().item():.2f} "
+                       f"robot={dist[j].item():.2f} {U.scene['robot'].body_names[j]}@({b[0]:.2f},{b[1]:.2f},{b[2]:.2f})")
     print(f"[trace] {tag}: " + " | ".join(out), flush=True)
 
 

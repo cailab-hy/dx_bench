@@ -148,11 +148,11 @@ def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
         objs.append(ObjSpec("cloth_0", "tshirt", [cx - 0.05, cy, top + 0.08], float(rng.uniform(-0.6, 0.6)) + math.pi / 2,
                             _shirts(split, seed)[0]))
     else:
-        # heap long axes along the desk (y, 1.4 m, yaw within 0.25 rad so the towel stays 1 cm inside the front edge)
-        # and 0.6 m from its -y edge (2026-10-21): at cy - 0.25 with any yaw the dropped top towel slid off the edge in
-        # 10/10 hard states
+        # heap long axes along the desk (y, 1.4 m, yaw within 0.25 rad), 0.40 m from the front edge and 0.6 m from
+        # the -y edge (2026-10-21): 0.30 m from the front with any yaw, the top towel slid down the heap's front slope
+        # and off the desk in 10/10 hard states (the robot pulls the heap towards itself anyway)
         for i, kind in enumerate(["tshirt", "tshirt", "towel", "tshirt", "towel"]):
-            objs.append(ObjSpec(f"cloth_{i}", kind, [cx - 0.05, cy - 0.10, top + 0.05 + 0.06 * i],
+            objs.append(ObjSpec(f"cloth_{i}", kind, [cx - 0.15, cy - 0.10, top + 0.05 + 0.06 * i],
                                 float(rng.uniform(-0.25, 0.25)) + math.pi / 2,
                                 _shirts(split, seed)[i] if kind == "tshirt" else _towel(split, seed, i)))
     # robot in front of the desk's long side (desk against the west wall: approach from +x). Head pitched down
