@@ -26,6 +26,8 @@ TOWELS = ("01_charcoalgray", "05_coolgray", "06_white", "07_oatmeal", "08_lightp
           "11_applegreen", "12_skyblue", "13_sandbeige")
 BASKET_VARIANT = "gray"
 HEAD_PITCH_DESK = 0.6  # rad, BED-02 head camera tilt (D-40)
+HEAD_PITCH_BED = 0.5  # rad, BED-01: level, the mattress top 0.9 m ahead is below the head camera's view (2026-10-22)
+HEAD_PITCH_NEAR = 0.85  # rad, BED-03 near: the first garment 0.75 m ahead on the floor in the lower middle of the view
 _COLOR_SALT = 54321
 _DIVERSE_SALT = 97531
 BLINDS = ("down", "half", "up")
@@ -120,7 +122,10 @@ def gen_bed03_near(diff: str, seed: int, split: str) -> SceneSpec:
         x, y = gx + NEAR_DIST * math.cos(a), gy + NEAR_DIST * math.sin(a)
         if free_floor_ok((x, y), L, 0.5, extra=others):
             break
-    spec.robot = {"xy": [float(x), float(y)], "yaw": math.atan2(gy - y, gx - x), "torso": "upright"}
+    # head pitched down (2026-10-22): level, the head camera looks over a garment 0.75 m ahead on the floor; at the
+    # BED-02 0.6 rad the garment is cut by the image bottom
+    spec.robot = {"xy": [float(x), float(y)], "yaw": math.atan2(gy - y, gx - x), "torso": "upright",
+                  "head_pitch": HEAD_PITCH_NEAR}
     spec.difficulty = "near"
     spec.scene_id = f"bed03_near_{seed:03d}" if split == "eval" else f"bed03_near_train_{seed}"
     return spec
@@ -170,19 +175,25 @@ def gen_bed01(diff: str, seed: int, split: str) -> SceneSpec:
     top = float(hi[2])
     cx, cy = 0.5 * (lo[0] + hi[0]), 0.5 * (lo[1] + hi[1])
     head_y = float(hi[1]) - 0.25
-    if diff == "easy":     # duvet folded at the foot (state file carries the fold; spawn flat over the foot half)
-        duvet = ObjSpec("duvet", "duvet", [cx, float(lo[1]) + 0.45, top + 0.02], math.pi / 2)
+    if diff == "easy":     # duvet folded at the foot (state file carries the fold; spawn flat with its foot edge 3 cm
+        # inside the mattress, 1.5 m along the bed, so the folded half covers the foot half. At lo + 0.45 the fold hung
+        # 30 cm over the foot end - unseen until the saved states were actually loaded, 2026-10-22)
+        duvet = ObjSpec("duvet", "duvet", [cx, float(lo[1]) + 0.78, top + 0.02], math.pi / 2)
         pillow_xyz = [cx + float(rng.uniform(-0.1, 0.1)), head_y, top + 0.08]
     elif diff == "medium":  # crumpled on the bed
         duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(-0.1, 0.1)), cy + float(rng.uniform(-0.2, 0.2)),
                                            top + 0.15], float(rng.uniform(-0.4, 0.4)) + math.pi / 2)
         pillow_xyz = [cx + float(rng.uniform(-0.15, 0.15)), head_y - float(rng.uniform(0.0, 0.3)), top + 0.08]
-    else:                   # half of the duvet on the floor (open long side), pillow on the floor
-        side_x = float(lo[0]) - 0.35
-        duvet = ObjSpec("duvet", "duvet", [side_x + 0.2, cy, top + 0.05], math.pi / 2)
-        pillow_xyz = [side_x - 0.4, cy + float(rng.uniform(-0.5, 0.5)), 0.08]
+    else:                   # half of the duvet off the open long side, pillow on the floor at the head end
+        # (2026-10-22: the pillow used to land 15 cm in front of the robot base origin, i.e. under the robot, and the
+        # hanging duvet rested on the robot; the robot now starts 1.3 m from the mattress, the pillow lies by the head)
+        # centre 15 cm inside the open mattress edge: after the crumple (shrink 0.55-0.8) 25-40 cm hang over the side;
+        # 5 cm outside the edge the whole duvet slid onto the floor
+        duvet = ObjSpec("duvet", "duvet", [float(lo[0]) + 0.15, cy, top + 0.05], math.pi / 2)
+        pillow_xyz = [float(lo[0]) - 0.5 + float(rng.uniform(-0.1, 0.1)), float(hi[1]) - float(rng.uniform(0.0, 0.2)), 0.08]
     objs = [duvet, ObjSpec("pillow", "pillow", pillow_xyz, float(rng.uniform(-0.3, 0.3)))]
-    robot = {"xy": [float(lo[0]) - 0.9, cy], "yaw": 0.0, "torso": "upright"}  # facing the open long side (+x)
+    robot = {"xy": [float(lo[0]) - (1.3 if diff == "hard" else 0.9), cy], "yaw": 0.0,  # facing the open long side (+x)
+             "torso": "upright", "head_pitch": HEAD_PITCH_BED}
     return SceneSpec(scene_id=f"bed01_{diff}_{seed:03d}" if split == "eval" else f"bed01_{diff}_train_{seed}",
                      task="BED-01", difficulty=diff, seed=seed, robot=robot, objects=objs, language=language("BED-01"))
 

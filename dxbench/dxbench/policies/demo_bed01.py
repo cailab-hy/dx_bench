@@ -88,7 +88,14 @@ class Bed01GraspDemo(Bed03OraclePolicy, PolicyBase[Bed01GraspDemoCfg]):  # Arena
             if err < 0.015 or self.t_phase > 90:
                 self._set("descend")
         elif self.phase == "descend":
-            a[0:6], err = self._servo(observation, self.pick + [0, 0, pinch_dz(U) - self.pick[2] * 0 - 0.003],
+            # follow the cloth surface under the pick point: a crumpled duvet's peak settles while the hand comes down
+            # (medium 000 ended 14 mm above it with the lean-time height, 2026-10-22)
+            _, n = self._cloth_xyz(U, "duvet")
+            nb = np.array([self._to_base(U, p) for p in n])
+            near = np.linalg.norm(nb[:, :2] - self.pick[:2], axis=1) < 0.03
+            if near.any():
+                self.pick[2] = float(nb[near, 2].max())
+            a[0:6], err = self._servo(observation, self.pick + [0, 0, pinch_dz(U) - 0.003],
                                       max_dp=0.012)
             if err < 0.006 or self.t_phase > 90:
                 self._set("close")
