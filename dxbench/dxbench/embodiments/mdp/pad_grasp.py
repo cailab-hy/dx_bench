@@ -156,6 +156,7 @@ class PadGraspAction(ActionTerm):
             obj = self._env.scene[name]
             pos = _T(obj.data.nodal_pos_w)
             vel = _T(obj.data.nodal_vel_w).clone()
+            posw = pos.clone() if c.pin_mode == "posvel" else None
             for e, h, pin in items:
                 hs = self._hands[h]
                 loc0 = pin["loc0"]
@@ -179,12 +180,20 @@ class PadGraspAction(ActionTerm):
                 v_ff = (tgt - pin["prev"]) / self._dt if pin["prev"] is not None else torch.zeros_like(tgt)
                 pin["prev"] = tgt.clone()
                 vel[e, pin["ids"]] = c.gain * (tgt - pos[e, pin["ids"]]) / self._dt + v_ff
+                if posw is not None:  # put the pinned nodes on the target and give them the target velocity
+                    posw[e, pin["ids"]] = tgt
+                    vel[e, pin["ids"]] = v_ff
                 sup = pin["sup"]
                 if sup is not None:  # support ring: own offset in the grip frame, softer gain
                     st_ = o[e, h] + sup["loc0"] @ G[e, h].T
                     sv = (st_ - sup["prev"]) / self._dt if sup["prev"] is not None else torch.zeros_like(st_)
                     sup["prev"] = st_.clone()
                     vel[e, sup["ids"]] = c.support_gain * (st_ - pos[e, sup["ids"]]) / self._dt + sv
+                    if posw is not None:
+                        posw[e, sup["ids"]] = st_
+                        vel[e, sup["ids"]] = sv
+            if posw is not None:
+                obj.write_nodal_pos_to_sim_index(posw)
             obj.write_nodal_velocity_to_sim_index(vel)
 
     def _record(self, e, h, name, pin):
@@ -229,6 +238,7 @@ class PadGraspActionCfg(ActionTermCfg):
     support_cloths: list[str] = []  # heavy cloths (duvet) that also get the support ring
     support_r: float = 0.05
     support_gain: float = 1.0
+    pin_mode: str = "velocity"  # "posvel": also write the pinned nodes' positions (heavy cloth test, 2026-10-21)
     gain: float = 1.0
 
 
@@ -255,7 +265,9 @@ RBY1_HANDS = [HandSpec(body=f"ee_{side}", tip_offset=(0.0, 0.0, -0.1355),
 
 
 def add_pad_grasp(env_cfg, cloth_names: list[str], squeeze: float = 0.0, tip_margin: float = 0.004,
-                  capture_c: float | None = 0.025, support_cloths: list[str] | None = None):  # D-35, D-37
+                  capture_c: float | None = 0.025, support_cloths: list[str] | None = None,
+                  support_r: float = 0.05, support_gain: float = 1.0, gain: float = 1.0,
+                  pin_mode: str = "velocity"):  # D-35, D-37
     """Call from an env_cfg_callback (RB-Y1): registers the term as `cloth_assist` (oracles read `.grasped` there)
     plus the hand/cloth prestartup filter of `cloth_assist` (D-19 links)."""
     from isaaclab.managers import EventTermCfg
@@ -265,7 +277,8 @@ def add_pad_grasp(env_cfg, cloth_names: list[str], squeeze: float = 0.0, tip_mar
     env_cfg.actions.cloth_assist = PadGraspActionCfg(cloth_names=list(cloth_names), gripper_term="gripper",
                                                      hands=RBY1_HANDS, squeeze=squeeze, tip_margin=tip_margin,
                                                      snap_s=0.5 if squeeze > 0 else 0.2, capture_c=capture_c,
-                                                     support_cloths=list(support_cloths or []))
+                                                     support_cloths=list(support_cloths or []), support_r=support_r,
+                                                     support_gain=support_gain, gain=gain, pin_mode=pin_mode)
     env_cfg.events.filter_finger_cloth = EventTermCfg(func=filter_finger_cloth_collisions, mode="prestartup",
                                                       params={"cloth_names": list(cloth_names)})
     return env_cfg

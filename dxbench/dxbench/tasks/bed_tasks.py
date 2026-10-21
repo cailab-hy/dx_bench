@@ -334,7 +334,9 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
                 if args_cli.grasp_assist == "pad":
                     add_pad_grasp(env_cfg, cloth, squeeze=args_cli.pad_squeeze, tip_margin=args_cli.pad_tip_margin,
                                   capture_c=args_cli.pad_capture_c,
-                                  support_cloths=[o.name for o in spec.objects if o.kind == "duvet"])  # D-37
+                                  support_cloths=[o.name for o in spec.objects if o.kind == "duvet"],  # D-37
+                                  support_r=args_cli.pad_support_r, support_gain=args_cli.pad_support_gain,
+                                  gain=args_cli.pad_gain, pin_mode=args_cli.pad_pin_mode)
                 else:
                     add_cloth_assist(env_cfg, cloth, radius=args_cli.assist_radius)
             if cloth:
@@ -367,6 +369,10 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
                                  "cylinder: cloth_assist (radius around the TCP axis, D-U11)")
         parser.add_argument("--pad_squeeze", type=float, default=0.0)  # D-34: 0.7 let pinned nodes drift up to 3 cm
         parser.add_argument("--pad_tip_margin", type=float, default=0.004)
+        parser.add_argument("--pad_support_r", type=float, default=0.05, help="pad assist: duvet support radius (m)")
+        parser.add_argument("--pad_support_gain", type=float, default=1.0)
+        parser.add_argument("--pad_gain", type=float, default=1.0)
+        parser.add_argument("--pad_pin_mode", default="velocity", choices=["velocity", "posvel"])
         parser.add_argument("--pad_capture_c", type=float, default=0.025,  # D-35
                             help="pad assist: catch only cloth within this distance (m) of the closing midplane")
         parser.add_argument("--episode_s", type=float, default=None)

@@ -22,6 +22,7 @@ class Bed01GraspDemoCfg(PolicyCfg):
     reach_x: tuple = (0.50, 0.66)    # base-frame window where the right arm reaches the mattress top in crouch
     reach_y: tuple = (-0.32, -0.08)
     pull: tuple = (-0.05, 0.25, 0.08)  # hand travel after the pinch (base frame): back, towards the head, up
+    pull_steps: int = 75             # duration of the pull (15 Hz steps)
     preset_steps: int = 2            # crouch
     max_v: float = 0.2               # used by the inherited _nav
     max_w: float = 0.6
@@ -101,9 +102,9 @@ class Bed01GraspDemo(Bed03OraclePolicy, PolicyBase[Bed01GraspDemoCfg]):  # Arena
                     self.start = tcp.copy()
                     self._set("pull", "pull toward the headboard")
             elif self.phase == "pull":
-                s = min(1.0, self.t_phase / 75.0)
+                s = min(1.0, self.t_phase / float(self.cfg.pull_steps))
                 a[0:6], _ = self._servo(observation, self.start + s * np.asarray(self.cfg.pull), max_dp=0.012)
-                if self.t_phase > 90:
+                if self.t_phase > self.cfg.pull_steps + 15:
                     self._set("hold")
             else:
                 a[0:6], _ = self._servo(observation, self.start + np.asarray(self.cfg.pull))
