@@ -10,6 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import isaaclab.sim as sim_utils
+from isaaclab.sim.spawners.from_files import spawn_from_usd
+from isaaclab.sim.spawners.meshes import spawn_mesh_rectangle
 from isaaclab_physx.sim.schemas.schemas_cfg import PhysxCollisionCfg
 
 from isaaclab_arena.assets.deformable_object import DeformableObject
@@ -17,6 +19,8 @@ from isaaclab_arena.assets.object import Object
 from isaaclab_arena.assets.object_base import ObjectType
 from isaaclab_arena.utils.physics_backend import PhysicsBackend
 from isaaclab_arena.utils.pose import Pose
+
+from dxbench.assets.thick_cloth import grid_rectangle_spawn, thick_spawn
 
 OBJ = Path(__file__).resolve().parent / "objects"
 TSHIRTS = ("s_red", "m_blue", "l_gray", "m_white", "m95_blue", "m95_wine", "m95_green")  # m95_*: real product (D-36)
@@ -34,7 +38,12 @@ TOWEL_COLORS = {"01_charcoalgray": "#7a707f", "05_coolgray": "#bbbdc8", "06_whit
                 "12_skyblue": "#bccae4", "13_sandbeige": "#c8988d"}
 TOWEL_SIZE = (0.80, 0.40)
 TOWEL_GSM = 375.0
-CLOTH_THICKNESS = 0.0015  # simulation surface thickness (m); mass = density x thickness x area
+CLOTH_THICKNESS = 0.0015  # FEM surface thickness (m): bending stiffness (matched to the towel video) and mass
+# (density x thickness x area); the 5 mm geometric thickness is CLOTH_HALF below
+CLOTH_HALF = 0.0025  # half of the real ~5 mm thickness (user 2026-10-22): collision rest offset + render shell (D-44)
+DUVET_SIZE = (2.0, 1.55)  # m, the lab duvet (user 2026-10-22); 2.0 m along the bed (spawn yaw pi / 2)
+DUVET_MASS = 1.2  # kg, ESTIMATE until weighed (a ~5 mm summer quilt of 3.1 m2)
+DUVET_YOUNGS = 1.0e5  # Pa at 2 mm, fitted to the drape in ~/Downloads/bed.mp4 (2026-10-22, reports/duvet_match)
 
 
 class PrebuiltClothObject(DeformableObject):
@@ -54,26 +63,31 @@ def _pose(xyz, yaw=0.0) -> Pose:
 
 
 def tshirt(name: str, variant: str = "m_blue", xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> PrebuiltClothObject:
-    return PrebuiltClothObject(name=name, spawner_cfg=sim_utils.UsdFileCfg(usd_path=str(OBJ / f"tshirt_{variant}.usda")),
-                               initial_pose=_pose(xyz, yaw))
+    cfg = sim_utils.UsdFileCfg(usd_path=str(OBJ / f"tshirt_{variant}.usda"))
+    cfg.func = thick_spawn(spawn_from_usd, CLOTH_HALF, single_mesh=True)
+    return PrebuiltClothObject(name=name, spawner_cfg=cfg, initial_pose=_pose(xyz, yaw))
 
 
 def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, rgb=(0.9, 0.85, 0.6),
                spacing_m: float = 0.023, iters: int = 16, self_collision: bool = True,
                youngs_modulus: float = 1.0e6, density: float = 120.0, friction: tuple = (0.72, 0.6),
-               thickness: float = CLOTH_THICKNESS, poisson: float = 0.25) -> DeformableObject:
+               thickness: float = CLOTH_THICKNESS, poisson: float = 0.25, grid_m: float | None = None) -> DeformableObject:
+    """grid_m: a regular node grid of this spacing (thick_cloth.grid_rectangle_spawn) instead of Isaac Lab's
+    edge-halving refinement (spacing_m), which jumps 2.0 m sheets from 3.1 cm to 1.6 cm nodes."""
     import math
 
     diag = math.hypot(*size)
     cfg = sim_utils.MeshRectangleCfg(
-        size=size, edge_refinement=max(1.0, diag / (1.45 * spacing_m)),
-        deformable_props=sim_utils.DeformableBodyPropertiesCfg(solver_position_iteration_count=iters,
-                                                               self_collision=self_collision),
+        size=size, edge_refinement=1.0 if grid_m else max(1.0, diag / (1.45 * spacing_m)),
+        deformable_props=sim_utils.DeformableBodyPropertiesCfg(
+            solver_position_iteration_count=iters, self_collision=self_collision,
+        ),
         physics_material=sim_utils.PhysxSurfaceDeformableBodyMaterialCfg(
             density=density, static_friction=friction[0], dynamic_friction=friction[1], youngs_modulus=youngs_modulus,
             poissons_ratio=poisson, surface_thickness=thickness, bend_damping=0.1, elasticity_damping=0.1),
-        collision_props=[PhysxCollisionCfg(contact_offset=0.008, rest_offset=0.002)],
+        collision_props=[PhysxCollisionCfg(contact_offset=0.008, rest_offset=CLOTH_HALF)],
         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=rgb))
+    cfg.func = thick_spawn(grid_rectangle_spawn(grid_m) if grid_m else spawn_mesh_rectangle, CLOTH_HALF)
     return DeformableObject(name=name, spawner_cfg=cfg, initial_pose=_pose(xyz, yaw))
 
 
@@ -93,11 +107,17 @@ def towel(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, small: bool = False,
 
 
 def duvet(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
-    """The lab bed's blanket as in the DX twin (Bed.usda `Blanket` + `BlanketPhysics`, D-39): 1.5 x 1.4 m, density 100,
-    2 mm, E 1e6, nu 0.3, friction 0.6 / 0.5, white sheet colour. 2.3 cm nodes (the DX mesh has 3.5 cm; stage 1 needed
-    2.3 cm to grasp)."""
-    return rect_cloth(name, (1.5, 1.4), xyz, yaw, rgb=(0.8879, 0.8879, 0.8714), density=100.0, thickness=0.002,
-                      youngs_modulus=1.0e6, poisson=0.3, friction=(0.6, 0.5))
+    """The lab duvet (user 2026-10-22): 2.0 x 1.55 m, ~5 mm thick (render shell + rest offset, CLOTH_HALF), mass
+    DUVET_MASS (estimate until weighed). E 1e5 at 2 mm FEM thickness from the video ~/Downloads/bed.mp4
+    (reports/duvet_match): the DX twin's 1e6 stands the bed corners out like a board, 1e4 crinkles like silk, 1e5
+    hangs soft with a ~9 cm corner flare as in the video. The video's billowing slow fall is air drag, which PhysX
+    does not model (D-44). nu 0.3, friction 0.6 / 0.5 (DX), DX white. 2.3 cm node grid (88 x 68): at
+    3.1 x 2.4 cm the physical fold crumpled it, 1.6 cm (Isaac Lab's next refinement) is 16.6 k nodes."""
+    th = 0.002
+    return rect_cloth(name, DUVET_SIZE, xyz, yaw, rgb=(0.8879, 0.8879, 0.8714),
+                      density=DUVET_MASS / (DUVET_SIZE[0] * DUVET_SIZE[1] * th), thickness=th,
+                      youngs_modulus=DUVET_YOUNGS, poisson=0.3, friction=(0.6, 0.5),
+                      grid_m=0.023)
 
 
 def sock(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:

@@ -1,6 +1,7 @@
 """Scene (background) assets registered with Arena."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from isaaclab_arena.assets.background import Background
@@ -26,7 +27,7 @@ class DxFlatGround(Background):
 @register_asset
 class DxCareRoom(Background):
     """DX Hub 11F care room (bedroom) — `DX_Hub_Building_add_obj_v1_CareRoom.usda` referenced once at a fixed
-    world prim (/World/DX_Hub_Building_add_obj), so furniture prim paths match the *_scene.usda stage and the
+    prim (paths.CARE_ROOM_PRIM, under env_0 since D-44; world frame = env frame with one env) and the
     WallAnchor world joints of the wardrobe stay valid. Contains its own lights. Nested physics is not reset."""
 
     name = "dx_care_room"
@@ -75,8 +76,8 @@ def replace_care_room_floor(env=None, env_ids=None):
     floor = stage.GetPrimAtPath(f"{CARE_ROOM_PRIM}/{CARE_ROOM_FLOOR}")
     if floor.IsValid():
         UsdPhysics.CollisionAPI.Apply(floor).CreateCollisionEnabledAttr(False)
-    if not stage.GetPrimAtPath("/World/DxFloorPlane").IsValid():
-        plane = UsdGeom.Plane.Define(stage, "/World/DxFloorPlane")
+    if not stage.GetPrimAtPath("/World/envs/env_0/DxFloorPlane").IsValid():
+        plane = UsdGeom.Plane.Define(stage, "/World/envs/env_0/DxFloorPlane")
         plane.CreateAxisAttr("Z")
         plane.CreateLengthAttr(60.0)
         plane.CreateWidthAttr(60.0)

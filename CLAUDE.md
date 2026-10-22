@@ -63,6 +63,9 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - AppLauncher에 `--device`(cuda)가 있으니 스크립트 인자로 `--device`를 쓰지 말 것(원격조작은 `--teleop_device`).
 - Isaac Lab `Isaac-Lift-*-Franka` 예제는 중력 커리큘럼(−1e-4 → −9.81, 10k RL step)이 있어 상태머신으로 짧게 돌리면 무중력이다 → `curriculum.gravity`·`events.variable_gravity`를 끌 것.
 - Arena는 task·embodiment의 이벤트/설정 configclass를 **dataclass 필드만** 복사해 합친다(`combine_configclass_instances`). 인스턴스에 나중에 붙인 속성(`ev.x = EventTermCfg(...)`)은 조용히 사라진다 → 클래스 본문에 필드로 선언(D-42). env_cfg 콜백에서 `env_cfg.events.x = ...`는 괜찮다.
-- 저장한 천 상태도 완전히 정지 상태는 아니다: 구겨진 옷은 에피소드 20 s 동안 정점 평균 6–15 cm 움직이며 조금씩 풀린다(펴짐 비율 ±0.15).
+- **천은 env 안 충돌체 위에서만 제대로 렌더된다**(D-44): env 밖(전역 prim) 충돌체에 닿은 천 부분은 물리는 맞는데 렌더에서 사라진다. DX 방은 `/World/envs/env_0/...`(`paths.CARE_ROOM_PRIM`).
+- DX 가구가 동적 강체·관절이면 방 안의 천이 떨린다 → prestartup `fix_bed`가 모두 정적으로(D-44).
+- 천 상태 생성은 순간이동(정점 위치 쓰기)으로 크게 접거나 구기지 말 것: 큰 이불이 NaN·뭉침. 속도 고정으로 물리적으로 접고 구긴다(`make_cloth_states.py`).
+- 저장한 천 상태도 완전히 정지 상태는 아니다: 구겨진 옷은 에피소드 20 s 동안 조금씩 풀린다(D-44 이전 측정: 정점 평균 6–15 cm, 가구 떨림 포함).
 - 보조 잡기 기본은 `pad_grasp`(D-34/35): 손끝이 천에서 4 mm 안, 닫히는 방향 가운데 ±2.5 cm 안의 천만 잡힌다. oracle·원격조작은 천에 닿을 때까지 내려갈 것(`oracle_bed03.pinch_dz`). 잡기 기록은 `result.json`의 `grasp_stats`.
 - 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.

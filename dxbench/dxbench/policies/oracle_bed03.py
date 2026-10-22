@@ -25,6 +25,8 @@ BASE_FRONT_X = 0.32
 TCP_OFF_Y = -0.20  # right hand lateral offset in the base frame during picks
 ROBOT_R = 0.45     # base footprint radius (m) for approach planning
 AXLE_X = 0.228     # drive-wheel axle ahead of the base origin (the base turns about it)
+WHEEL_Y = 0.265    # drive wheels either side of the axle midpoint (track 0.53 m)
+WHEEL_CLEAR = 0.07  # a goal pose keeps every floor garment node this far from both wheel ground points (2026-10-22)
 
 
 @dataclass
@@ -110,6 +112,32 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
 
     def _tcp_b(self, obs):
         return obs["policy"]["tcp_right"][0, :3].cpu().numpy()
+
+    def _floor_cloth(self, U, exclude: str | None = None):
+        """(K,2) xy of garment nodes lying on the floor (z < 5 cm), every 2nd node; `exclude` left out. A garment under a
+        drive wheel is caught (pad_grasp wheel_trap, real RB-Y1), so goals and paths keep the wheels off them."""
+        pts = []
+        for n in U.scene.deformable_objects.keys():
+            if n == exclude or n == "pillow":
+                continue
+            p = (_T(U.scene[n].data.nodal_pos_w)[0] - U.scene.env_origins[0])[::2]
+            p = p[p[:, 2] < 0.05]
+            if len(p):
+                pts.append(p[:, :2].cpu().numpy())
+        return np.concatenate(pts) if pts else np.zeros((0, 2))
+
+    def _pick_point(self, c, n):
+        """Grasp xy: the planned edge point (snapped to the nearest garment node) or the garment centre."""
+        if getattr(self, "pick_xy", None) is None:
+            return c
+        j = int(np.argmin(np.linalg.norm(n[:, :2] - self.pick_xy, axis=1)))
+        return np.array([n[j, 0], n[j, 1], c[2]])
+
+    def _wheel_points(self, xy, yaw):
+        c, s_ = math.cos(yaw), math.sin(yaw)
+        ax = np.asarray(xy) + AXLE_X * np.array([c, s_])
+        lat = WHEEL_Y * np.array([-s_, c])
+        return ax + lat, ax - lat
 
     def _cloth_xyz(self, U, name):
         n = _T(U.scene[name].data.nodal_pos_w)[0] - U.scene.env_origins[0]
@@ -202,6 +230,8 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
                 if not (0 <= n[0] < G["shape"][0] and 0 <= n[1] < G["shape"][1]) or not free[n]:
                     continue
                 nc = c + G["res"] * math.hypot(di, dj) + 0.02 * max(0.0, 0.3 - G["clear"][n])  # prefer clearance
+                if "cloth_cost" in G:
+                    nc += G["res"] * G["cloth_cost"][n]  # avoid driving over garments
                 if nc < cost.get(n, 1e9):
                     cost[n], came[n] = nc, cur
                     heapq.heappush(openq, (nc + H(n), nc, n))
@@ -215,7 +245,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         path[-1] = (float(goal[0]), float(goal[1]))
         return [np.asarray(p) for p in path[::3]] + [np.asarray(goal, dtype=float)]
 
-    def _plan_approach(self, U, target_xy, off_xy, exclude, obs=None):
+    def _plan_approach(self, U, target_xy, off_xy, exclude, obs=None, pick_nodes=None):
         """Base goal (xy, yaw) putting `target_xy` at `off_xy` in the base frame + an A* path to it. 16 approach
         directions; the shortest path (+ turning) wins. Returns (goal, yaw, ok, path_len, goal_clear, path)."""
         if self.layout is None:
@@ -225,26 +255,49 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         p, yaw0 = self._base(U)
         obs = self._obstacles(U, exclude) if obs is None else obs
         G = self._grid(obs, self.layout)
+        from scipy.spatial import cKDTree
+
+        cloth_all = self._floor_cloth(U)  # the target too: the wheels must not stand on it either
+        tree = cKDTree(cloth_all) if len(cloth_all) else None
+        others = self._floor_cloth(U, exclude)
+        if len(others):  # soft cost: paths keep the base (and wheels) off the other garments where they can
+            X = G["x0"] + np.arange(G["shape"][0])[:, None] * G["res"]
+            Y = G["y0"] + np.arange(G["shape"][1])[None, :] * G["res"]
+            P = np.stack(np.broadcast_arrays(X, Y), -1).reshape(-1, 2)
+            d, _ = cKDTree(others).query(P)
+            G["cloth_cost"] = (0.5 * (d < 0.40)).reshape(G["shape"])
         best, best_key = None, None
         for k in range(16):
             yaw = math.atan2(target_xy[1] - p[1], target_xy[0] - p[0]) + k * 2 * math.pi / 16
             cy, sy = math.cos(yaw), math.sin(yaw)
-            goal = np.asarray(target_xy) - np.array([cy * off_xy[0] - sy * off_xy[1], sy * off_xy[0] + cy * off_xy[1]])
+            pick = np.asarray(target_xy, dtype=float)
+            if pick_nodes is not None and len(pick_nodes):
+                # grasp the garment near its edge on the robot's side (6 cm in), on the line through its centre, so
+                # the robot (and its wheels) stays off it - a garment under a wheel is caught (2026-10-22)
+                f = np.array([cy, sy])
+                rel = pick_nodes - pick
+                along, lat = rel @ f, rel @ np.array([-sy, cy])
+                band = np.abs(lat) < 0.06
+                if band.any():
+                    pick = pick + f * (float(along[band].min()) + 0.06)
+            goal = pick - np.array([cy * off_xy[0] - sy * off_xy[1], sy * off_xy[0] + cy * off_xy[1]])
             gc = float(G["clear"][self._cell(G, goal)])
             if gc < 0.03:
                 continue
+            if tree is not None and min(tree.query(w)[0] for w in self._wheel_points(goal, yaw)) < WHEEL_CLEAR:
+                continue  # a wheel would stand on a garment
             path = self._astar(G, p[:2], goal)
             if path is None:
                 continue
             length = sum(float(np.linalg.norm(path[i + 1] - path[i])) for i in range(len(path) - 1))
             key = length + 0.25 * abs(wrap(yaw - yaw0))
             if best_key is None or key < best_key:
-                best, best_key = (goal, yaw, True, length, gc, path), key
+                best, best_key = (goal, yaw, True, length, gc, path, pick), key
         if best is None:  # fall back: direct approach from the current side
             yaw = math.atan2(target_xy[1] - p[1], target_xy[0] - p[0])
             cy, sy = math.cos(yaw), math.sin(yaw)
             goal = np.asarray(target_xy) - np.array([cy * off_xy[0] - sy * off_xy[1], sy * off_xy[0] + cy * off_xy[1]])
-            best = (goal, yaw, False, float(np.linalg.norm(goal - p[:2])), -1.0, [goal])
+            best = (goal, yaw, False, float(np.linalg.norm(goal - p[:2])), -1.0, [goal], np.asarray(target_xy))
         return best
 
     def _follow(self, U, path, goal_yaw, lookahead=0.35):
@@ -392,6 +445,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
                 self._set("finished", "look for clothes")
             else:
                 self.target = self.queue.pop(0)
+                self.pick_xy = None
                 self.retries = 0
                 self.regrasps = 0
                 self.replans = 0
@@ -399,9 +453,11 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
                 self._set("goto_cloth", "go to the shirt")
         if self.phase == "goto_cloth":
             if self.goal is None:  # plan once per approach: garment pick_ahead in front, under the right hand
-                c, _ = self._cloth_xyz(U, self.target)
-                g = self._plan_approach(U, c[:2], (BASE_FRONT_X + self.cfg.pick_ahead_m, TCP_OFF_Y), self.target)
+                c, n = self._cloth_xyz(U, self.target)
+                g = self._plan_approach(U, c[:2], (BASE_FRONT_X + self.cfg.pick_ahead_m, TCP_OFF_Y), self.target,
+                                        pick_nodes=n[n[:, 2] < 0.05][:, :2])
                 self.goal = (g[0], g[1], list(g[5]))
+                self.pick_xy = np.asarray(g[6], dtype=float)
                 self.plan_log.append({"target": self.target, "goal": g[0].tolist(), "yaw": g[1], "ok": g[2],
                                       "path_len": g[3], "goal_clear": g[4], "waypoints": len(g[5])})
             goal, yaw, path = self.goal
@@ -416,6 +472,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
                 self._set("above")
         elif self.phase == "above":
             c, n = self._cloth_xyz(U, self.target)
+            c = self._pick_point(c, n)
             near = n[np.argsort(np.linalg.norm(n[:, :2] - c[:2], axis=1))[:30]]
             top = float(near[:, 2].max())
             tb = self._to_base(U, [c[0], c[1], top + 0.031 + 0.12])
@@ -424,6 +481,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
                 self._set("descend")
         elif self.phase == "descend":
             c, n = self._cloth_xyz(U, self.target)
+            c = self._pick_point(c, n)
             near = n[np.argsort(np.linalg.norm(n[:, :2] - c[:2], axis=1))[:30]]
             top = float(near[:, 2].max())
             pad = pinch_dz(U) < 0.031

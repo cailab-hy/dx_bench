@@ -1,0 +1,42 @@
+{
+ "args": {
+  "E": 300000.0,
+  "hz": 480,
+  "cases": "lift,hang,fold",
+  "tag": "e3e5",
+  "xr": false,
+  "device": "cuda:0",
+  "visualizer": [],
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "deterministic": false,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0
+ },
+ "cases": {
+  "lift": {
+   "frac_on_desk": 0.5174216032028198,
+   "desk_extent_xy": [
+    0.7228631377220154,
+    0.6198325157165527
+   ]
+  },
+  "hang": {
+   "hang_length": 0.5969999432563782,
+   "hang_width_x": 0.60309898853302,
+   "hang_depth_y": 0.1698114573955536,
+   "touches_desk": false
+  },
+  "fold": {
+   "frac_side_still_folded": 1.0,
+   "max_z_above_desk": 0.08805960416793823
+  }
+ }
+}

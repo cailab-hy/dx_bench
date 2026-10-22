@@ -12,6 +12,7 @@ evaluation scenes load these files instead of re-simulating the drop.
 from __future__ import annotations
 
 import glob
+import math
 import os
 import sys
 
@@ -31,18 +32,24 @@ def _args(p):
     p.add_argument("--salt", type=int, default=0, help="new crumple draw (make_states.sh retries a rejected state)")
 
 
-def shape_nodes(nodes: np.ndarray, kind: str, difficulty: str, task: str, rng: np.random.Generator) -> np.ndarray:
+def shape_nodes(nodes: np.ndarray, kind: str, difficulty: str, task: str, rng: np.random.Generator,
+                fold_at: float | None = None) -> np.ndarray:
     n = nodes.copy()
     c = n.mean(axis=0)
-    if task == "BED-01" and kind == "duvet" and difficulty == "easy":
-        # fold in half along the bed length: the head-side half is mirrored onto the foot half, 4 cm higher
+    if task == "BED-01" and kind == "duvet" and difficulty == "easy" and fold_at is not None and fold_at < 0:
+        pass  # folded physically in main() (2026-10-22); kept for the old mirror fold
+    elif task == "BED-01" and kind == "duvet" and difficulty == "easy":
+        # (old) fold along the bed length: the part beyond `fold_at` (head side) is mirrored onto the foot side, 4 cm higher.
+        # The 2.0 m duvet (2026-10-22) is folded at the mattress middle, its head edge 2 cm short of the mattress end
         ax = 1
-        fold = c[ax]
+        fold = c[ax] if fold_at is None else fold_at
         top = n[:, ax] > fold
         n[top, ax] = 2 * fold - n[top, ax]
         n[top, 2] += 0.04 + 0.02 * (n[top, ax] - n[top, ax].min()) / max(1e-6, np.ptp(n[top, ax]))
+    elif difficulty in ("medium", "hard") and kind == "duvet" and fold_at is not None and fold_at < 0:
+        pass  # crumpled physically in main() (2026-10-22): the shrink + bump teleport went NaN on the 2.0 m duvet
     elif difficulty in ("medium", "hard") and kind == "duvet":
-        # crumple: shrink towards the centre and add a smooth random height field
+        # (old) crumple: shrink towards the centre and add a smooth random height field
         s = rng.uniform(0.55, 0.8)
         n[:, :2] = c[:2] + (n[:, :2] - c[:2]) * s
         k = rng.normal(size=(4, 2)) * 6.0
@@ -60,7 +67,7 @@ def _trace(U, spec, tag):
     bodies = U.scene["robot"].data.body_pos_w.torch[0]
     out = []
     for o in spec.objects:
-        if o.kind in ("tshirt", "towel"):
+        if o.kind in ("tshirt", "towel", "duvet"):
             n = U.scene[o.name].data.nodal_pos_w.torch[0]
             dist = (n[:, None, :] - bodies[None]).norm(dim=-1).min(dim=0).values
             j = int(dist.argmin())
@@ -87,9 +94,18 @@ def main():
     path = files[0]
     spec = SceneSpec.from_json(path)
     env_name = {"BED-01": "dx_bed01", "BED-02": "dx_bed02", "BED-03": "dx_bed03"}[spec.task]
+    # the env must start from the spawn shapes: since load_cloth_states really runs (D-42) a scene that already has
+    # states would start from the old ones (2026-10-22: a 2 mm-gap tee state under the 2.5 mm offset bunched up 15 cm)
+    import tempfile
+
+    fresh = SceneSpec.from_json(path)
+    for o in fresh.objects:
+        o.cloth_state = None
+    tmp = os.path.join(tempfile.mkdtemp(prefix="dx_states_"), os.path.basename(path))
+    fresh.to_json(tmp)
     sys.argv = [sys.argv[0], *sys.argv[1:], "--external_environment_class_path",
-                f"dxbench.tasks.bed_tasks:DxBed0{spec.task[-1]}Environment", env_name, "--scene", path,
-                "--no_assist", "--embodiment", "rby1_joint"]
+                f"dxbench.tasks.bed_tasks:DxBed0{spec.task[-1]}Environment", env_name, "--scene", tmp,
+                "--no_assist", "--embodiment", "rby1_joint", *os.environ.get("DX_STATES_ENV_ARGS", "").split()]
     rt._argv = sys.argv[1:]
     env = rt.make_env()
     U = env.unwrapped
@@ -100,12 +116,23 @@ def main():
             continue
         obj = U.scene[o.name]
         pos = obj.data.nodal_pos_w.torch.clone()
-        shaped = shape_nodes(pos[0].cpu().numpy(), o.kind, spec.difficulty, spec.task, rng)
+        mat = load_layout()["parts_aabb"]["Bed/Mattress"]
+        shaped = shape_nodes(pos[0].cpu().numpy(), o.kind, spec.difficulty, spec.task, rng, fold_at=-1.0)
         pos[0] = torch.as_tensor(shaped, device=U.device, dtype=pos.dtype)
         obj.write_nodal_pos_to_sim_index(pos)
         obj.write_nodal_velocity_to_sim_index(torch.zeros_like(pos))
     # hold the robot still (rby1_joint default targets) while the garments settle
     from dxbench.embodiments.rby1_cfg import ARM_L, ARM_R, READY_ARMS
+
+    def hold_step(act):
+        """One env step (decimation physics steps) without the env's termination checks and auto reset: a BED-01
+        failure / success fired mid-generation and reset the cloth to its spawn shape (2026-10-22)."""
+        U.action_manager.process_action(act)
+        for _ in range(U.cfg.decimation):
+            U.action_manager.apply_action()
+            U.scene.write_data_to_sim()
+            U.sim.step(render=False)
+            U.scene.update(U.physics_dt)
 
     act = torch.zeros(U.num_envs, 24, device=U.device)
     act[:, :14] = torch.tensor([[READY_ARMS.get(n, 0.0) for n in ARM_R + ARM_L]], device=U.device)
@@ -115,7 +142,7 @@ def main():
     # shrink + bump field relaxed back to ~98 % flat; laying random folds by hand jittered (> 4 m/s after 8 s).
     if spec.task == "BED-02" and a.presettle_s > 0:
         for _ in range(int(a.presettle_s * 15)):
-            env.step(act)
+            hold_step(act)
     drops = []
     if spec.difficulty in ("medium", "hard"):
         for o in spec.objects:
@@ -135,22 +162,93 @@ def main():
                     drift = torch.as_tensor(rng.normal(0, 0.08, 2), device=U.device, dtype=n0.dtype)
                     lift = 0.45
                 ids = torch.nonzero((n0 - n0[k]).norm(dim=-1) < 0.03).flatten()
-                drops.append((o.name, ids, n0[ids].clone(), drift, lift))
+
+                def lift_path(p0, s_, drift=drift, lift=lift):
+                    t = p0.clone()
+                    t[:, :2] += drift * s_
+                    t[:, 2] += lift * s_
+                    return t
+
+                drops.append((o.name, ids, n0[ids].clone(), lift_path, 1.0))
+    if spec.task == "BED-01" and spec.difficulty in ("medium", "hard"):
+        # crumple the duvet physically like the garments: two points pulled up 50 cm towards each other (gathering the
+        # sheet like a person bundling it), released over the bed / over its open side
+        for _ in range(int(1.0 * 15)):
+            hold_step(act)
+        for o in spec.objects:
+            if o.kind == "duvet":
+                n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
+                c0 = n0.mean(dim=0)
+                for _k in range(2):
+                    # not near the pillow: its pose is not saved, the episode respawns it where the scene says
+                    pxy = torch.as_tensor(spec.obj("pillow").xyz[:2], device=U.device, dtype=n0.dtype) \
+                        + U.scene.env_origins[0][:2]
+                    on_top = torch.nonzero((n0[:, 2] > n0[:, 2].max() - 0.05)
+                                           & ((n0[:, :2] - c0[:2]).norm(dim=-1) > 0.25)
+                                           & ((n0[:, :2] - pxy).norm(dim=-1) > 0.45)).flatten()
+                    if len(on_top) == 0:
+                        on_top = torch.nonzero((n0[:, :2] - pxy).norm(dim=-1) > 0.45).flatten()
+                    k = int(on_top[int(rng.integers(len(on_top)))])
+                    ids = torch.nonzero((n0 - n0[k]).norm(dim=-1) < 0.03).flatten()
+                    pull = (c0[:2] - n0[k, :2]) * float(rng.uniform(0.4, 0.8))
+
+                    def gather(p0, s_, pull=pull):
+                        t = p0.clone()
+                        t[:, :2] += pull * s_
+                        t[:, 2] += 0.5 * math.sin(math.pi * s_)  # up and back down on the gathered spot
+                        return t
+
+                    drops.append((o.name, ids, n0[ids].clone(), gather, 2.0))
+    if spec.task == "BED-01" and spec.difficulty == "easy":
+        # fold the duvet like a person (2026-10-22): pin its head-side edge, carry it in a 35 cm high arc (4 s) to the foot
+        # side of the mattress middle, release. Writing mirrored positions instead left the render mesh wrong (a
+        # strip, or nothing until the cloth moved) and crumpled the 65 x 65 duvet into a ball.
+        mat = load_layout()["parts_aabb"]["Bed/Mattress"]
+        fold = 0.5 * (mat[0][1] + mat[1][1]) + float(U.scene.env_origins[0][1])
+        # the pillow lies on the duvet's head edge and rode along with it, dragging the whole duvet off the foot end:
+        # park it on the floor beyond the bed while folding (its pose is not saved; the episode spawns it from the
+        # scene JSON, clear of the folded duvet)
+        if "pillow" in [o.name for o in spec.objects]:
+            pl = U.scene["pillow"]
+            pp = pl.data.nodal_pos_w.torch.clone()
+            pp[0, :, 0] += 1.2
+            pp[0, :, 2] += 0.01 - pp[0, :, 2].min()
+            pl.write_nodal_pos_to_sim_index(pp)
+            pl.write_nodal_velocity_to_sim_index(torch.zeros_like(pp))
+        for k in range(int(2.0 * 15)):  # let the spawned sheet land on the mattress first (folding it mid-fall
+            hold_step(act)              # bunched the duvet into a 1.0 x 0.5 m heap)
+            if TRACE and k % 3 == 0:
+                _trace(U, spec, f"presettle {k / 15:.2f}s")
+        for o in spec.objects:
+            if o.kind == "duvet":
+                n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
+                ids = torch.nonzero(n0[:, 1] > n0[:, 1].max() - 0.02).flatten()
+
+                def fold_path(p0, s_, fold=fold):
+                    t = p0.clone()
+                    ang = math.pi * s_
+                    r = p0[:, 1] - fold  # rotate the edge about the fold line, 2 cm extra lift for the layer below
+                    t[:, 1] = fold + r * math.cos(ang)
+                    t[:, 2] = p0[:, 2] + 0.35 * math.sin(ang) + 0.02 * s_  # a flat 35 cm high arc
+                    return t
+
+                drops.append((o.name, ids, n0[ids].clone(), fold_path, 4.0))
     if drops:
         sim, dt = U.sim, U.physics_dt
-        n_lift, n_fall = int(1.0 / dt), int(0.5 / dt)
-        for i in range(n_lift + n_fall):
-            if i < n_lift:
-                s_ = (i + 1) / n_lift
-                for name, ids, p0, drift, lift in drops:
-                    obj = U.scene[name]
-                    pos = obj.data.nodal_pos_w.torch
-                    vel = obj.data.nodal_vel_w.torch.clone()
-                    tgt = p0.clone()
-                    tgt[:, :2] += drift * s_
-                    tgt[:, 2] += lift * s_
-                    vel[0, ids] = (tgt - pos[0, ids]) / dt
-                    obj.write_nodal_velocity_to_sim_index(vel)
+        t_max = max(d[4] for d in drops)
+        n_all = int((t_max + 0.5) / dt)
+        for i in range(n_all):
+            for name, ids, p0, fn, secs in drops:
+                n_d = int(secs / dt)
+                if i >= n_d:
+                    continue
+                s_ = min(1.0, (i + 1) / (0.85 * n_d))  # the last 15 %: hold at the target, then release
+                s_ = s_ * s_ * (3 - 2 * s_)
+                obj = U.scene[name]
+                pos = obj.data.nodal_pos_w.torch
+                vel = obj.data.nodal_vel_w.torch.clone()
+                vel[0, ids] = (fn(p0, s_) - pos[0, ids]) / dt
+                obj.write_nodal_velocity_to_sim_index(vel)
             U.scene.write_data_to_sim()
             sim.step(render=False)
             U.scene.update(dt)
@@ -158,7 +256,7 @@ def main():
                 _trace(U, spec, f"drop {i * dt:.2f}s")
     steps = int((a.settle_s + (2.0 if drops else 0.0)) * 15)  # a dropped heap keeps collapsing for ~5 s
     for k in range(steps):
-        env.step(act)
+        hold_step(act)
         if TRACE and k % 3 == 0:
             _trace(U, spec, f"settle {k / 15:.2f}s")
     if spec.task == "BED-02":
@@ -175,7 +273,12 @@ def main():
         if o.kind not in ("tshirt", "towel", "sock", "duvet"):
             continue
         nodes = (U.scene[o.name].data.nodal_pos_w.torch[0] - U.scene.env_origins[0]).cpu().numpy()
-        vel = U.scene[o.name].data.nodal_vel_w.torch[0].norm(dim=-1).max().item()
+        vn = U.scene[o.name].data.nodal_vel_w.torch[0].norm(dim=-1)
+        vel = vn.max().item()
+        if vel > 1.0:  # where the fastest node is (debug for jitter at contacts)
+            j = int(vn.argmax())
+            print(f"[states-fast] {o.name}: {vel:.1f} m/s at {np.round(nodes[j], 3).tolist()}, "
+                  f"nodes > 0.5 m/s: {int((vn > 0.5).sum())}", flush=True)
         f = os.path.join(out_dir, f"{spec.scene_id}_{o.name}.npz")
         np.savez_compressed(f, nodes=nodes.astype(np.float32))
         o.cloth_state = os.path.relpath(f, REPO)

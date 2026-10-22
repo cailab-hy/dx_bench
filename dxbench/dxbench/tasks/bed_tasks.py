@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 from pathlib import Path
 
 import numpy as np
@@ -74,6 +75,26 @@ def deactivate_dx_deformables(env, env_ids):
             p.SetActive(False)
 
 
+def fix_bed(env, env_ids):
+    """Prestartup (D-44, 2026-10-22): make every DX care-room furniture rigid body static and switch its joints off
+    (14 bodies, 10 joints: bed frame / mattress, wardrobe and its WallAnchor, closet / vanity doors, desk, sofa, plant).
+    With them dynamic, every cloth in the room buzzed (2.7 k duvet nodes > 0.5 m/s; the same duvet with the furniture
+    static or removed: ~100) and the 1.2 kg duvet folded into a heap or went NaN; reproduced outside Arena
+    (tools/cloth_spike/duvet_match.py --dx_room, --static_furniture). The robot does not move furniture."""
+    import isaaclab.sim as sim_utils
+    from pxr import Usd, UsdPhysics
+
+    stage = sim_utils.get_current_stage()
+    root = stage.GetPrimAtPath(CARE_FURNITURE)
+    if not root.IsValid():
+        return
+    for p in Usd.PrimRange(root):
+        if p.HasAPI(UsdPhysics.RigidBodyAPI):
+            UsdPhysics.RigidBodyAPI(p).CreateRigidBodyEnabledAttr(False)
+        if p.IsA(UsdPhysics.Joint):
+            UsdPhysics.Joint(p).CreateJointEnabledAttr(False)
+
+
 def load_cloth_states(env, env_ids, states: dict):
     """Reset: write saved (settled) nodal positions for each garment, zero velocities. states: {name: npz path}."""
     if env_ids is None:
@@ -115,6 +136,7 @@ class BedTaskBase(TaskBase):
         @configclass
         class _Events:
             deactivate_dx = EventTermCfg(func=deactivate_dx_deformables, mode="prestartup")
+            fix_bed = EventTermCfg(func=fix_bed, mode="prestartup")
             lighting = EventTermCfg(func=apply_care_room_lighting, mode="prestartup",
                                     params={"lighting": dict(self.spec.lighting)})
             floor_plane = EventTermCfg(func=replace_care_room_floor, mode="prestartup")

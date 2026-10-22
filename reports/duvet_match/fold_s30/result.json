@@ -1,0 +1,46 @@
+{
+ "args": {
+  "E": 100000.0,
+  "thickness": 0.002,
+  "mass": 1.2,
+  "mu": 0.6,
+  "damping": 0.0,
+  "hz": 480,
+  "settle": 5.0,
+  "spacing": 0.03,
+  "fold": true,
+  "fold_s": 4.0,
+  "fold_z": 0.35,
+  "tag": "fold_s30",
+  "xr": false,
+  "device": "cuda:0",
+  "visualizer": [],
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "deterministic": false,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0
+ },
+ "side_drop": 0.44558846950531006,
+ "side_flare": 0.19484078884124756,
+ "foot_drop": 0.46710801124572754,
+ "foot_flare": 0.11891549825668335,
+ "top_rough_mm": 11.243075370788574,
+ "max_speed": 0.2985561192035675,
+ "extent": [
+  1.3040000200271606,
+  0.996999979019165,
+  0.5419999957084656
+ ],
+ "y_range": [
+  -1.0589154958724976,
+  -0.062367577105760574
+ ]
+}

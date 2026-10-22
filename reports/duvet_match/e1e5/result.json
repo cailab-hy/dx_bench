@@ -1,0 +1,33 @@
+{
+ "args": {
+  "E": 100000.0,
+  "thickness": 0.002,
+  "mass": 1.2,
+  "mu": 0.6,
+  "damping": 0.0,
+  "hz": 480,
+  "settle": 5.0,
+  "tag": "e1e5",
+  "xr": false,
+  "device": "cuda:0",
+  "visualizer": [],
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "deterministic": false,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0
+ },
+ "side_drop": 0.472039133310318,
+ "side_flare": 0.09127140045166016,
+ "foot_drop": 0.472039133310318,
+ "foot_flare": 0.0952485203742981,
+ "top_rough_mm": 0.00011920928955078125,
+ "max_speed": 0.06323549151420593
+}

@@ -250,8 +250,9 @@ def make_basket_real(spec=None, name="laundry_basket_gray"):
 TEE_REAL = {"chest_half": 0.49, "length": 0.625, "shoulder": 0.42, "sleeve": 0.19, "neck": 0.18,
             "armhole": 0.235, "shoulder_drop": 0.04, "sleeve_angle_deg": 30.0, "cuff": 0.165,
             "mass": 0.140,  # real tee weighed 140 g (user, 2026-10-21); density = mass / (thickness x mesh area)
-            "youngs": 1.0e5, "friction": (0.9, 0.75)}  # = towel until the tee is measured (D-39)
-TEE_COLORS = {"blue": "#2e4880", "wine": "#623944", "green": "#374a4a"}  # 유니미스 30수 무지 반팔티 photos (sRGB)
+            "youngs": 3.0e4, "friction": (0.9, 0.75)}  # E fitted to ~/Downloads/cloth.mp4 (2026-10-22, D-44)
+TEE_COLORS = {"blue": "#2e4880", "wine": "#815261", "green": "#374a4a"}  # 유니미스 30수 무지 반팔티 photos (sRGB);
+# wine = median of the real tee in ~/Downloads/cloth.mp4 (2026-10-22: only the wine tee arrived, the benchmark uses it)
 
 
 def _tps(src, dst):

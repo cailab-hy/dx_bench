@@ -1,0 +1,35 @@
+{
+ "args": {
+  "variant": "thick",
+  "half": 0.0025,
+  "surface_thickness": 0.0015,
+  "hz": 480,
+  "video": false,
+  "tag": null,
+  "xr": false,
+  "device": "cuda:0",
+  "visualizer": [],
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "deterministic": false,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0
+ },
+ "rest_offset": 0.0025,
+ "towel_min_z_above_desk_mm": 2.4994611740112305,
+ "fold_layer_gap_mm": {
+  "median": 4.999756813049316,
+  "p5": 4.999637603759766,
+  "frac_below_3mm": 0.0
+ },
+ "floor_towel_min_z_mm": 2.4996583461761475,
+ "tee_min_z_mm": 2.499635696411133,
+ "towel_max_speed": 0.022394990548491478
+}

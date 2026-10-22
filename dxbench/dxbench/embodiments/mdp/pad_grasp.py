@@ -72,6 +72,12 @@ class PadGraspAction(ActionTerm):
         # one record per finished grasp: nodes, fingertip-cloth gap at capture, how far the pinned nodes left the pad
         # box (m, max / mean over the hold), hold time (s)
         self.stats: list[dict] = []
+        # cloth caught under a drive wheel (2026-10-22): those nodes are held on the floor, the garment cannot be
+        # grasped and a held one slips out; one record per trap (env, cloth, first step, nodes)
+        self._wheels = [self._asset.body_names.index(w) for w in cfg.wheel_bodies] if cfg.wheel_trap else []
+        self.trapped: dict[tuple[int, str], torch.Tensor] = {}
+        self.wheel_events: list[dict] = []
+        self._step = 0
 
     @property
     def action_dim(self) -> int:
@@ -102,8 +108,38 @@ class PadGraspAction(ActionTerm):
         g = self._env.action_manager.get_term(self.cfg.gripper_term).raw_actions
         return torch.stack([g[:, h.gripper_index] < h.close_below for h in self._hands], -1)
 
+    def _wheel_traps(self):
+        """Nodes under each drive wheel's contact patch (base-frame box around the wheel's ground point, cloth within
+        4 cm of the floor) -> self.trapped[(env, cloth)] = node ids."""
+        c = self.cfg
+        prev = set(self.trapped)
+        self.trapped = {}
+        if not self._wheels:
+            return
+        wp_ = _T(self._asset.data.body_link_pos_w)[:, self._wheels]  # (N,W,3)
+        q = _T(self._asset.data.root_link_quat_w)  # (N,4) x y z w
+        yaw = torch.atan2(2 * (q[:, 3] * q[:, 2] + q[:, 0] * q[:, 1]), 1 - 2 * (q[:, 1] ** 2 + q[:, 2] ** 2))
+        f = torch.stack([torch.cos(yaw), torch.sin(yaw)], -1)  # (N,2) forward
+        l_ = torch.stack([-torch.sin(yaw), torch.cos(yaw)], -1)
+        for name in c.cloth_names:
+            nodes = _T(self._env.scene[name].data.nodal_pos_w)  # (N,V,3)
+            low = nodes[..., 2] <= c.wheel_cloth_z
+            for e in range(self.num_envs):
+                m = torch.zeros(nodes.shape[1], dtype=torch.bool, device=self.device)
+                for k in range(len(self._wheels)):
+                    d = nodes[e, :, :2] - wp_[e, k, :2]
+                    m |= ((d @ f[e]).abs() <= c.wheel_patch_half_len) & ((d @ l_[e]).abs() <= c.wheel_half_width)
+                m &= low[e]
+                if m.any():
+                    ids = torch.nonzero(m).flatten()
+                    self.trapped[(e, name)] = ids
+                    if (e, name) not in prev:
+                        self.wheel_events.append({"env": e, "cloth": name, "step": self._step, "nodes": int(len(ids))})
+
     def apply_actions(self):
         c = self.cfg
+        self._step += 1
+        self._wheel_traps()
         closed = self._closed_cmd()
         o, G, half = self.grip_frames()
         for e, h in torch.nonzero(~closed & self._closed).tolist():
@@ -116,6 +152,9 @@ class PadGraspAction(ActionTerm):
             hs = self._hands[h]
             diag = {"half_gap": float(half[e, h]), "n": 0}
             for name in c.cloth_names:
+                if (e, name) in self.trapped:  # caught under a wheel: cannot be pulled out (real RB-Y1, user 2026-10-22)
+                    diag[f"{name}_wheel_trapped"] = int(len(self.trapped[(e, name)]))
+                    continue
                 nodes = _T(self._env.scene[name].data.nodal_pos_w)[e]
                 loc = (nodes - o[e, h]) @ G[e, h]  # (V,3) w, c, a
                 c_cap = half[e, h] + c.margin_c if c.capture_c is None else min(float(half[e, h]) + c.margin_c, c.capture_c)
@@ -146,10 +185,15 @@ class PadGraspAction(ActionTerm):
                 self.stats.append({"env": e, "hand": h, "nodes": 0, "half_gap": round(diag["half_gap"], 4),
                                    **{k: round(v, 4) for k, v in diag.items() if k.endswith("tip_to_cloth")}})
         self._closed = closed
-        if not self._pins:
+        for (e, h, name) in [k for k in self._pins if (k[0], k[2]) in self.trapped]:  # a wheel rolled onto it: slips
+            pin = self._pins.pop((e, h, name))
+            pin["slipped"] = "wheel"
+            self._record(e, h, name, pin)
+            self.grasped[e, h] = max(0, int(self.grasped[e, h]) - len(pin["ids"]))
+        if not self._pins and not self.trapped:
             return
         n_snap = max(1, round(c.snap_s / self._dt))
-        by_cloth: dict[str, list] = {}
+        by_cloth: dict[str, list] = {name: [] for (_e, name) in self.trapped}
         for (e, h, name), pin in self._pins.items():
             by_cloth.setdefault(name, []).append((e, h, pin))
         for name, items in by_cloth.items():
@@ -192,6 +236,9 @@ class PadGraspAction(ActionTerm):
                     if posw is not None:
                         posw[e, sup["ids"]] = st_
                         vel[e, sup["ids"]] = sv
+            for (e, nm), ids in self.trapped.items():  # held on the floor under the wheel (rolling contact: v = 0)
+                if nm == name:
+                    vel[e, ids] = 0.0
             if posw is not None:
                 obj.write_nodal_pos_to_sim_index(posw)
             obj.write_nodal_velocity_to_sim_index(vel)
@@ -200,7 +247,8 @@ class PadGraspAction(ActionTerm):
         self.stats.append({"env": e, "hand": h, "cloth": name, "nodes": int(len(pin["ids"])),
                            "tip_to_cloth": pin["tip_to_cloth"], "out_max": round(pin["out_max"], 4),
                            "out_mean": round(pin["out_sum"] / max(pin["out_n"], 1), 4),
-                           "hold_s": round(pin["t"] * self._dt, 2)})
+                           "hold_s": round(pin["t"] * self._dt, 2),
+                           **({"slipped": pin["slipped"]} if pin.get("slipped") else {})})
 
     def pinned_offsets(self, e: int, h: int, name: str):
         """Grip-frame (w, c, a) of the pinned nodes now (diagnostics: are they between the pads?)."""
@@ -240,6 +288,14 @@ class PadGraspActionCfg(ActionTermCfg):
     support_gain: float = 1.0
     pin_mode: str = "velocity"  # "posvel": also write the pinned nodes' positions (heavy cloth test, 2026-10-21)
     gain: float = 1.0
+    # cloth under a drive wheel (2026-10-22, user: on the real robot a garment under a wheel is caught and cannot be
+    # picked; sim filters wheel-cloth collisions, D-18): nodes in the contact patch are held on the floor, the garment
+    # cannot be grasped, a held one slips out. RB-Y1 wheels: radius 0.1 m, ~6 cm wide
+    wheel_trap: bool = True
+    wheel_bodies: list[str] = ["wheel_l", "wheel_r"]
+    wheel_half_width: float = 0.035
+    wheel_patch_half_len: float = 0.05
+    wheel_cloth_z: float = 0.04
 
 
 def filter_hand_cloth_collisions(env, env_ids, cloth_names: list[str], links: Sequence[str]):

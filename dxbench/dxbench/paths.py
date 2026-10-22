@@ -13,7 +13,9 @@ DX_ADD_OBJ = DX_USD / "DX_Hub_Building_add_obj_v1"
 CARE_ROOM_USD = DX_ADD_OBJ / "DX_Hub_Building_add_obj_v1_CareRoom.usda"
 DX_ASSETS = DX_ADD_OBJ / "assets"
 FURNITURE_CFG = DX_USD / "config" / "add_obj_v1_furniture.json"
-CARE_ROOM_PRIM = "/World/DX_Hub_Building_add_obj"
+# under the (single) env, not a global prim (D-44, 2026-10-22): cloth resting on global colliders rendered wrong (only
+# the parts not touching them showed) though its physics was the same; the env origin is (0, 0, 0)
+CARE_ROOM_PRIM = "/World/envs/env_0/DX_Hub_Building_add_obj"
 CARE_FURNITURE = f"{CARE_ROOM_PRIM}/Furniture/CareRoom"
 CARE_SPAWN = (-2.6, 17.7, 0.0)
 DATA = REPO / "data"

@@ -151,6 +151,8 @@ def main():
         ca = U.action_manager.get_term("cloth_assist")
         if hasattr(ca, "stats"):
             res["grasp_stats"] = ca.stats
+            if hasattr(ca, "wheel_events"):
+                res["wheel_trap_events"] = ca.wheel_events
     except (KeyError, ValueError):
         pass
     (out / "result.json").write_text(json.dumps(res, indent=1, default=float))
