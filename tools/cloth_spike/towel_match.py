@@ -25,6 +25,7 @@ ap.add_argument("--mu", type=float, default=0.9, help="static friction of towel 
 ap.add_argument("--mass", type=float, default=0.120, help="towel mass (kg)")
 ap.add_argument("--thickness", type=float, default=0.0015)
 ap.add_argument("--bend_damping", type=float, default=0.1)
+ap.add_argument("--ld", type=float, default=0.0, help="linear damping (1/s), air-drag stand-in (D-45)")
 ap.add_argument("--hz", type=int, default=480)
 ap.add_argument("--cases", default="corner,center,drag")
 ap.add_argument("--video", action="store_true", help="record each case (top-down | oblique) at 15 fps")
@@ -72,7 +73,8 @@ def build():
                elasticity_damping=0.1)
     spawn = sim_utils.MeshRectangleCfg(
         size=SIZE, edge_refinement=max(1.0, math.hypot(*SIZE) / (1.45 * 0.023)),
-        deformable_props=sim_utils.DeformableBodyPropertiesCfg(solver_position_iteration_count=16, self_collision=True),
+        deformable_props=sim_utils.DeformableBodyPropertiesCfg(solver_position_iteration_count=16, self_collision=True,
+                                                              linear_damping=args.ld or None),
         physics_material=sim_utils.PhysxSurfaceDeformableBodyMaterialCfg(**mat),
         collision_props=[PhysxCollisionCfg(contact_offset=0.008, rest_offset=0.002)],
         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=LAVENDER, roughness=0.9))

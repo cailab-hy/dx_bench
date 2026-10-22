@@ -250,7 +250,8 @@ def make_basket_real(spec=None, name="laundry_basket_gray"):
 TEE_REAL = {"chest_half": 0.49, "length": 0.625, "shoulder": 0.42, "sleeve": 0.19, "neck": 0.18,
             "armhole": 0.235, "shoulder_drop": 0.04, "sleeve_angle_deg": 30.0, "cuff": 0.165,
             "mass": 0.140,  # real tee weighed 140 g (user, 2026-10-21); density = mass / (thickness x mesh area)
-            "youngs": 3.0e4, "friction": (0.9, 0.75)}  # E fitted to ~/Downloads/cloth.mp4 (2026-10-22, D-44)
+            "youngs": 3.0e4, "friction": (0.9, 0.75),
+            "linear_damping": 3.0}  # 1/s air-drag stand-in, = objects.CLOTH_LINEAR_DAMPING (D-45)  # E fitted to ~/Downloads/cloth.mp4 (2026-10-22, D-44)
 TEE_COLORS = {"blue": "#2e4880", "wine": "#815261", "green": "#374a4a"}  # 유니미스 30수 무지 반팔티 photos (sRGB);
 # wine = median of the real tee in ~/Downloads/cloth.mp4 (2026-10-22: only the wine tee arrived, the benchmark uses it)
 
@@ -360,6 +361,10 @@ def make_real_tshirts(colors=None, spec=None):
                 P = np.array(UsdGeom.Mesh(prim).GetPointsAttr().Get(), dtype=float)
                 F = np.array(UsdGeom.Mesh(prim).GetFaceVertexIndicesAttr().Get()).reshape(-1, 3)
                 area += 0.5 * np.linalg.norm(np.cross(P[F[:, 1]] - P[F[:, 0]], P[F[:, 2]] - P[F[:, 0]]), axis=1).sum()
+        for prim in st.Traverse():
+            if prim.GetTypeName() == "Mesh" and prim.HasAPI("OmniPhysicsDeformableBodyAPI"):
+                prim.CreateAttribute("physxDeformableBody:linearDamping", Sdf.ValueTypeNames.Float).Set(
+                    float(t["linear_damping"]))
         for prim in mats:
             prim.GetAttribute("omniphysics:density").Set(float(t["mass"] / (thick * area)))
             # same bending stiffness / friction as the towel for now (user 2026-10-21, D-39): E 1e5, mu 0.9 / 0.75

@@ -41,6 +41,9 @@ TOWEL_GSM = 375.0
 CLOTH_THICKNESS = 0.0015  # FEM surface thickness (m): bending stiffness (matched to the towel video) and mass
 # (density x thickness x area); the 5 mm geometric thickness is CLOTH_HALF below
 CLOTH_HALF = 0.0025  # half of the real ~5 mm thickness (user 2026-10-22): collision rest offset + render shell (D-44)
+CLOTH_LINEAR_DAMPING = 3.0  # 1/s on every node: stands in for air drag, which PhysX FEM cloth lacks (D-45). At 0 a
+# carried towel / tee swings +-40 cm like a pendulum for seconds (reports/swing); 3 stops it within ~1 swing (3-4 cm),
+# bend / elasticity damping do not touch that whole-cloth swing
 DUVET_SIZE = (2.0, 1.55)  # m, the lab duvet (user 2026-10-22); 2.0 m along the bed (spawn yaw pi / 2)
 DUVET_MASS = 1.2  # kg, ESTIMATE until weighed (a ~5 mm summer quilt of 3.1 m2)
 DUVET_YOUNGS = 1.0e5  # Pa at 2 mm, fitted to the drape in ~/Downloads/bed.mp4 (2026-10-22, reports/duvet_match)
@@ -80,7 +83,7 @@ def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.
     cfg = sim_utils.MeshRectangleCfg(
         size=size, edge_refinement=1.0 if grid_m else max(1.0, diag / (1.45 * spacing_m)),
         deformable_props=sim_utils.DeformableBodyPropertiesCfg(
-            solver_position_iteration_count=iters, self_collision=self_collision,
+            solver_position_iteration_count=iters, self_collision=self_collision, linear_damping=CLOTH_LINEAR_DAMPING,
         ),
         physics_material=sim_utils.PhysxSurfaceDeformableBodyMaterialCfg(
             density=density, static_friction=friction[0], dynamic_friction=friction[1], youngs_modulus=youngs_modulus,
