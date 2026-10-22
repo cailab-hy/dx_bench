@@ -22,7 +22,7 @@
     0.775000023841858
    ],
    "yaw": 1.484282465097677,
-   "variant": "m95_blue",
+   "variant": "m95_wine",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_008_cloth_0.npz"
   },
   {
@@ -34,7 +34,7 @@
     0.835000023841858
    ],
    "yaw": 1.8144347484638592,
-   "variant": "m95_green",
+   "variant": "m95_wine",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_008_cloth_1.npz"
   },
   {

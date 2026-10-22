@@ -22,7 +22,7 @@
     0.775000023841858
    ],
    "yaw": 1.63334406009723,
-   "variant": "m95_green",
+   "variant": "m95_wine",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_007_cloth_0.npz"
   },
   {
@@ -34,7 +34,7 @@
     0.835000023841858
    ],
    "yaw": 1.7694032272796842,
-   "variant": "m95_green",
+   "variant": "m95_wine",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_007_cloth_1.npz"
   },
   {
@@ -58,7 +58,7 @@
     0.9550000238418579
    ],
    "yaw": 1.4333999217901925,
-   "variant": "m95_green",
+   "variant": "m95_wine",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_hard_007_cloth_3.npz"
   },
   {
