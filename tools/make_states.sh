@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Settled cloth initial states, one Kit process per scene (retry up to 3x on the known Kit startup segfault).
 #   tools/make_states.sh benchmarks/dx_bed_v0/scenes/bed03_easy_*.json
-# A rejected state ([states-reject], e.g. a BED-02 garment slid off the desk) is redrawn with --salt 1..4.
+# A rejected state ([states-reject], e.g. a BED-02 garment slid off the desk) or one whose start score is not 0 is
+# redrawn with --salt 1..4.
 set -u
 cd "$(dirname "$0")/.."
 PY=${PY:-$HOME/miniforge3/envs/dx_arena/bin/python}
@@ -17,6 +18,12 @@ for f in "$@"; do
       if grep -q "^\[states" "outputs/logs/states/$id.log"; then grep "^\[states" "outputs/logs/states/$id.log"; break; fi
       echo "[make_states] $id try $try failed rc=$rc"; tail -3 "outputs/logs/states/$id.log"
     done
-    grep -q "^\[states-reject\]" "outputs/logs/states/$id.log" || break
+    grep -q "^\[states-reject\]" "outputs/logs/states/$id.log" && continue
+    # a start state that already scores (e.g. a light BED-01 duvet that stayed spread, D-47) is redrawn too
+    score=$("$PY" -c "import sys, json; sys.argv = ['x']; sys.path.insert(0, 'tools'); import predicate_audit as A
+print(A.eval_scene(json.load(open('$f')))['score'])" 2>/dev/null)
+    [ -z "$score" ] && { echo "[make_states] $id start score check failed"; break; }
+    [ "$score" = "0.0" ] && break
+    echo "[make_states] $id start score $score: redraw"
   done
 done

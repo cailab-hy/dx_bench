@@ -54,7 +54,9 @@ DUVET_BEND = 3.0e3  # the 125 g cover-only duvet (D-47); 5e4 at the old 1.2 kg g
 DUVET_LINEAR_DAMPING = 6.0  # 1/s: air drag per mass ~ 1 / areal density, 40 g/m2 -> ~6-9 /s at 0.5 m/s (D-47)
 DUVET_SIZE = (2.0, 1.55)  # m, the lab duvet (user 2026-10-22); 2.0 m along the bed (spawn yaw pi / 2)
 DUVET_MASS = 0.125  # kg: cover fabric only, no filling, ~100-150 g (user 2026-10-23, no scale; D-47)
-DUVET_YOUNGS = 1.0e5  # Pa at 2 mm, fitted to the drape in ~/Downloads/bed.mp4 (2026-10-22, reports/duvet_match)
+DUVET_YOUNGS = 1.0e4  # Pa at 2 mm: 1e5 was fitted to bed.mp4 at the 1.2 kg guess (D-44); scaled with the mass to 125 g
+# (D-47) so stiffness / mass stays as fitted. At 1e5 the 10x lighter nodes could not drag the stiff membrane: the pinned
+# grasp node trailed 1.8 cm outside the pads (1e4: 0.1-1.2 mm); drape and crumple unchanged (reports/crumple)
 
 
 class PrebuiltClothObject(DeformableObject):
@@ -126,11 +128,18 @@ def duvet(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
     hangs soft with a ~9 cm corner flare as in the video. The video's billowing slow fall is air drag, which PhysX
     does not model (D-44). nu 0.3, friction 0.6 / 0.5 (DX), DX white. 2.3 cm node grid (88 x 68): at
     3.1 x 2.4 cm the physical fold crumpled it, 1.6 cm (Isaac Lab's next refinement) is 16.6 k nodes."""
+    import os
+
     th = 0.002
+    # experiment overrides (material studies only; benchmark runs leave them unset)
+    mass = float(os.environ.get("DX_DUVET_MASS", DUVET_MASS))
+    bend = float(os.environ.get("DX_DUVET_BEND", DUVET_BEND))
+    ld = float(os.environ.get("DX_DUVET_LD", DUVET_LINEAR_DAMPING))
+    E = float(os.environ.get("DX_DUVET_E", DUVET_YOUNGS))
     return rect_cloth(name, DUVET_SIZE, xyz, yaw, rgb=(0.8879, 0.8879, 0.8714),
-                      density=DUVET_MASS / (DUVET_SIZE[0] * DUVET_SIZE[1] * th), thickness=th,
-                      youngs_modulus=DUVET_YOUNGS, poisson=0.3, friction=(0.6, 0.5),
-                      grid_m=0.023, bend=DUVET_BEND, linear_damping=DUVET_LINEAR_DAMPING)
+                      density=mass / (DUVET_SIZE[0] * DUVET_SIZE[1] * th), thickness=th,
+                      youngs_modulus=E, poisson=0.3, friction=(0.6, 0.5),
+                      grid_m=0.023, bend=bend, linear_damping=ld)
 
 
 def sock(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
