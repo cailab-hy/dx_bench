@@ -34,6 +34,7 @@ ap.add_argument("--ld", type=float, default=3.0, help="linear damping (1/s), D-4
 ap.add_argument("--bd", type=float, default=0.1, help="bend damping")
 ap.add_argument("--grid", type=float, default=0.023, help="towel / duvet node spacing (m)")
 ap.add_argument("--seed", type=int, default=0)
+ap.add_argument("--mass", type=float, default=None, help="towel / duvet mass override (kg)")
 ap.add_argument("--rest", default=None, help="omniphysics:restBendAnglesDefault (flatDefault / restShapeDefault)")
 ap.add_argument("--cantilever", action="store_true",
                 help="towel only: lie on the bed box with --overhang hanging over its edge (Peirce bending length test)")
@@ -95,6 +96,7 @@ def cloth_cfg():
     if args.cloth == "tee":
         return sim_utils.UsdFileCfg(usd_path=str(REPO / "dxbench/dxbench/assets/objects/tshirt_m95_wine.usda"))
     size, mass, E, th, nu, mu, rgb = SPEC[args.cloth]
+    mass = args.mass or mass
     th_sim = args.thick or th
     mat = dict(density=mass / (size[0] * size[1] * th_sim), static_friction=mu[0], dynamic_friction=mu[1],
                youngs_modulus=args.E or E, poissons_ratio=args.nu or nu, surface_thickness=th_sim,

@@ -48,11 +48,12 @@ CLOTH_LINEAR_DAMPING = 3.0  # 1/s on every node: stands in for air drag, which P
 # E), and the D-44 cloth crumpled like paper at the 2 cm node scale (D-46, reports/crumple). Real fabric bends even more
 # easily (jersey / terry ~1e-6 N m, a quilt ~3e-4) but below ~2 cm bending length the 1.7-2.3 cm mesh creases at single
 # edges, so tee / towel sit at the softest value that crumples into rounded folds; Peirce bending length measured on
-# the box edge: towel 2e4 -> 2.5 cm, tee 5e3 -> ~1.7 cm, duvet 5e4 -> 3.7 cm
+# the box edge: towel 2e4 -> 2.5 cm, tee 5e3 -> ~1.7 cm, duvet (125 g) 3e3 -> 3.3 cm
 TOWEL_BEND = 2.0e4
-DUVET_BEND = 5.0e4
+DUVET_BEND = 3.0e3  # the 125 g cover-only duvet (D-47); 5e4 at the old 1.2 kg guess
+DUVET_LINEAR_DAMPING = 6.0  # 1/s: air drag per mass ~ 1 / areal density, 40 g/m2 -> ~6-9 /s at 0.5 m/s (D-47)
 DUVET_SIZE = (2.0, 1.55)  # m, the lab duvet (user 2026-10-22); 2.0 m along the bed (spawn yaw pi / 2)
-DUVET_MASS = 1.2  # kg, ESTIMATE until weighed (a ~5 mm summer quilt of 3.1 m2)
+DUVET_MASS = 0.125  # kg: cover fabric only, no filling, ~100-150 g (user 2026-10-23, no scale; D-47)
 DUVET_YOUNGS = 1.0e5  # Pa at 2 mm, fitted to the drape in ~/Downloads/bed.mp4 (2026-10-22, reports/duvet_match)
 
 
@@ -82,7 +83,7 @@ def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.
                spacing_m: float = 0.023, iters: int = 16, self_collision: bool = True,
                youngs_modulus: float = 1.0e6, density: float = 120.0, friction: tuple = (0.72, 0.6),
                thickness: float = CLOTH_THICKNESS, poisson: float = 0.25, grid_m: float | None = None,
-               bend: float = TOWEL_BEND) -> DeformableObject:
+               bend: float = TOWEL_BEND, linear_damping: float = CLOTH_LINEAR_DAMPING) -> DeformableObject:
     """grid_m: a regular node grid of this spacing (thick_cloth.grid_rectangle_spawn) instead of Isaac Lab's
     edge-halving refinement (spacing_m), which jumps 2.0 m sheets from 3.1 cm to 1.6 cm nodes."""
     import math
@@ -91,7 +92,7 @@ def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.
     cfg = sim_utils.MeshRectangleCfg(
         size=size, edge_refinement=1.0 if grid_m else max(1.0, diag / (1.45 * spacing_m)),
         deformable_props=sim_utils.DeformableBodyPropertiesCfg(
-            solver_position_iteration_count=iters, self_collision=self_collision, linear_damping=CLOTH_LINEAR_DAMPING,
+            solver_position_iteration_count=iters, self_collision=self_collision, linear_damping=linear_damping,
         ),
         physics_material=sim_utils.PhysxSurfaceDeformableBodyMaterialCfg(
             density=density, static_friction=friction[0], dynamic_friction=friction[1], youngs_modulus=youngs_modulus,
@@ -120,7 +121,7 @@ def towel(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, small: bool = False,
 
 def duvet(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
     """The lab duvet (user 2026-10-22): 2.0 x 1.55 m, ~5 mm thick (render shell + rest offset, CLOTH_HALF), mass
-    DUVET_MASS (estimate until weighed). E 1e5 at 2 mm FEM thickness from the video ~/Downloads/bed.mp4
+    DUVET_MASS (user's estimate, cover only). E 1e5 at 2 mm FEM thickness from the video ~/Downloads/bed.mp4
     (reports/duvet_match): the DX twin's 1e6 stands the bed corners out like a board, 1e4 crinkles like silk, 1e5
     hangs soft with a ~9 cm corner flare as in the video. The video's billowing slow fall is air drag, which PhysX
     does not model (D-44). nu 0.3, friction 0.6 / 0.5 (DX), DX white. 2.3 cm node grid (88 x 68): at
@@ -129,7 +130,7 @@ def duvet(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
     return rect_cloth(name, DUVET_SIZE, xyz, yaw, rgb=(0.8879, 0.8879, 0.8714),
                       density=DUVET_MASS / (DUVET_SIZE[0] * DUVET_SIZE[1] * th), thickness=th,
                       youngs_modulus=DUVET_YOUNGS, poisson=0.3, friction=(0.6, 0.5),
-                      grid_m=0.023, bend=DUVET_BEND)
+                      grid_m=0.023, bend=DUVET_BEND, linear_damping=DUVET_LINEAR_DAMPING)
 
 
 def sock(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
