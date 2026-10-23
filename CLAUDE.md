@@ -65,6 +65,7 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - Arena는 task·embodiment의 이벤트/설정 configclass를 **dataclass 필드만** 복사해 합친다(`combine_configclass_instances`). 인스턴스에 나중에 붙인 속성(`ev.x = EventTermCfg(...)`)은 조용히 사라진다 → 클래스 본문에 필드로 선언(D-42). env_cfg 콜백에서 `env_cfg.events.x = ...`는 괜찮다.
 - **천은 env 안 충돌체 위에서만 제대로 렌더된다**(D-44): env 밖(전역 prim) 충돌체에 닿은 천 부분은 물리는 맞는데 렌더에서 사라진다. DX 방은 `/World/envs/env_0/...`(`paths.CARE_ROOM_PRIM`).
 - PhysX FEM 천에는 공기 저항이 없다: linear damping 0이면 들고 옮긴 천이 진자처럼 ±40 cm 몇 초간 흔들린다. 모든 천 `linear_damping` 3 /s(`objects.CLOTH_LINEAR_DAMPING`, 반팔티 USD에도, D-45). bend·elasticity 감쇠로는 안 줄어든다. PhysX가 주는 정점 속도로 흔들림을 재지 말 것(위치 차분 사용).
+- PhysX 표면 천의 `surfaceBendStiffness` 기본 0 = **굽힘 꺼짐**(영률로 계산되지 않음, D-46). 굽힘 값은 Pa(힌지 = 값 × 두께³), 반팔티 5e3·수건 2e4·이불 5e4. 앞·뒤판이 접힌 옷 메시는 `restBendAnglesDefault = restShapeDefault`. `surfaceStretch/ShearStiffness`는 무시됨. 천 렌더 메시는 catmullClark(세분 0)여야 각지지 않는다.
 - DX 가구가 동적 강체·관절이면 방 안의 천이 떨린다 → prestartup `fix_bed`가 모두 정적으로(D-44).
 - 천 상태 생성은 순간이동(정점 위치 쓰기)으로 크게 접거나 구기지 말 것: 큰 이불이 NaN·뭉침. 속도 고정으로 물리적으로 접고 구긴다(`make_cloth_states.py`).
 - 저장한 천 상태도 완전히 정지 상태는 아니다: 구겨진 옷은 에피소드 20 s 동안 조금씩 풀린다(D-44 이전 측정: 정점 평균 6–15 cm, 가구 떨림 포함).

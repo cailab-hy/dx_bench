@@ -21,6 +21,7 @@ from isaaclab.app import AppLauncher
 ap = argparse.ArgumentParser()
 ap.add_argument("--E", type=float, default=1.0e5, help="Young's modulus (Pa) at the 1.5 mm FEM thickness")
 ap.add_argument("--hz", type=int, default=480)
+ap.add_argument("--bend", type=float, default=None, help="omniphysics:surfaceBendStiffness override (D-46)")
 ap.add_argument("--cases", default="lift,hang,fold")
 ap.add_argument("--tag", default=None)
 AppLauncher.add_app_launcher_args(ap)
@@ -97,6 +98,8 @@ def build():
         a = p.GetAttribute("omniphysics:youngsModulus")
         if a and a.IsValid():
             a.Set(float(args.E))
+            if args.bend is not None:
+                p.GetAttribute("omniphysics:surfaceBendStiffness").Set(float(args.bend))
     sim.reset()
     return sim, scene
 

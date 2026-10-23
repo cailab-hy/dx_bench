@@ -44,6 +44,13 @@ CLOTH_HALF = 0.0025  # half of the real ~5 mm thickness (user 2026-10-22): colli
 CLOTH_LINEAR_DAMPING = 3.0  # 1/s on every node: stands in for air drag, which PhysX FEM cloth lacks (D-45). At 0 a
 # carried towel / tee swings +-40 cm like a pendulum for seconds (reports/swing); 3 stops it within ~1 swing (3-4 cm),
 # bend / elasticity damping do not touch that whole-cloth swing
+# surfaceBendStiffness (Pa; hinge stiffness = value x thickness^3): 0 turns bending OFF in PhysX (it is not derived from
+# E), and the D-44 cloth crumpled like paper at the 2 cm node scale (D-46, reports/crumple). Real fabric bends even more
+# easily (jersey / terry ~1e-6 N m, a quilt ~3e-4) but below ~2 cm bending length the 1.7-2.3 cm mesh creases at single
+# edges, so tee / towel sit at the softest value that crumples into rounded folds; Peirce bending length measured on
+# the box edge: towel 2e4 -> 2.5 cm, tee 5e3 -> ~1.7 cm, duvet 5e4 -> 3.7 cm
+TOWEL_BEND = 2.0e4
+DUVET_BEND = 5.0e4
 DUVET_SIZE = (2.0, 1.55)  # m, the lab duvet (user 2026-10-22); 2.0 m along the bed (spawn yaw pi / 2)
 DUVET_MASS = 1.2  # kg, ESTIMATE until weighed (a ~5 mm summer quilt of 3.1 m2)
 DUVET_YOUNGS = 1.0e5  # Pa at 2 mm, fitted to the drape in ~/Downloads/bed.mp4 (2026-10-22, reports/duvet_match)
@@ -74,7 +81,8 @@ def tshirt(name: str, variant: str = "m_blue", xyz=(0.0, 0.0, 0.0), yaw: float =
 def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, rgb=(0.9, 0.85, 0.6),
                spacing_m: float = 0.023, iters: int = 16, self_collision: bool = True,
                youngs_modulus: float = 1.0e6, density: float = 120.0, friction: tuple = (0.72, 0.6),
-               thickness: float = CLOTH_THICKNESS, poisson: float = 0.25, grid_m: float | None = None) -> DeformableObject:
+               thickness: float = CLOTH_THICKNESS, poisson: float = 0.25, grid_m: float | None = None,
+               bend: float = TOWEL_BEND) -> DeformableObject:
     """grid_m: a regular node grid of this spacing (thick_cloth.grid_rectangle_spawn) instead of Isaac Lab's
     edge-halving refinement (spacing_m), which jumps 2.0 m sheets from 3.1 cm to 1.6 cm nodes."""
     import math
@@ -87,7 +95,8 @@ def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.
         ),
         physics_material=sim_utils.PhysxSurfaceDeformableBodyMaterialCfg(
             density=density, static_friction=friction[0], dynamic_friction=friction[1], youngs_modulus=youngs_modulus,
-            poissons_ratio=poisson, surface_thickness=thickness, bend_damping=0.1, elasticity_damping=0.1),
+            poissons_ratio=poisson, surface_thickness=thickness, bend_damping=0.1, elasticity_damping=0.1,
+            surface_bend_stiffness=bend),
         collision_props=[PhysxCollisionCfg(contact_offset=0.008, rest_offset=CLOTH_HALF)],
         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=rgb))
     cfg.func = thick_spawn(grid_rectangle_spawn(grid_m) if grid_m else spawn_mesh_rectangle, CLOTH_HALF)
@@ -120,7 +129,7 @@ def duvet(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:
     return rect_cloth(name, DUVET_SIZE, xyz, yaw, rgb=(0.8879, 0.8879, 0.8714),
                       density=DUVET_MASS / (DUVET_SIZE[0] * DUVET_SIZE[1] * th), thickness=th,
                       youngs_modulus=DUVET_YOUNGS, poisson=0.3, friction=(0.6, 0.5),
-                      grid_m=0.023)
+                      grid_m=0.023, bend=DUVET_BEND)
 
 
 def sock(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> DeformableObject:

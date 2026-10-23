@@ -24,6 +24,7 @@ ap.add_argument("--mass", type=float, default=1.2)
 ap.add_argument("--mu", type=float, default=0.6)
 ap.add_argument("--damping", type=float, default=0.0, help="linear damping (1/s), a crude air drag")
 ap.add_argument("--hz", type=int, default=480)
+ap.add_argument("--bend", type=float, default=0.0, help="omniphysics:surfaceBendStiffness (0 = no bending, D-46)")
 ap.add_argument("--settle", type=float, default=5.0)
 ap.add_argument("--spacing", type=float, default=0.023)
 ap.add_argument("--grid", type=float, default=0.0, help="regular node grid spacing (thick_cloth.grid_rectangle_spawn)")
@@ -110,7 +111,8 @@ def build():
                                                                linear_damping=args.damping or None),
         physics_material=sim_utils.PhysxSurfaceDeformableBodyMaterialCfg(
             density=density, static_friction=args.mu, dynamic_friction=0.85 * args.mu, youngs_modulus=args.E,
-            poissons_ratio=0.3, surface_thickness=args.thickness, bend_damping=0.1, elasticity_damping=0.1),
+            poissons_ratio=0.3, surface_thickness=args.thickness, bend_damping=0.1, elasticity_damping=0.1,
+            surface_bend_stiffness=args.bend),
         collision_props=[PhysxCollisionCfg(contact_offset=0.008, rest_offset=HALF)],
         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.85, 0.85, 0.84), roughness=0.95))
     if args.grid:

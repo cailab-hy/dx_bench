@@ -61,7 +61,10 @@ def _set_mesh(prim, pts, tris):
     for name in ("primvars:normals", "primvars:st", "primvars:st:indices", "primvars:normals:indices"):
         if prim.HasAttribute(name):
             prim.RemoveProperty(name)
-    m.CreateSubdivisionSchemeAttr().Set(UsdGeom.Tokens.none)
+    # catmullClark without refinement: RTX shades with smooth normals recomputed from the skinned points every frame.
+    # "none" (no authored normals) rendered every 2 cm triangle as a flat facet, like crumpled paper (D-46);
+    # loop broke apart, refinementLevel > 0 is not updated by the GPU skinning
+    m.CreateSubdivisionSchemeAttr().Set(UsdGeom.Tokens.catmullClark)
     m.CreateDoubleSidedAttr().Set(False)
     m.GetExtentAttr().Set(Vt.Vec3fArray.FromNumpy(np.stack([pts.min(0), pts.max(0)]).astype(np.float32)))
     prim.CreateAttribute("deformablePose:default:omniphysics:points", Sdf.ValueTypeNames.Point3fArray).Set(

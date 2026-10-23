@@ -251,7 +251,8 @@ TEE_REAL = {"chest_half": 0.49, "length": 0.625, "shoulder": 0.42, "sleeve": 0.1
             "armhole": 0.235, "shoulder_drop": 0.04, "sleeve_angle_deg": 30.0, "cuff": 0.165,
             "mass": 0.140,  # real tee weighed 140 g (user, 2026-10-21); density = mass / (thickness x mesh area)
             "youngs": 3.0e4, "friction": (0.9, 0.75),
-            "linear_damping": 3.0}  # 1/s air-drag stand-in, = objects.CLOTH_LINEAR_DAMPING (D-45)  # E fitted to ~/Downloads/cloth.mp4 (2026-10-22, D-44)
+            "linear_damping": 3.0,
+            "bend": 5.0e3}  # Pa surfaceBendStiffness (0 = bending off), D-46  # 1/s air-drag stand-in, = objects.CLOTH_LINEAR_DAMPING (D-45)  # E fitted to ~/Downloads/cloth.mp4 (2026-10-22, D-44)
 TEE_COLORS = {"blue": "#2e4880", "wine": "#815261", "green": "#374a4a"}  # 유니미스 30수 무지 반팔티 photos (sRGB);
 # wine = median of the real tee in ~/Downloads/cloth.mp4 (2026-10-22: only the wine tee arrived, the benchmark uses it)
 
@@ -365,10 +366,15 @@ def make_real_tshirts(colors=None, spec=None):
             if prim.GetTypeName() == "Mesh" and prim.HasAPI("OmniPhysicsDeformableBodyAPI"):
                 prim.CreateAttribute("physxDeformableBody:linearDamping", Sdf.ValueTypeNames.Float).Set(
                     float(t["linear_damping"]))
+                # bending rest angles from the rest shape (front / back layers folded 180 deg at the side seams):
+                # the default flat rest angle made the seams spring open, a flat tee rose 2.5 cm and kept moving (D-46)
+                prim.CreateAttribute("omniphysics:restBendAnglesDefault", Sdf.ValueTypeNames.Token,
+                                     variability=Sdf.VariabilityUniform).Set("restShapeDefault")
         for prim in mats:
             prim.GetAttribute("omniphysics:density").Set(float(t["mass"] / (thick * area)))
             # same bending stiffness / friction as the towel for now (user 2026-10-21, D-39): E 1e5, mu 0.9 / 0.75
             prim.GetAttribute("omniphysics:youngsModulus").Set(float(t["youngs"]))
+            prim.GetAttribute("omniphysics:surfaceBendStiffness").Set(float(t["bend"]))
             prim.GetAttribute("omniphysics:staticFriction").Set(float(t["friction"][0]))
             prim.GetAttribute("omniphysics:dynamicFriction").Set(float(t["friction"][1]))
         new.customLayerData = {"source": str(src), "product": "M(95) short-sleeve tee, cotton 100 %",
