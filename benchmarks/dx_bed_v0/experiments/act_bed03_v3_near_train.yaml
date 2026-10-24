@@ -1,0 +1,12 @@
+# diagnostic: act_bed03_v3_near on training scenes (garments seen in the demos); run with --limit 5
+name: act_bed03_v3_near_train
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8789, open_loop_horizon: 8}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-03: [near]}
+scenes_dir: data/scenes_train
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend lerobot --checkpoint outputs/train/act_bed03_v3_near/checkpoints/last/pretrained_model --chunk 8 --port 8789
+video: true
+timeout_s: 7200
+parallel: 3
+max_steps: 1800
