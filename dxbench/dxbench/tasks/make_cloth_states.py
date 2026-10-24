@@ -170,6 +170,22 @@ def main():
                     return t
 
                 drops.append((o.name, ids, n0[ids].clone(), lift_path, 1.0))
+    if spec.task == "BED-03" and spec.difficulty == "second":
+        # the first garment is already in the basket (D-49): spawned flat over it, it lay across the rim, so it is put
+        # in like the oracle does - the point nearest its centre carried up to 0.95 m over the basket centre (the
+        # garment hangs into the basket), then released
+        bxy = torch.as_tensor(spec.obj("laundry_basket").xyz[:2], device=U.device) + U.scene.env_origins[0][:2]
+        for o in spec.objects:
+            if o.kind in ("tshirt", "towel") and o.xyz[2] > 0.3:
+                n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
+                k = int((n0[:, :2] - n0[:, :2].mean(dim=0)).norm(dim=-1).argmin())
+                ids = torch.nonzero((n0 - n0[k]).norm(dim=-1) < 0.03).flatten()
+                goal = torch.cat([bxy.to(n0.dtype), torch.tensor([0.95], device=U.device, dtype=n0.dtype)])
+
+                def put_path(p0, s_, goal=goal, c=n0[k].clone()):
+                    return p0 + (goal - c) * s_
+
+                drops.append((o.name, ids, n0[ids].clone(), put_path, 1.5))
     if spec.task == "BED-01" and spec.difficulty in ("medium", "hard"):
         # crumple the duvet physically like a person bundling it: three of its corners carried in 40 cm arcs onto one
         # spot (medium: near the bed middle; hard: on the open long edge, so the bundle hangs over the side). Two random

@@ -135,6 +135,33 @@ def gen_bed03_near(diff: str, seed: int, split: str) -> SceneSpec:
 NEAR_DIST = 0.75  # robot base origin to the first garment (m)
 
 
+def gen_bed03_second(diff: str, seed: int, split: str) -> SceneSpec:
+    """BED-03 "second" (D-49, training only): the easy layout of the same seed with the first garment already
+    dropped into the basket and the robot NEAR_DIST in front of the basket, facing it, on the side the first garment
+    came from - the state right after the first put, so demos cover turning away, finding the second garment and
+    bringing it (the v3 near ACT put the first garment 9/10 but then circled in place). The second garment keeps the
+    easy spawn (and its settled cloth state)."""
+    spec = gen_bed03("easy", seed, split)
+    L = load_layout()
+    g = next(o for o in spec.objects if o.kind in ("tshirt", "towel"))
+    b = next(o for o in spec.objects if o.kind == "basket")
+    bx, by = b.xyz[0], b.xyz[1]
+    a0 = math.atan2(g.xyz[1] - by, g.xyz[0] - bx)
+    g.xyz = [bx, by, 0.6]  # dropped flat over the basket centre while the cloth states are made
+    g.yaw = b.yaw
+    others = [((o.xyz[0], o.xyz[1]), 0.55) for o in spec.objects if o.kind in ("tshirt", "towel", "sock") and o is not g]
+    for k in range(24):
+        a = a0 + (k + 1) // 2 * (math.pi / 12) * (1 if k % 2 else -1)
+        x, y = bx + NEAR_DIST * math.cos(a), by + NEAR_DIST * math.sin(a)
+        if free_floor_ok((x, y), L, 0.5, extra=others):
+            break
+    spec.robot = {"xy": [float(x), float(y)], "yaw": math.atan2(by - y, bx - x), "torso": "upright",
+                  "head_pitch": HEAD_PITCH_NEAR}
+    spec.difficulty = "second"
+    spec.scene_id = f"bed03_second_{seed:03d}" if split == "eval" else f"bed03_second_train_{seed}"
+    return spec
+
+
 def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
     rng = np.random.default_rng(seed)
     L = load_layout()
@@ -203,7 +230,7 @@ def diversify(spec: SceneSpec, split: str) -> SceneSpec:
     """Instruction paraphrase, blinds / room lighting and robot start jitter (D-42, step 2). Own generator per scene,
     so layouts and colours stay those of the same seed. Evaluation easy / near stay canonical (comparable with the
     earlier results); evaluation medium varies the instruction and blinds; hard and every training scene vary all."""
-    level = 2 if split == "train" else {"easy": 0, "near": 0, "medium": 1, "hard": 2}[spec.difficulty]
+    level = 2 if split == "train" else {"easy": 0, "near": 0, "second": 0, "medium": 1, "hard": 2}[spec.difficulty]
     if level == 0:
         return spec
     rng = np.random.default_rng([spec.seed, _DIVERSE_SALT, {"BED-01": 1, "BED-02": 2, "BED-03": 3}[spec.task],
@@ -215,7 +242,7 @@ def diversify(spec: SceneSpec, split: str) -> SceneSpec:
     spec.lighting = light
     if level == 2:
         dxy, dyaw = START_JITTER[spec.task]
-        if spec.difficulty == "near":
+        if spec.difficulty in ("near", "second"):
             dxy, dyaw = 0.08, 0.15
         L = load_layout()
         others = [((o.xyz[0], o.xyz[1]), 0.55) for o in spec.objects if o.xyz[2] < 0.1]
@@ -234,7 +261,7 @@ GEN = {"BED-01": gen_bed01, "BED-02": gen_bed02, "BED-03": gen_bed03}
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--task", required=True, choices=list(GEN))
-    ap.add_argument("--difficulty", required=True, choices=["easy", "medium", "hard", "near"],
+    ap.add_argument("--difficulty", required=True, choices=["easy", "medium", "hard", "near", "second"],
                     help="near: BED-03 only, the easy layout with the robot in front of the first garment (D-39)")
     ap.add_argument("--n", type=int, default=10)
     ap.add_argument("--seed0", type=int, default=0)
@@ -243,7 +270,8 @@ def main():
     a = ap.parse_args()
     out = Path(a.out)
     for s in range(a.seed0, a.seed0 + a.n):
-        spec = diversify((gen_bed03_near if a.difficulty == "near" else GEN[a.task])(a.difficulty, s, a.split), a.split)
+        gen = {"near": gen_bed03_near, "second": gen_bed03_second}.get(a.difficulty, GEN[a.task])
+        spec = diversify(gen(a.difficulty, s, a.split), a.split)
         f = out / f"{spec.scene_id}.json"
         if f.exists():  # keep settled cloth states of objects whose spawn did not change
             old = {o.name: o for o in SceneSpec.from_json(f).objects}

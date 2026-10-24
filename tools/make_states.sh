@@ -19,7 +19,9 @@ for f in "$@"; do
       echo "[make_states] $id try $try failed rc=$rc"; tail -3 "outputs/logs/states/$id.log"
     done
     grep -q "^\[states-reject\]" "outputs/logs/states/$id.log" && continue
-    # a start state that already scores (e.g. a light BED-01 duvet that stayed spread, D-47) is redrawn too
+    # a start state that already scores (e.g. a light BED-01 duvet that stayed spread, D-47) is redrawn too;
+    # BED-03 "second" scenes start with the first garment in the basket on purpose (D-49)
+    case "$id" in *_second_*) break ;; esac
     score=$("$PY" -c "import sys, json; sys.argv = ['x']; sys.path.insert(0, 'tools'); import predicate_audit as A
 print(A.eval_scene(json.load(open('$f')))['score'])" 2>/dev/null)
     [ -z "$score" ] && { echo "[make_states] $id start score check failed"; break; }

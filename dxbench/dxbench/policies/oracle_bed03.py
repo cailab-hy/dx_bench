@@ -436,6 +436,11 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             spec = getattr(U.cfg, "_dx_spec", None)
             names = [n for n in U.scene.deformable_objects.keys()]
             garments = [n for n in names if n.startswith("cloth_")]
+            # skip garments that start in the basket (BED-03 "second" scenes, D-49): centroid inside the basket
+            # footprint (a garment on the floor cannot be centred there; one bunched in the basket sits ~5 cm high)
+            b = (_T(U.scene["laundry_basket"].data.root_link_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
+            hl, _hs = self._basket_half()
+            garments = [n for n in garments if np.linalg.norm(self._cloth_xyz(U, n)[0][:2] - b[:2]) >= hl]
             p, _ = self._base(U)
             garments.sort(key=lambda n: float(np.linalg.norm(self._cloth_xyz(U, n)[0][:2] - p[:2])))
             self.queue = garments

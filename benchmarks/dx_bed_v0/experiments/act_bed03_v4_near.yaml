@@ -1,0 +1,12 @@
+# ACT on near v3 + "second" v4 oracle demos (D-49), evaluated on the near scenes
+name: act_bed03_v4_near
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8791, open_loop_horizon: 8}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-03: [near]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend lerobot --checkpoint outputs/train/act_bed03_v4/checkpoints/last/pretrained_model --chunk 8 --port 8791
+video: true   # ACT needs the camera images (also writes the mp4s)
+timeout_s: 7200
+parallel: 3
+max_steps: 1800   # 120 s sim cap; near oracle episodes take ~1350 steps
