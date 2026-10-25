@@ -1,6 +1,6 @@
 # dx_bed_v0 sample results
 
-Generated 2026-10-24 16:19 by `python -m dxbench.bench.make_results` from `outputs/bench/*/summary.json`. Per-episode tables: `outputs/bench/<experiment>/REPORT.md`. Experiment definitions: `benchmarks/dx_bed_v0/experiments/<experiment>.yaml`.
+Generated 2026-10-25 09:01 by `python -m dxbench.bench.make_results` from `outputs/bench/*/summary.json`. Per-episode tables: `outputs/bench/<experiment>/REPORT.md`. Experiment definitions: `benchmarks/dx_bed_v0/experiments/<experiment>.yaml`.
 
 | experiment | policy | task | difficulty | episodes | success | score mean | stage completion | stage time (s) | tipped | task failures | errors | settings |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -17,3 +17,4 @@ Generated 2026-10-24 16:19 by `python -m dxbench.bench.make_results` from `outpu
 | replay_bed03 | replay of demo 0 via server | BED-03 | easy | 10 | 0/10 (0%) | 0.00 | cloth_0 0%, cloth_1 0% | - | 0 | 1 | 0 | assist radius 5 cm, towel E 1e6 (before D-U11 / D-28) |
 | smolvla_bed03 | SMOLVLA (`smolvla_bed03`) via server | BED-03 | easy | 10 | 0/10 (0%) | 0.00 | cloth_0 0%, cloth_1 0% | - | 0 | 0 | 0 |  |
 | smolvla_bed03_train | SMOLVLA (`smolvla_bed03`) via server | BED-03 | easy | 3 | 0/3 (0%) | 0.00 | cloth_0 0%, cloth_1 0% | - | 0 | 0 | 0 |  |
+| smolvla_bed03_v3_near | SMOLVLA (`smolvla_bed03_v3_near`) via server | BED-03 | near | 10 | 0/10 (0%) | 0.06 | cloth_0 12%, cloth_1 0% | cloth_0 29 | 0 | 0 | 2 |  |

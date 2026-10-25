@@ -16,7 +16,7 @@ one() {
   [ -f "$OUTD/$id/result.json" ] && return
   task=$(python3 -c "import json;print(json.load(open('$f'))['task'][-1])")
   for try in 1 2 3; do
-    timeout ${TIMEOUT:-7200} ~/miniforge3/envs/dx_arena/bin/python dxbench/dxbench/scripts/run_episode.py --policy "$POLICY" \
+    timeout -k 120 ${TIMEOUT:-7200} ~/miniforge3/envs/dx_arena/bin/python dxbench/dxbench/scripts/run_episode.py --policy "$POLICY" \
       --out "$OUTD/$id" --record "$RAW" --progress_every 150 \
       --external_environment_class_path dxbench.tasks.bed_tasks:DxBed0${task}Environment dx_bed0${task} --scene "$f" \
       --embodiment "$EMB" > "$OUTD/logs/$id.log" 2>&1

@@ -1,0 +1,12 @@
+# pi0.5 (lerobot/pi05_base, full fine-tune 15k steps x batch 8) on near v3 + "second" v4 oracle demos (D-49)
+name: pi05_bed03_v4_near
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8792, open_loop_horizon: 10}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-03: [near]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend lerobot --checkpoint outputs/train/pi05_bed03_v4/checkpoints/last/pretrained_model --chunk 10 --port 8792
+video: true
+timeout_s: 7200
+parallel: 2
+max_steps: 1800
