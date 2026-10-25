@@ -1,0 +1,11 @@
+# scripted oracle (privileged: reads cloth nodes) on the BED-03 near evaluation scenes, current cloth (D-45/46/47) -
+# the upper reference for the learned policies
+name: oracle_bed03_near
+policy: dxbench.policies.oracle_bed03.Bed03OraclePolicy
+policy_kw: {}
+env_args: [--embodiment, rby1_ik]
+tasks: {BED-03: [near]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+video: false
+timeout_s: 7200
+parallel: 2
