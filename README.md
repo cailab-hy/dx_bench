@@ -56,12 +56,19 @@ Tested on Ubuntu 22.04, NVIDIA driver 580, one RTX 6000 Ada (48 GB). The simulat
 
 ### 1. Clone
 
+IsaacLab-Arena's own submodules (Isaac Lab, Isaac-GR00T) use SSH URLs (`git@github.com:`), so on a machine
+without a GitHub SSH key let git fetch them over HTTPS, and skip Isaac-GR00T (1.4 GB, not used here):
+
 ```bash
-git clone --recursive https://github.com/cailab-hy/dx_bench.git
+git config --global url."https://github.com/".insteadOf "git@github.com:"   # only without a GitHub SSH key
+git clone https://github.com/cailab-hy/dx_bench.git
 cd dx_bench
-# an existing clone without submodules:
-git submodule update --init --recursive
+git submodule update --init                                                    # IsaacLab-Arena, rby1-sim-isaac
+git -C submodules/IsaacLab-Arena submodule update --init submodules/IsaacLab   # Isaac Lab 3.0 (91a0906)
+git submodule status --recursive    # Isaac-GR00T stays "-" (not checked out); everything else has a commit
 ```
+
+`git clone --recursive` also works once the URL rewrite is set, but then downloads Isaac-GR00T too.
 
 ### 2. `dx_arena` (simulation)
 
