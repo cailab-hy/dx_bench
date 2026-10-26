@@ -72,14 +72,18 @@ git submodule status --recursive    # Isaac-GR00T stays "-" (not checked out); e
 
 ### 2. `dx_arena` (simulation)
 
+Run every command from the repository root (`cd dx_bench`); the paths below are relative to it. The Isaac Lab line
+runs in a subshell `( ... )` so it comes back to the root afterwards.
+
 ```bash
+cd dx_bench
 conda create -n dx_arena python=3.12 -y
 conda activate dx_arena
 pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cu128
 pip install "isaacsim[all,extscache]==6.1.0.0" --extra-index-url https://pypi.nvidia.com
 export OMNI_KIT_ACCEPT_EULA=YES            # Isaac Sim EULA, also set by the scripts
 # Isaac Lab 3.0 from the Arena submodule (installs its packages editable into the active env)
-(cd submodules/IsaacLab-Arena/submodules/IsaacLab && ./isaaclab.sh --install)
+(cd submodules/IsaacLab-Arena/submodules/IsaacLab && ./isaaclab.sh --install)   # back in dx_bench afterwards
 pip install -e submodules/IsaacLab-Arena   # IsaacLab-Arena 0.3.1 (release/0.3.1, unmodified)
 pip install --no-deps -e dxbench           # this repository's simulation package
 pip list | grep -E "^(isaacsim |torch |numpy |warp-lang|newton |websockets)"   # check the pins above
