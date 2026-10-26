@@ -4,6 +4,21 @@ A VLA / world-action-model benchmark for the Rainbow Robotics RB-Y1 in the DX Hu
 runs on Isaac Sim 6.1, Isaac Lab 3.0 and IsaacLab-Arena 0.3.1 with the PhysX backend. It covers three bedroom
 tasks: BED-01 make the bed, BED-02 fold clothes, BED-03 laundry to the basket.
 
+Get it (the RB-Y1 model and IsaacLab-Arena are submodules):
+
+```bash
+git clone --recursive https://github.com/cailab-hy/dx_bench.git
+```
+
+Not in this repository:
+- the DX Hub 11F building twin (`DX_Hub_Building_add_obj_v1`, CareRoom USD): the tasks load it from
+  `~/P2-DX_project` (`dxbench/dxbench/paths.py`); ask the lab for access;
+- demonstration datasets, raw recordings, checkpoints and run logs (`data/`, `outputs/`, tens of GB);
+- third-party photos and videos used while matching the cloth to real garments (product photos, YouTube frames,
+  our own footage): the reports keep the numbers.
+
+Most project notes (`PROGRESS.md`, `DECISIONS.md`, `HUMAN_TODO.md`, `CLAUDE.md`, the stage reports) are in Korean.
+
 Start here:
 - [`PROGRESS.md`](PROGRESS.md): status and repro commands
 - [`DECISIONS.md`](DECISIONS.md): every design decision, with how to revert it
@@ -18,7 +33,7 @@ Start here:
 | `dxbench_policy/` | `dx_policy` package: LeRobot v3 conversion / validation, websocket policy server (hold / replay / ACT / SmolVLA), ACT training wrapper |
 | `benchmarks/dx_bed_v0/` | Fixed evaluation scenes (3 tasks × 3 difficulties × 10), settled cloth states, experiment YAMLs, `RESULTS.md` |
 | `tools/` | Stage scripts: cloth spike, RB-Y1 regression (`rby1_check/`), state generation, oracle / demo / replay / stage 4–5 pipelines |
-| `reports/` | Per-stage reports (`cloth_spike`, `rby1_check`, `stage3`–`stage5`) |
+| `reports/` | Per-stage and per-study reports (`cloth_spike`, `rby1_check`, `stage3`–`stage5`, `stage_v2`, cloth material studies: `swing`, `crumple`, `duvet_match`, `tee_match`, `towel_match`) |
 | `docs/` | `action_space.md`, `BENCHMARK.md`, `PIPELINE.md`, notes |
 | `config/cloth_params.yaml` | Cloth simulation parameters (stage 1) |
 

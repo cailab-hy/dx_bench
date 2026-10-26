@@ -13,3 +13,15 @@ outputs/
 __tracked_surface.stl
 *.egg-info/
 .pytest_cache/
+# run logs and training / conversion log tails (kept local; the public repository has the reports only)
+*.log
+**/logs/
+reports/stage*/train_*_tail.txt
+reports/stage*/convert_*.txt
+reports/stage*/validate_*.txt
+reports/stage4/replay_check_ep0.txt
+# internal report pages (third-party product photos) and third-party / own footage used for material matching
+reports/professor_*/
+reports/crumple/compare.jpg
+reports/towel_match/compare*.jpg
+reports/towel_match/compare_*.mp4
