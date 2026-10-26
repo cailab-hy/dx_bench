@@ -12,7 +12,9 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - `submodules/` 원본 수정 금지. USD는 덮어쓰기 레이어/별도 파일, Arena 확장은 등록 API(`@register_asset`, external environment class path).
 - `~/P2-DX_project`(DX 씬)과 conda `env_isaaclab`은 읽기만. 침실 씬: `~/P2-DX_project/DX/USD/DX_Hub_Building_add_obj_v1/*_CareRoom{,_scene}.usda`,
   자산 단독 USD: `.../assets/{Bed,TShirt,CareDesk,...}/*.usda`. 수납장은 `WallAnchor` 월드 고정 관절이 있으니 씬을 옮기지 말 것.
-- git: 단계마다 로컬 커밋 `stage N: ...`, **push 금지**.
+- git: 단계마다 로컬 커밋 `stage N: ...`, **push 금지**(공개 레포 github.com/cailab-hy/dx_bench 는 사용자가 직접 push, 2026-10-26).
+  공개 레포에 넣지 말 것: 실행·학습 로그(`*.log`, `logs/`), 교수님 보고 폴더(`reports/professor_*`), 쇼핑몰 제품 사진·유튜브 프레임·
+  사용자가 찍은 실물 영상 프레임(`.gitignore`에 등록, 로컬 보관). 기록 정리 전 전체 백업: `outputs/backup/dx_bench_before_public_*.bundle`.
 - 용량: 5 GB 넘는 모델/데이터 다운로드 금지, 데이터·결과 합계 50 GB 이하(`data/`, `outputs/`는 gitignore).
 
 ## RB-Y1 사실 (0단계 `reports/rby1_check/REPORT.md`)
