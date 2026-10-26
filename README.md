@@ -37,12 +37,84 @@ Start here:
 | `docs/` | `action_space.md`, `BENCHMARK.md`, `PIPELINE.md`, notes |
 | `config/cloth_params.yaml` | Cloth simulation parameters (stage 1) |
 
-## Environments
+## Installation
 
-- **`dx_arena`** (simulation, recording, policy client):
-  - pinned isaacsim 6.1.0.0, torch 2.11.0+cu128, numpy 2.3.1, warp-lang 1.16.0, newton 1.5.2, websockets 16.1.1
-  - plus `dxbench` (`pip install --no-deps -e dxbench`)
-- **`dx_policy`** (LeRobot 0.6.1, training, policy server): see [`VERSIONS.md`](VERSIONS.md).
+Two conda environments, kept apart on purpose: the simulator stack and LeRobot pin different torch / websockets
+builds, so **never install lerobot into `dx_arena`**.
+
+| Environment | Role | Key versions |
+|---|---|---|
+| `dx_arena` | simulation, teleop, raw recording, benchmark runner, policy client | Python 3.12, isaacsim 6.1.0.0, torch 2.11.0+cu128, Isaac Lab 17.0.2 (Arena submodule), IsaacLab-Arena 0.3.1, numpy 2.3.1, warp-lang 1.16.0, newton 1.5.2, websockets 16.1.1 |
+| `dx_policy` | LeRobot conversion, training, policy server | Python 3.12, lerobot 0.6.1, torch 2.11.0 (see [`VERSIONS.md`](VERSIONS.md)) |
+
+Tested on Ubuntu 22.04, NVIDIA driver 580, one RTX 6000 Ada (48 GB). The simulator alone runs on a smaller GPU;
+π0.5 fine-tuning needs about 37 GB. Isaac Sim, the submodules and the conda environments take roughly 60 GB of disk.
+
+> These commands rebuild the environments recorded in this repository (the installed package lists above); they
+> have not been re-run on a clean machine yet. If a step pulls a different version of a pinned package, reinstall
+> the pinned one.
+
+### 1. Clone
+
+```bash
+git clone --recursive https://github.com/cailab-hy/dx_bench.git
+cd dx_bench
+# an existing clone without submodules:
+git submodule update --init --recursive
+```
+
+### 2. `dx_arena` (simulation)
+
+```bash
+conda create -n dx_arena python=3.12 -y
+conda activate dx_arena
+pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cu128
+pip install "isaacsim[all,extscache]==6.1.0.0" --extra-index-url https://pypi.nvidia.com
+export OMNI_KIT_ACCEPT_EULA=YES            # Isaac Sim EULA, also set by the scripts
+# Isaac Lab 3.0 from the Arena submodule (installs its packages editable into the active env)
+(cd submodules/IsaacLab-Arena/submodules/IsaacLab && ./isaaclab.sh --install)
+pip install -e submodules/IsaacLab-Arena   # IsaacLab-Arena 0.3.1 (release/0.3.1, unmodified)
+pip install --no-deps -e dxbench           # this repository's simulation package
+pip list | grep -E "^(isaacsim |torch |numpy |warp-lang|newton |websockets)"   # check the pins above
+```
+
+### 3. `dx_policy` (training and policy server)
+
+```bash
+conda create -n dx_policy python=3.12 -y
+conda activate dx_policy
+pip install "lerobot[training,smolvla]==0.6.1" websockets msgpack pytest
+pip install --no-deps -e dxbench_policy
+```
+
+π0.5 (`lerobot/pi05_base`, 14.5 GB) also needs the gated PaliGemma tokenizer: accept the license at
+<https://huggingface.co/google/paligemma-3b-pt-224> with your Hugging Face account, then `hf auth login`.
+
+### 4. DX Hub building twin
+
+The tasks load the CareRoom USD (`DX_Hub_Building_add_obj_v1`), which is not in this repository. Get it from the lab
+and point `DX_USD_DIR` at its `DX/USD` folder (default `~/P2-DX_project/DX/USD`, see `dxbench/dxbench/paths.py`):
+
+```bash
+export DX_USD_DIR=/path/to/DX/USD
+```
+
+The RB-Y1 model comes from the `rby1-sim-isaac` submodule; nothing else needs downloading.
+
+### 5. Check
+
+```bash
+conda activate dx_arena
+python -m pytest -q dxbench/tests dxbench/dxbench/teleop/vr              # no simulator
+python dxbench/dxbench/scripts/run_episode.py --policy dxbench.policies.oracle_bed03.Bed03OraclePolicy \
+  --out outputs/check_000 --external_environment_class_path dxbench.tasks.bed_tasks:DxBed03Environment dx_bed03 \
+  --scene benchmarks/dx_bed_v0/scenes/bed03_near_000.json             # one oracle episode, ~10-20 min
+conda activate dx_policy
+python -m pytest -q dxbench_policy/tests
+```
+
+The Kit app sometimes segfaults in its first seconds (`platforminfo`, ~8 %); the repository's runner scripts retry
+up to three times.
 
 ## Quick start
 
