@@ -145,3 +145,98 @@ $A -m pytest -q dxbench/tests dxbench/dxbench/teleop/vr
 ```
 
 For data collection, conversion, training and closed-loop play, see [`docs/PIPELINE.md`](docs/PIPELINE.md). For the benchmark definition, see [`docs/BENCHMARK.md`](docs/BENCHMARK.md).
+
+## VR teleoperation (Meta Quest 2 / 3)
+
+Human demonstrations (BED-01 make the bed and BED-02 fold clothes need two-handed motions the scripted oracles do
+not do well). The headset connects over USB; its browser opens a WebXR page served by the simulator, which shows
+the robot's three camera views in VR and sends the controller poses back. Episodes are recorded in the same raw
+format as the oracle demonstrations, so they go through the same LeRobot conversion and training.
+
+### One-time setup
+
+1. **adb on the PC:** `sudo apt install adb`
+2. **Developer mode on the headset:** the headset's Meta account must belong to a developer organization
+   (create one at <https://developer.oculus.com/manage/organizations/>). Then in the Meta Horizon phone app:
+   Devices → your headset → Headset settings → Developer mode → on. Restart the headset.
+3. **USB debugging:** connect the headset with a USB-C data cable, put it on and accept "Allow USB debugging"
+   (tick "Always allow from this computer"). Check on the PC:
+   ```bash
+   adb devices        # the headset is listed as "device" (not "unauthorized")
+   ```
+
+### Scenes to record in
+
+Training scenes and their cloth initial states live in `data/`, which is not in the repository; make them once
+(seeds 10000+ never overlap the evaluation scenes):
+
+```bash
+conda activate dx_arena
+python dxbench/dxbench/tasks/scene_gen.py --task BED-02 --difficulty easy --n 30 --seed0 10000 --split train --out data/scenes_train
+tools/make_states.sh data/scenes_train/bed02_easy_train_*.json        # settled cloth states, ~3 min per scene
+```
+
+(`--task BED-01 / BED-02 / BED-03`, `--difficulty easy / medium / hard`; BED-03 also `near`, `second`.)
+
+### Each session
+
+```bash
+conda activate dx_arena
+adb reverse tcp:8012 tcp:8012                     # headset localhost:8012 -> PC (again after every reconnect)
+python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw/bed02_vr --physics_hz 360 \
+  --external_environment_class_path dxbench.tasks.bed_tasks:DxBed02Environment dx_bed02 \
+  --scene data/scenes_train/bed02_easy_train_10000.json
+```
+
+- In the headset browser open **http://localhost:8012**. The page lists its checks (WebXR, connection, video);
+  press **Enter VR**.
+- Stand facing the way the robot should look forward and **hold Y for 1 s** (recenter).
+- Press **A** to start recording, do the task. The episode is saved automatically when the task succeeds.
+  Hold **B** to throw it away. Either way the scene resets for the next episode. An episode that reaches the task
+  time limit (simulated time: BED-01 / BED-02 240 s, BED-03 180 s) without success is not kept.
+- `--physics_hz 360` is fine for BED-02 / BED-03 (towel, T-shirt); keep the default 480 Hz for BED-01, where the
+  large duvet drifts at 360 Hz (DECISIONS D-11). Other tasks: `DxBed01Environment dx_bed01` / `DxBed03Environment dx_bed03`.
+- More flags: `--vr_port` (default 8012), `--max_episodes`, `--realtime` (pace to 15 Hz wall time when the sim is
+  faster than real time).
+
+| Control | Action |
+|---|---|
+| Grip (hold) | That arm follows the controller (clutch). Release, move your hand, grip again: no jump |
+| Trigger | Close the gripper (release: open) |
+| Right stick | Drive the base: up / down forward / back, left / right turn |
+| Left stick up / down | Torso one posture step deeper / more upright (crouch to reach the desk or the floor) |
+| Left stick left / right | Camera panel size |
+| A | Start recording |
+| B (hold) | Discard the episode |
+| X | Pause |
+| Y (hold 1 s) | Recenter: your forward = robot forward, the panel in front of you |
+
+Notes:
+- With three cameras and cloth the simulation runs at about half real time (360 Hz): move slowly and let the
+  robot catch up.
+- If a controller loses tracking, that arm stops; the grippers keep their state, so a held garment is not dropped.
+- Grasping is the assisted pad grasp (`pad_grasp`): close the gripper with the fingertips touching the cloth, between
+  the two pads.
+
+### Check without a headset
+
+A scripted operator plays the controllers through the same WebSocket (recenter, start, grip, move the right hand
+10 cm forward / up and 5 cm sideways, trigger) and checks the arm follows:
+
+```bash
+python dxbench/dxbench/teleop/run_teleop.py --teleop_device scripted_vr --record outputs/teleop_test --save_any \
+  --max_episodes 1 --external_environment_class_path dxbench.tasks.bed_tasks:DxBed03Environment dx_bed03 \
+  --scene benchmarks/dx_bed_v0/scenes/bed03_near_000.json
+# prints scripted={"tcp_offset": [...], "expected": [0.1, -0.05, 0.1], "err_m": ...}: err_m should be well under 1 cm
+```
+
+### After recording
+
+```bash
+conda activate dx_policy
+python -m dxbench_policy.convert.raw_to_lerobot --raw data/raw/bed02_vr --out data/lerobot/bed02_vr_dx24 --fmt dx24 --image_scale 0.5
+python -m dxbench_policy.convert.validate --out data/lerobot/bed02_vr_dx24 --raw data/raw/bed02_vr
+```
+
+Training and evaluation: [`docs/PIPELINE.md`](docs/PIPELINE.md) sections 5–6. Keyboard teleoperation (GUI) is in
+section 2 there.

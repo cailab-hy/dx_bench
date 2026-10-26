@@ -23,7 +23,7 @@ import base64, hashlib, json, os, socket, struct, subprocess, sys, threading, ti
 from collections import OrderedDict, deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-PAGE_VERSION = 4
+PAGE_VERSION = 5  # 5 (2026-10-26): panel size on the left stick x; the right stick drives the base
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 PAGE = r"""<!doctype html><html><head><meta charset="utf-8">
@@ -36,7 +36,7 @@ p.help{font-size:18px;color:#bbb}</style></head><body>
 <div id="env"></div><p><button id="enter" disabled>Enter VR</button></p><div id="state"></div><div id="video"></div>
 <canvas id="preview" width="1360" height="600"></canvas>
 <p class="help">In VR the robot camera panel (left wrist | head | right wrist) floats in front of you.
-Hold Y for 1 s: recenter (robot forward and the panel). Right stick up/down: panel distance, left/right: panel size.</p>
+Hold Y for 1 s: recenter (robot forward and the panel). Left stick left/right: panel size.</p>
 <script>
 const PAGE_VERSION = __PAGE_VERSION__;
 const env = document.getElementById('env'), btn = document.getElementById('enter');
@@ -125,7 +125,8 @@ function perspective(fovy, asp, n, f) {
   const t = 1 / Math.tan(fovy / 2);
   return new Float32Array([t / asp, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, 2 * f * n / (n - f), 0]);
 }
-// panel placement (VR): in front of the head when entering VR or on a 1 s Y press; stick adjusts it
+// panel placement (VR): in front of the head when entering VR or on a 1 s Y press; the left stick x sizes it (the right
+// stick drives the robot base and the left stick y steps the torso, so neither moves the panel)
 let panel = {dist: 1.1, width: 1.5};
 try { Object.assign(panel, JSON.parse(localStorage.getItem('rby1_panel') || '{}')); } catch (e) {}
 let anchor = null, yDown = null, yUsed = false;
@@ -144,12 +145,12 @@ function controls(hands, t, viewer, dt) {
   if (y && yDown === null) { yDown = t; yUsed = false; }
   if (!y) yDown = null;
   if (y && !yUsed && t - yDown >= 1000 && viewer) { placePanel(viewer.transform); yUsed = true; }
-  if (right && right.axes.length >= 4) {
-    const ax = right.axes[2], ay = right.axes[3];
-    let changed = false;
-    if (Math.abs(ay) > 0.25) { panel.dist = Math.min(3.0, Math.max(0.5, panel.dist - ay * 0.6 * dt)); changed = true; }
-    if (Math.abs(ax) > 0.25) { panel.width = Math.min(4.0, Math.max(0.5, panel.width * Math.exp(ax * 0.6 * dt))); changed = true; }
-    if (changed) try { localStorage.setItem('rby1_panel', JSON.stringify(panel)); } catch (e) {}
+  if (left && left.axes.length >= 4) {
+    const ax = left.axes[2];
+    if (Math.abs(ax) > 0.5) {
+      panel.width = Math.min(4.0, Math.max(0.5, panel.width * Math.exp(ax * 0.6 * dt)));
+      try { localStorage.setItem('rby1_panel', JSON.stringify(panel)); } catch (e) {}
+    }
   }
 }
 // 2D preview (before entering VR): same texture and panel shader
@@ -511,7 +512,7 @@ if __name__ == "__main__":
             time.sleep(1 / 15)
             k += 1
             if streamer is not None and srv.status()["clients"]:
-                streamer.submit(test_images(k), f"TEST PICTURE {k / 15:6.1f} s | hold Y 1 s: recenter panel | right stick: distance / size")
+                streamer.submit(test_images(k), f"TEST PICTURE {k / 15:6.1f} s | hold Y 1 s: recenter panel | left stick left/right: size")
             if time.monotonic() - last >= 1:
                 last = time.monotonic()
                 st = srv.status()
