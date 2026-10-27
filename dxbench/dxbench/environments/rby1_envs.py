@@ -19,14 +19,19 @@ from dxbench.paths import CARE_SPAWN
 CTRL_HZ = 15
 
 
-def physics_callback(physics_hz: int):
-    """env_cfg_callback: 15 Hz control (decimation = physics_hz / 15), PhysX GPU (backend kept)."""
+def physics_callback(physics_hz: int, ik_every: int = 1):
+    """env_cfg_callback: 15 Hz control (decimation = physics_hz / 15), PhysX GPU (backend kept); rby1_ik arm IK on
+    every `ik_every`-th physics step (HomingDiffIKAction)."""
     assert physics_hz % CTRL_HZ == 0, "physics rate must be a multiple of 15 Hz"
 
     def cb(env_cfg):
         env_cfg.sim.dt = 1.0 / physics_hz
         env_cfg.decimation = physics_hz // CTRL_HZ
         env_cfg.sim.render_interval = env_cfg.decimation
+        for term in ("right_arm", "left_arm"):
+            t = getattr(env_cfg.actions, term, None)
+            if t is not None and hasattr(t, "ik_every"):
+                t.ik_every = ik_every
         phys = env_cfg.sim.physics
         for k, v in (("gpu_max_rigid_contact_count", 2**23), ("gpu_max_rigid_patch_count", 2**21),
                      ("gpu_max_soft_body_contacts", 2**21), ("gpu_heap_capacity", 2**27),
@@ -43,6 +48,8 @@ def _common_args(parser: argparse.ArgumentParser):
     parser.add_argument("--gains", default="tuned", choices=["tuned", "original"])
     parser.add_argument("--torso", default="upright", choices=["upright", "lean", "crouch", "deep"])
     parser.add_argument("--physics_hz", type=int, default=240)
+    parser.add_argument("--ik_every_n", type=int, default=1,
+                        help="rby1_ik: solve the arm IK on every n-th physics step (1 = every step; teleop 4)")
     parser.add_argument("--untiled_cameras", action="store_true")
     parser.add_argument("--robot_usd", default=None, help="override the robot USD (debugging)")
 
@@ -72,7 +79,7 @@ class DxFlatEnvironment(_Base):
             assets += grasp_cube_props(tuple(float(v) for v in args_cli.cube_xyz.split(",")))
         return IsaacLabArenaEnvironment(name=self.name, embodiment=self._embodiment(args_cli),
                                         scene=Scene(assets=assets), task=NoTask(),
-                                        env_cfg_callback=physics_callback(args_cli.physics_hz))
+                                        env_cfg_callback=physics_callback(args_cli.physics_hz, args_cli.ik_every_n))
 
     @staticmethod
     def add_cli_args(parser: argparse.ArgumentParser) -> None:
@@ -124,7 +131,7 @@ class DxBedroomEnvironment(_Base):
         pose = Pose(position_xyz=CARE_SPAWN, rotation_xyzw=(0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2)))
         return IsaacLabArenaEnvironment(name=self.name, embodiment=self._embodiment(args_cli, pose),
                                         scene=Scene(assets=[room]), task=NoTask(),
-                                        env_cfg_callback=physics_callback(args_cli.physics_hz))
+                                        env_cfg_callback=physics_callback(args_cli.physics_hz, args_cli.ik_every_n))
 
     @staticmethod
     def add_cli_args(parser: argparse.ArgumentParser) -> None:

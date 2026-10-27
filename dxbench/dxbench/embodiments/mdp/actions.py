@@ -285,6 +285,7 @@ class HomingDiffIKAction(DifferentialInverseKinematicsAction):
         super().__init__(cfg, env)
         self._homing = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self._dt = env.physics_dt
+        self._substep = 0
 
     def request_home(self, env_ids=None):
         if env_ids is None:
@@ -296,8 +297,17 @@ class HomingDiffIKAction(DifferentialInverseKinematicsAction):
     def homing(self) -> torch.Tensor:
         return self._homing
 
+    def process_actions(self, actions: torch.Tensor):
+        super().process_actions(actions)
+        self._substep = 0
+
     def apply_actions(self):
-        super().apply_actions()
+        # ik_every > 1: solve on every n-th physics step of the control step (the first included) and keep the joint
+        # targets in between; 1 = every physics step (Isaac Lab default, evaluation / oracles). Teleop uses 4 (the two
+        # arm solves were ~2.5 ms per physics step each, 2026-10-27)
+        if self._substep % self.cfg.ik_every == 0:
+            super().apply_actions()
+        self._substep += 1
         if not self._homing.any():
             return
         q = self._asset.data.joint_pos.torch[:, self._joint_ids]
@@ -327,6 +337,7 @@ class HomingDiffIKAction(DifferentialInverseKinematicsAction):
 class HomingDiffIKActionCfg(DifferentialInverseKinematicsActionCfg):
     class_type: type[ActionTerm] = HomingDiffIKAction
     home_rad_s: float = 0.8
+    ik_every: int = 1  # solve the IK on every n-th physics step (see HomingDiffIKAction.apply_actions)
 
 
 def hold_joints_at_default(env, env_ids, joint_names, asset_name: str = "robot"):

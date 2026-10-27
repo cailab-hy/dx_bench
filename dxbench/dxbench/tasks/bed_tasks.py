@@ -385,7 +385,7 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         global CURRENT_TASK
         CURRENT_TASK = task
         cloth = task.cloth_names
-        base_cb = physics_callback(args_cli.physics_hz)
+        base_cb = physics_callback(args_cli.physics_hz, args_cli.ik_every_n)
 
         def cb(env_cfg):
             env_cfg = base_cb(env_cfg)
@@ -435,6 +435,8 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         parser.add_argument("--pad_capture_c", type=float, default=0.025,  # D-35
                             help="pad assist: catch only cloth within this distance (m) of the closing midplane")
         parser.add_argument("--episode_s", type=float, default=None)
+        parser.add_argument("--ik_every_n", type=int, default=1,
+                            help="rby1_ik: solve the arm IK on every n-th physics step (1 = every step; teleop 4)")
         parser.add_argument("--observer", action="store_true", help="add a third-person camera (needs --video)")
         parser.add_argument("--observer_res", type=int, nargs=2, default=(960, 540))
         parser.add_argument("--observer_target", type=float, nargs=3, default=None,

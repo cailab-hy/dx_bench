@@ -4,6 +4,7 @@
 physics:
   hz_eval: 480            # evaluation, oracle demos, benchmark (duvet drift 1.0 cm; 360 Hz = 2.1 cm fails the 2 cm bar)
   hz_teleop_small: 360    # teleop allowed for BED-02/03 (shirt / towel): sleeve 1.5 cm, floor 1.0 cm, RTF ~0.5 w/o cameras
+                          # (stage-1 spike scene; BED-03 teleop with 3 cameras: RTF ~0.2, 0.26 performance profile, D-50)
   hz_teleop_duvet: 480    # BED-01 duvet: 360 Hz drift 2.1 cm -> keep 480 (RTF ~0.36, slow-motion teleop)
   control_hz: 15          # decimation = hz / 15
   gpu_buffers: {rigid_contact: 8388608, rigid_patch: 2097152, soft_body_contacts: 2097152, heap: 134217728, found_lost_pairs: 4194304}  # rby1_envs.physics_callback

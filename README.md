@@ -182,6 +182,7 @@ tools/make_states.sh data/scenes_train/bed02_easy_train_*.json        # settled 
 
 ```bash
 conda activate dx_arena
+powerprofilesctl set performance                  # laptop: ~1.3x faster simulation (back: powerprofilesctl set balanced)
 adb reverse tcp:8012 tcp:8012                     # headset localhost:8012 -> PC (again after every reconnect)
 python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw/bed02_vr \
   --external_environment_class_path dxbench.tasks.bed_tasks:DxBed02Environment dx_bed02 \
@@ -197,7 +198,8 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
 - `--physics_hz 360` is fine for BED-02 / BED-03 (towel, T-shirt); keep the default 480 Hz for BED-01, where the
   large duvet drifts at 360 Hz (DECISIONS D-11). Other tasks: `DxBed01Environment dx_bed01` / `DxBed03Environment dx_bed03`.
 - More flags: `--vr_port` (default 8012), `--max_episodes`, `--realtime` (pace to 15 Hz wall time when the sim is
-  faster than real time).
+  faster than real time). Task flag `--ik_every_n` (default 4 in `run_teleop.py`, 1 in evaluation and the oracles):
+  the arm IK is solved on every n-th physics step (DECISIONS D-50).
 
 | Control | Action |
 |---|---|
@@ -213,8 +215,9 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
 | Y (hold 1 s) | Recenter: your forward = robot forward, the panel in front of you |
 
 Notes:
-- With three cameras and cloth the simulation runs at about half real time (360 Hz): move slowly and let the
-  robot catch up. The panel's status lines show recording, the torso posture and the base mode / speed.
+- With three cameras and cloth the simulation runs at about **0.2x real time** (BED-03, 360 Hz, RTX 5000 Ada laptop;
+  ~0.26x with the `performance` power profile): move slowly and let the robot catch up. The 0.5x of stage 1 was a
+  small test scene without cameras. The panel's status lines show recording, the torso posture and the base mode / speed.
 - To carry a garment, hold it with the trigger, release the grip, then drive (the base is locked while a grip is held).
 - If a controller loses tracking, that arm stops; the grippers keep their state, so a held garment is not dropped.
 - Grasping is the assisted pad grasp (`pad_grasp`): close the gripper with the fingertips touching the cloth, between

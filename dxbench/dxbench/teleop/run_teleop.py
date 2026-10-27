@@ -38,6 +38,8 @@ def _args(p):
 def main():
     if "--enable_cameras" not in sys.argv:
         sys.argv.insert(1, "--enable_cameras")
+    if "--ik_every_n" not in sys.argv:  # task flag (after the task name): arm IK on every 4th physics step
+        sys.argv += ["--ik_every_n", "4"]
     rt = ArenaRuntime(add_args=_args)
     env = rt.make_env()
     a = rt.args
