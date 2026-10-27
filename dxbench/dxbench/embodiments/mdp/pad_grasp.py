@@ -52,6 +52,15 @@ class HandSpec:
     pad_h: float = 0.02  # pad length from the tip along -a (m)
 
 
+def wheel_patch_mask(nodes, wheel_xy, fwd, left, half_len: float, half_width: float, z_max: float):
+    """(N,V) bool: cloth nodes (N,V,3) inside any wheel's contact box (wheel ground points (N,W,2), base forward /
+    left unit vectors (N,2); box half sizes along forward / left) and at most `z_max` above the floor."""
+    d = nodes[:, None, :, :2] - wheel_xy[:, :, None, :]  # (N,W,V,2)
+    along = (d @ fwd[:, None, :, None]).squeeze(-1)  # (N,W,V)
+    side = (d @ left[:, None, :, None]).squeeze(-1)
+    return ((along.abs() <= half_len) & (side.abs() <= half_width)).any(1) & (nodes[..., 2] <= z_max)
+
+
 class PadGraspAction(ActionTerm):
     cfg: PadGraspActionCfg
 
@@ -108,47 +117,57 @@ class PadGraspAction(ActionTerm):
         g = self._env.action_manager.get_term(self.cfg.gripper_term).raw_actions
         return torch.stack([g[:, h.gripper_index] < h.close_below for h in self._hands], -1)
 
-    def _wheel_traps(self):
+    def _wheel_masks(self) -> dict[str, torch.Tensor]:
         """Nodes under each drive wheel's contact patch (base-frame box around the wheel's ground point, cloth within
-        4 cm of the floor) -> self.trapped[(env, cloth)] = node ids."""
-        c = self.cfg
-        prev = set(self.trapped)
-        self.trapped = {}
+        4 cm of the floor): cloth name -> (N,V) bool, on the device (no host sync)."""
         if not self._wheels:
-            return
-        wp_ = _T(self._asset.data.body_link_pos_w)[:, self._wheels]  # (N,W,3)
+            return {}
+        c = self.cfg
+        wp_ = _T(self._asset.data.body_link_pos_w)[:, self._wheels, :2]  # (N,W,2)
         q = _T(self._asset.data.root_link_quat_w)  # (N,4) x y z w
         yaw = torch.atan2(2 * (q[:, 3] * q[:, 2] + q[:, 0] * q[:, 1]), 1 - 2 * (q[:, 1] ** 2 + q[:, 2] ** 2))
         f = torch.stack([torch.cos(yaw), torch.sin(yaw)], -1)  # (N,2) forward
         l_ = torch.stack([-torch.sin(yaw), torch.cos(yaw)], -1)
+        out = {}
         for name in c.cloth_names:
             nodes = _T(self._env.scene[name].data.nodal_pos_w)  # (N,V,3)
-            low = nodes[..., 2] <= c.wheel_cloth_z
-            for e in range(self.num_envs):
-                m = torch.zeros(nodes.shape[1], dtype=torch.bool, device=self.device)
-                for k in range(len(self._wheels)):
-                    d = nodes[e, :, :2] - wp_[e, k, :2]
-                    m |= ((d @ f[e]).abs() <= c.wheel_patch_half_len) & ((d @ l_[e]).abs() <= c.wheel_half_width)
-                m &= low[e]
-                if m.any():
-                    ids = torch.nonzero(m).flatten()
+            out[name] = wheel_patch_mask(nodes, wp_, f, l_, c.wheel_patch_half_len, c.wheel_half_width,
+                                         c.wheel_cloth_z)
+        return out
+
+    def apply_actions(self):
+        # runs every physics step: one host sync for the edge / wheel-trap flags (each .any() / .tolist() waits for
+        # the GPU; the per-wheel loop with one sync per cloth and env was ~1.1 ms of the ~2 ms per call, 2026-10-27)
+        c = self.cfg
+        self._step += 1
+        closed = self._closed_cmd()
+        masks = self._wheel_masks()
+        N, H = closed.shape
+        parts = [(~closed & self._closed).flatten(), (closed & ~self._closed).flatten()]
+        parts += [m.any(-1) for m in masks.values()]  # (N,) per cloth
+        flags = torch.cat(parts).tolist()
+        opened = [divmod(i, H) for i in range(N * H) if flags[i]]
+        closing = [divmod(i, H) for i in range(N * H) if flags[N * H + i]]
+        prev = set(self.trapped)
+        self.trapped = {}
+        for j, name in enumerate(masks):
+            for e in range(N):
+                if flags[2 * N * H + j * N + e]:
+                    ids = torch.nonzero(masks[name][e]).flatten()
                     self.trapped[(e, name)] = ids
                     if (e, name) not in prev:
                         self.wheel_events.append({"env": e, "cloth": name, "step": self._step, "nodes": int(len(ids))})
-
-    def apply_actions(self):
-        c = self.cfg
-        self._step += 1
-        self._wheel_traps()
-        closed = self._closed_cmd()
-        o, G, half = self.grip_frames()
-        for e, h in torch.nonzero(~closed & self._closed).tolist():
+        # grip frames only when a close or a held pin needs them (same values: they only read the robot state)
+        o = G = half = None
+        if closing or self._pins:
+            o, G, half = self.grip_frames()
+        for e, h in opened:
             for name in c.cloth_names:
                 pin = self._pins.pop((e, h, name), None)
                 if pin is not None:
                     self._record(e, h, name, pin)
             self.grasped[e, h] = 0
-        for e, h in torch.nonzero(closed & ~self._closed).tolist():
+        for e, h in closing:
             hs = self._hands[h]
             diag = {"half_gap": float(half[e, h]), "n": 0}
             for name in c.cloth_names:

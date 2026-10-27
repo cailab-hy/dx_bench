@@ -221,8 +221,8 @@ class TorsoPresetAction(_RobotTerm):
         dn = (a < -0.5) & (self._prev >= -0.5)
         self._idx = (self._idx + up.long() - dn.long()).clamp(0, len(self.PRESET_ORDER) - 1)
         self._prev = a.clone()
-
-    def apply_actions(self):
+        # the goal only changes here, so the re-plan runs once per control step (in apply_actions its .any() was a
+        # host sync every physics step); _cmd is the last physics step's command either way
         goal = self._presets[self._idx]
         new = self._idx != self._goal_idx
         if new.any():  # re-plan from the current command: duration so the largest joint peaks at ramp_rad_s
@@ -231,6 +231,9 @@ class TorsoPresetAction(_RobotTerm):
             self._dur[new] = (span * (math.pi / 2) / self.cfg.ramp_rad_s).clamp(min=1e-3)
             self._tt[new] = 0.0
             self._goal_idx = self._idx.clone()
+
+    def apply_actions(self):
+        goal = self._presets[self._idx]
         self._tt = self._tt + self._dt
         s = (self._tt / self._dur).clamp(0.0, 1.0)
         a = (0.5 * (1.0 - torch.cos(math.pi * s))).unsqueeze(-1)
