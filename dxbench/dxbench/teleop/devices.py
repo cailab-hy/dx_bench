@@ -11,7 +11,8 @@ Keyboard (lightwheel collect_keyboard.py keymap + base / torso keys):
   H arms home (joint-space back to READY)
   B start recording, ENTER save (only if the task succeeded), BACKSPACE discard + reset, R reset, P pause, ESC quit
 VR (Quest WebXR, lightwheel vr_server / vr_teleop): grip = clutch, trigger = gripper, A start, B (hold) discard,
-  X pause, Y (hold) recenter; right thumbstick = base (v, omega), left thumbstick up/down = torso preset step.
+  X pause, Y (hold) recenter; right thumbstick = base (v, omega; `BaseStick`: dead zone, expo, axis snap, acceleration
+  limits, click = slow / fast, locked while a grip is held), left thumbstick up/down = torso preset step.
 """
 from __future__ import annotations
 
@@ -22,7 +23,7 @@ import numpy as np
 
 LIN_SPEED = 0.25    # m/s TCP (keyboard)
 ROT_SPEED = 0.8     # rad/s TCP (keyboard)
-BASE_V = 0.3        # m/s
+BASE_V = 0.3        # m/s (keyboard; VR fast mode)
 BASE_W = 0.6        # rad/s
 FPS = 15
 MAX_DP = 0.03       # m per step (VR tracking clip)
@@ -123,6 +124,67 @@ def quat_xyzw_to_mat(q) -> np.ndarray:
                      [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
 
 
+class BaseStick:
+    """Right thumbstick -> base (v, omega) for VR driving (2026-10-27, user: make driving with linear + angular speed
+    easy). Up / down = forward / back, left / right = turn left / right, as before, plus:
+
+    * radial dead zone with rescaling: the output starts at 0 at the dead-zone edge (it used to jump to 20 %);
+    * expo curve per axis, out = (1 - expo) x + expo x^3: small deflections are slow for fine positioning;
+    * axis snap: within `snap_deg` of straight up / down the turn is 0, within `snap_deg` of straight left / right the
+      speed is 0, so a slightly crooked thumb still drives straight or turns in place; diagonals blend both;
+    * slow / fast mode toggled by clicking the stick: slow for lining up at a garment or the basket;
+    * acceleration limits, so starts and stops are smooth (and the recorded base commands too);
+    * locked (target 0) while an arm clutch (grip) is held: a thumb brushing the stick during fine arm work does not
+      move the robot. Holding a garment (trigger) with the grip released still drives.
+    """
+
+    MODES = {"slow": (0.10, 0.30), "fast": (BASE_V, BASE_W)}
+
+    def __init__(self, fps: int = FPS, dead: float = 0.2, expo: float = 0.6, snap_deg: float = 15.0,
+                 acc_v: float = 0.5, acc_w: float = 1.5, mode: str = "fast"):
+        self.dt = 1.0 / fps
+        self.dead, self.expo, self.snap = dead, expo, math.radians(snap_deg)
+        self.acc_v, self.acc_w = acc_v, acc_w
+        self.mode = mode
+        self.v = self.w = 0.0
+        self._click = False
+
+    def reset(self):
+        self.v = self.w = 0.0
+        self._click = False
+
+    def shape(self, fwd: float, turn: float) -> tuple[float, float]:
+        """Stick (forward, turn-left) in [-1, 1] -> normalised (speed, turn) in [-1, 1]."""
+        r = math.hypot(fwd, turn)
+        if r <= self.dead:
+            return 0.0, 0.0
+        k = min(1.0, (r - self.dead) / (1.0 - self.dead)) / r
+        f, t = fwd * k, turn * k
+        ang = math.atan2(abs(t), abs(f))  # 0 = straight forward / back, pi / 2 = pure turn
+        if ang < self.snap:
+            t = 0.0
+            f = math.copysign(min(1.0, (r - self.dead) / (1.0 - self.dead)), f)
+        elif ang > math.pi / 2 - self.snap:
+            f = 0.0
+            t = math.copysign(min(1.0, (r - self.dead) / (1.0 - self.dead)), t)
+        e = self.expo
+        return (1 - e) * f + e * f ** 3, (1 - e) * t + e * t ** 3
+
+    def step(self, fwd: float, turn: float, click: bool = False, locked: bool = False) -> tuple[float, float]:
+        if click and not self._click:
+            self.mode = "slow" if self.mode == "fast" else "fast"
+        self._click = click
+        vmax, wmax = self.MODES[self.mode]
+        f, t = (0.0, 0.0) if locked else self.shape(fwd, turn)
+        tv, tw = vmax * f, wmax * t
+        self.v += float(np.clip(tv - self.v, -self.acc_v * self.dt, self.acc_v * self.dt))
+        self.w += float(np.clip(tw - self.w, -self.acc_w * self.dt, self.acc_w * self.dt))
+        return self.v, self.w
+
+    def status(self) -> str:
+        return f"BASE {self.mode.upper()} v {self.v:+.2f} m/s  w {self.w:+.2f} rad/s"
+
+
 class VRTeleopDevice:
     """WebXR reports (VRServer) -> clutch targets (VRTeleop) -> rby1_ik deltas towards the targets."""
 
@@ -135,14 +197,16 @@ class VRTeleopDevice:
         self.hold: dict[str, tuple[np.ndarray, np.ndarray] | None] = {"right": None, "left": None}
         self.torso_latch = 0.0
         self.last_step = None
+        self.base = BaseStick()
 
     def reset(self):
         self.teleop.reset()
         self.hold = {"right": None, "left": None}
+        self.base.reset()
 
     def step(self, tcp_b: dict[str, np.ndarray]) -> tuple[np.ndarray, list[str]]:
         """tcp_b: side -> [x, y, z, qx, qy, qz, qw] measured TCP in the base frame."""
-        from dxbench.teleop.vr.vr_teleop import STICK_X, STICK_Y
+        from dxbench.teleop.vr.vr_teleop import STICK_X, STICK_Y, THUMBSTICK
 
         cur = {s: (np.asarray(tcp_b[s][:3], float), quat_xyzw_to_mat(tcp_b[s][3:7])) for s in ("right", "left")}
         # the clutch anchors on the commanded target (held pose) so releasing / re-grabbing does not jump
@@ -168,8 +232,10 @@ class VRTeleopDevice:
         ax_r = (hands.get("right") or {}).get("axes") or [0.0] * 4
         ax_l = (hands.get("left") or {}).get("axes") or [0.0] * 4
         dead = lambda v: 0.0 if abs(v) < 0.2 else float(v)  # noqa: E731
-        a[15] = -BASE_V * dead(ax_r[STICK_Y])
-        a[16] = -BASE_W * dead(ax_r[STICK_X])
+        bt_r = (hands.get("right") or {}).get("buttons") or []
+        click = len(bt_r) > THUMBSTICK and bt_r[THUMBSTICK] > 0.5
+        locked = any(t is not None for t in st.targets.values())  # an arm clutch is held
+        a[15], a[16] = self.base.step(-float(ax_r[STICK_Y]), -float(ax_r[STICK_X]), click, locked)
         ly = -dead(ax_l[STICK_Y])
         a[14] = float(np.sign(ly)) if abs(ly) > 0.7 and abs(self.torso_latch) < 0.7 else 0.0
         self.torso_latch = ly

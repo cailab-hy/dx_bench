@@ -183,9 +183,9 @@ tools/make_states.sh data/scenes_train/bed02_easy_train_*.json        # settled 
 ```bash
 conda activate dx_arena
 adb reverse tcp:8012 tcp:8012                     # headset localhost:8012 -> PC (again after every reconnect)
-python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw/bed02_vr --physics_hz 360 \
+python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw/bed02_vr \
   --external_environment_class_path dxbench.tasks.bed_tasks:DxBed02Environment dx_bed02 \
-  --scene data/scenes_train/bed02_easy_train_10000.json
+  --scene data/scenes_train/bed02_easy_train_10000.json --physics_hz 360   # task flags go after the task name
 ```
 
 - In the headset browser open **http://localhost:8012**. The page lists its checks (WebXR, connection, video);
@@ -201,9 +201,10 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
 
 | Control | Action |
 |---|---|
-| Grip (hold) | That arm follows the controller (clutch). Release, move your hand, grip again: no jump |
+| Grip (hold) | That arm follows the controller (clutch). Release, move your hand, grip again: no jump. The base does not drive while a grip is held |
 | Trigger | Close the gripper (release: open) |
-| Right stick | Drive the base: up / down forward / back, left / right turn |
+| Right stick | Drive the base: up / down forward / back, left / right turn; diagonal = both. Gentle push = slow, full = top speed; within 15° of straight up / sideways it drives exactly straight / turns in place; starts and stops are ramped |
+| Right stick click | Slow / fast driving (slow 0.1 m/s, 0.3 rad/s for lining up at a garment or the basket; fast 0.3 m/s, 0.6 rad/s) |
 | Left stick up / down | Torso one posture step deeper / more upright (crouch to reach the desk or the floor) |
 | Left stick left / right | Camera panel size |
 | A | Start recording |
@@ -213,21 +214,24 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
 
 Notes:
 - With three cameras and cloth the simulation runs at about half real time (360 Hz): move slowly and let the
-  robot catch up.
+  robot catch up. The panel's status lines show recording, the torso posture and the base mode / speed.
+- To carry a garment, hold it with the trigger, release the grip, then drive (the base is locked while a grip is held).
 - If a controller loses tracking, that arm stops; the grippers keep their state, so a held garment is not dropped.
 - Grasping is the assisted pad grasp (`pad_grasp`): close the gripper with the fingertips touching the cloth, between
   the two pads.
 
 ### Check without a headset
 
-A scripted operator plays the controllers through the same WebSocket (recenter, start, grip, move the right hand
-10 cm forward / up and 5 cm sideways, trigger) and checks the arm follows:
+A scripted operator plays the controllers through the same WebSocket. `scripted_vr` checks the arm clutch (recenter,
+start, grip, move the right hand 10 cm forward / up and 5 cm sideways, trigger); `scripted_vr_drive` checks the
+sticks (forward 4 s, turn 2 s, slow mode 3 s, grip lock, one torso step):
 
 ```bash
 python dxbench/dxbench/teleop/run_teleop.py --teleop_device scripted_vr --record outputs/teleop_test --save_any \
   --max_episodes 1 --external_environment_class_path dxbench.tasks.bed_tasks:DxBed03Environment dx_bed03 \
   --scene benchmarks/dx_bed_v0/scenes/bed03_near_000.json
 # prints scripted={"tcp_offset": [...], "expected": [0.1, -0.05, 0.1], "err_m": ...}: err_m should be well under 1 cm
+# --teleop_device scripted_vr_drive prints forward_m ~1.2, turn_rad ~-1.1, slow_m ~0.3, locked_m 0, torso_steps 1
 ```
 
 ### After recording

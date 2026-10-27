@@ -27,7 +27,8 @@ $A dxbench/dxbench/teleop/run_teleop.py --teleop_device keyboard --record data/r
 
 # Quest 2/3 over USB: adb reverse tcp:8012 tcp:8012, then open http://localhost:8012 in the headset browser
 # grip = clutch, trigger = gripper, A start, B (hold) discard, X pause, Y (hold) recenter,
-# right stick = base, left stick up/down = torso preset
+# right stick = base (click: slow / fast; locked while a grip is held), left stick up/down = torso preset,
+# left stick left/right = camera panel size
 $A dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw/bed03_vr --realtime ...same env args...
 
 # headless VR end-to-end check (scripted operator through the real WebSocket)

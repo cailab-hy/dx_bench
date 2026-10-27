@@ -26,7 +26,8 @@ from dxbench.utils.arena_runtime import ArenaRuntime
 
 
 def _args(p):
-    p.add_argument("--teleop_device", choices=["keyboard", "vr", "scripted_vr"], default="keyboard")
+    p.add_argument("--teleop_device", choices=["keyboard", "vr", "scripted_vr", "scripted_vr_drive"], default="keyboard",
+                   help="scripted_vr / scripted_vr_drive: headless VR checks (arm clutch / base + torso sticks)")
     p.add_argument("--record", default="data/raw/teleop")
     p.add_argument("--vr_port", type=int, default=8012)
     p.add_argument("--save_any", action="store_true")
@@ -53,10 +54,10 @@ def main():
         sub = attach_carb_keyboard(dev)  # noqa: F841 (keep the subscription alive)
     else:
         dev = VRTeleopDevice(a.vr_port)
-        if a.teleop_device == "scripted_vr":
+        if a.teleop_device.startswith("scripted_vr"):
             from dxbench.teleop.scripted_vr import ScriptedVROperator
 
-            op = ScriptedVROperator(a.vr_port)
+            op = ScriptedVROperator(a.vr_port, "drive" if a.teleop_device == "scripted_vr_drive" else "arm")
             t0 = time.monotonic()
             while dev.server.status()["clients"] < 1 and time.monotonic() - t0 < 5:
                 time.sleep(0.01)
@@ -72,7 +73,7 @@ def main():
     dev.reset()
     rec, paused, saved, discarded, steps = None, False, [], 0, 0
     summary = {"device": a.teleop_device, "episodes": []}
-    tcp_log = []
+    tcp_log, base_log, torso_log = [], [], []
     while True:
         t_loop = time.monotonic()
         if op is not None:
@@ -119,12 +120,24 @@ def main():
         if rec is not None and not (bool(term[0]) or bool(trunc[0])):
             rec.post_step()  # not on the terminating step (already reset); finish() trims that frame
         tcp_log.append(obs["policy"]["tcp_right"][0, :3].cpu().numpy().tolist())
+        base_log.append(obs["policy"]["base_pose"][0].cpu().numpy().tolist())
+        try:
+            torso_log.append(int(U.action_manager.get_term("torso").preset_index[0]))
+        except (KeyError, AttributeError):
+            torso_log.append(-1)
         if streamer is not None and dev.server.status()["clients"]:
             cam = obs.get("camera_obs", {})
             names = {"head": "first_person", "left_wrist": "left_hand", "right_wrist": "right_hand"}
             imgs = {names[k]: cam[f"{k}_rgb"][0].cpu().numpy()[..., :3].astype(np.uint8) for k in names
                     if f"{k}_rgb" in cam}
-            streamer.submit(imgs, "REC" if rec else ("PAUSED" if paused else "IDLE"), "rec" if rec else "idle")
+            line1 = "REC" if rec else ("PAUSED" if paused else "IDLE")
+            try:  # driving / torso state for the operator (the sim runs slower than real time, so it looks off)
+                tt = U.action_manager.get_term("torso")
+                line1 += f"   TORSO {tt.PRESET_ORDER[int(tt.preset_index[0])]}"
+            except (KeyError, AttributeError, IndexError, ValueError):
+                pass
+            text = line1 + (f"\n{dev.base.status()}" if hasattr(dev, "base") else "")
+            streamer.submit(imgs, text, "rec" if rec else "idle")
         task = bed_tasks.CURRENT_TASK
         ended = bool(term[0]) or bool(trunc[0])
         if task is None:
@@ -165,7 +178,22 @@ def main():
     if op is not None:
         tl = np.asarray(tcp_log)
         g1, end = op.marks.get("grip1"), op.marks.get("end")
-        if g1 is not None and end is not None:
+        if op.script == "drive":
+            bl = np.asarray(base_log)
+            mk = {k: min(v, len(bl) - 1) for k, v in op.marks.items()}
+
+            def fwd(k0, k1):  # distance along the heading at k0
+                d = bl[mk[k1], :2] - bl[mk[k0], :2]
+                return float(d @ np.array([np.cos(bl[mk[k0], 2]), np.sin(bl[mk[k0], 2])]))
+            dyaw = float(np.angle(np.exp(1j * (bl[mk["slow0"], 2] - bl[mk["turn0"], 2]))))
+            summary["scripted"] = {
+                "forward_m": fwd("drive0", "turn0"), "turn_rad": dyaw,
+                "turn_drift_m": float(np.linalg.norm(bl[mk["slow0"], :2] - bl[mk["turn0"], :2])),
+                "slow_m": fwd("slow0", "lock0"),
+                "locked_m": float(np.linalg.norm(bl[mk["torso0"], :2] - bl[mk["lock0"], :2])),
+                "torso_steps": int(torso_log[mk["end"]] - torso_log[mk["torso0"]]),
+                "expected": op.expected_drive, "marks": op.marks}
+        elif g1 is not None and end is not None:
             moved = tl[min(end, len(tl) - 1)] - tl[g1]
             summary["scripted"] = {"tcp_offset": moved.tolist(), "expected": op.expected_offset.tolist(),
                                    "err_m": float(np.linalg.norm(moved - op.expected_offset)), "marks": op.marks}
