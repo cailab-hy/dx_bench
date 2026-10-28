@@ -98,7 +98,7 @@ def main():
                 aim_observer(U, task_obj, a.observer_eye, getattr(a, "observer_target", None))
             frames["observer"].append(U.scene["observer"].data.output["rgb"].torch[0, ..., :3].cpu().numpy().astype(np.uint8))
         if task_obj is not None and step % 5 == 0:
-            last_eval = task_obj.evaluate(U)[0]
+            last_eval = task_obj.evaluate_cached(U)[0]
             if not (bool(term[0]) or bool(trunc[0])):  # garments every 5 steps (not after the reset) -> final_state.npz
                 snap = {n: (U.scene[n].data.nodal_pos_w.torch[0] - U.scene.env_origins[0]).cpu().numpy()
                         for n in getattr(task_obj, "cloth_names", [])}

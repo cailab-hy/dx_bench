@@ -121,6 +121,30 @@ def cloth_solver_overrides(env, env_ids):
     print(f"[cloth_overrides] {n} deformable(s): " + ", ".join(f"{k}={os.environ[k]}" for k in todo), flush=True)
 
 
+def rigid_solver_overrides(env, env_ids):
+    """Prestartup, experiments only (2026-10-28): DX_RIGID_ITERS = solver position iterations of every dynamic rigid
+    body that is not part of the robot (basket, ...). Prints the bodies and their previous values."""
+    import os
+
+    import isaaclab.sim as sim_utils
+    from pxr import PhysxSchema, Usd, UsdPhysics
+
+    it = os.environ.get("DX_RIGID_ITERS")
+    stage = sim_utils.get_current_stage()
+    seen = []
+    for p in Usd.PrimRange(stage.GetPrimAtPath("/World")):
+        if not p.HasAPI(UsdPhysics.RigidBodyAPI) or "/Robot" in str(p.GetPath()):
+            continue
+        en = UsdPhysics.RigidBodyAPI(p).GetRigidBodyEnabledAttr().Get()
+        api = PhysxSchema.PhysxRigidBodyAPI(p) if p.HasAPI(PhysxSchema.PhysxRigidBodyAPI) else None
+        old = api.GetSolverPositionIterationCountAttr().Get() if api else None
+        if it and en is not False:
+            api = api or PhysxSchema.PhysxRigidBodyAPI.Apply(p)
+            api.CreateSolverPositionIterationCountAttr().Set(int(it))
+        seen.append(f"{p.GetPath()} enabled={en} iters={old}")
+    print(f"[rigid_overrides] DX_RIGID_ITERS={it}: " + "; ".join(s for s in seen if "enabled=False" not in s), flush=True)
+
+
 def load_cloth_states(env, env_ids, states: dict):
     """Reset: write saved (settled) nodal positions for each garment, zero velocities. states: {name: npz path}."""
     if env_ids is None:
@@ -147,6 +171,8 @@ class BedTaskBase(TaskBase):
         self.cloth_names = [o.name for o in spec.objects if o.kind in CLOTH_KINDS]
         self.layout = load_layout()
         self.last_eval: list[dict] = []
+        self._eval_key = None
+        self._eval_cache: list[dict] = []
 
     # --- Arena interface
     def get_scene_cfg(self):
@@ -167,6 +193,7 @@ class BedTaskBase(TaskBase):
                                     params={"lighting": dict(self.spec.lighting)})
             floor_plane = EventTermCfg(func=replace_care_room_floor, mode="prestartup")
             cloth_overrides = EventTermCfg(func=cloth_solver_overrides, mode="prestartup")
+            rigid_overrides = EventTermCfg(func=rigid_solver_overrides, mode="prestartup")
             load_cloth_states = EventTermCfg(func=load_cloth_states, mode="reset", params={"states": states})
 
         return _Events()
@@ -200,12 +227,21 @@ class BedTaskBase(TaskBase):
     def evaluate(self, env) -> list[dict]:
         raise NotImplementedError
 
+    def evaluate_cached(self, env) -> list[dict]:
+        """evaluate() once per env state: the success predicate, the failure term and the teleop loop asked for the
+        same verdict three times per control step (2026-10-28). Key: physics step count + episode lengths (a reset
+        within the step sets them to 0)."""
+        key = (env._sim_step_counter, tuple(env.episode_length_buf.tolist()))
+        if key != self._eval_key:
+            self._eval_cache, self._eval_key = self.evaluate(env), key
+        return self._eval_cache
+
     def _success_pred(self, env) -> torch.Tensor:
-        self.last_eval = self.evaluate(env)
+        self.last_eval = self.evaluate_cached(env)
         return torch.tensor([r["success"] for r in self.last_eval], device=env.device)
 
     def _failure_term(self, env) -> torch.Tensor:
-        res = self.last_eval or self.evaluate(env)
+        res = self.last_eval or self.evaluate_cached(env)
         return torch.tensor([r["failure"] is not None for r in res], device=env.device)
 
     def subtask_labels(self) -> list[str]:

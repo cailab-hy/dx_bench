@@ -153,7 +153,7 @@ def main():
             tb = terminated_by(U)
             ev = {"success": tb == "success", "score": 1.0 if tb == "success" else 0.0}
         else:
-            ev = task.evaluate(U)[0]
+            ev = task.evaluate_cached(U)[0]
         if rec is not None and (ev["success"] or "save" in events or ended):
             path = rec.finish(success=bool(ev["success"]), score=float(ev["score"]), save_only_success=not a.save_any)
             summary["episodes"].append({"saved": str(path) if path else None, "task_success": bool(ev["success"]),

@@ -41,6 +41,9 @@ class ArenaRuntime:
         if getattr(builder, "cfg", None) is not None and getattr(builder.cfg, "recorder_dataset_filename", "x") is None:
             builder.cfg.recorder_dataset_filename = f"arena_dataset_pid{os.getpid()}"
         self.env = builder.make_registered(render_mode=render_mode) if render_mode else builder.make_registered()
+        from dxbench.utils.obs_cache import dedupe_observations
+
+        dedupe_observations(self.env)  # one observation pass per control step instead of two
         return self.env
 
     def close(self):
