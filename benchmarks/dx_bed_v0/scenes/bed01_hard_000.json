@@ -5,7 +5,7 @@
  "seed": 0,
  "robot": {
   "xy": [
-   0.339925940225018,
+   0.739925940225018,
    20.110870868849638
   ],
   "yaw": 0.07622131983445948,
@@ -17,23 +17,23 @@
    "name": "duvet",
    "kind": "duvet",
    "xyz": [
-    1.740999990463257,
-    19.9685,
-    0.5800000014901162
+    1.9809999999999999,
+    19.888499997615813,
+    0.5500000014901162
    ],
    "yaw": 1.5707963267948966,
-   "variant": null,
+   "variant": "bundle_foot",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed01_hard_000_duvet.npz"
   },
   {
    "name": "pillow",
    "kind": "pillow",
    "xyz": [
-    1.0183923279275477,
-    20.85454265486304,
-    0.08
+    1.9946961687321454,
+    20.658499997615813,
+    0.6100000014901161
    ],
-   "yaw": -0.2754158856382832,
+   "yaw": -0.04604265724722594,
    "variant": null,
    "cloth_state": null
   }
@@ -49,18 +49,16 @@
    "\uce68\ub300 \uc815\ub9ac\ud574 \uc918",
    "Please make the bed.",
    "Tidy up the bed.",
-   "Straighten the duvet and put the pillow back.",
+   "Straighten the duvet.",
    "Can you make the bed for me?",
-   "Spread the blanket over the bed and fix the pillow.",
-   "\uc774\ubd88 \ud3b4\uace0 \ubca0\uac1c \uc815\ub9ac\ud574 \uc918"
+   "Spread the blanket over the bed.",
+   "\uc774\ubd88 \ud3b4 \uc918"
   ],
   "subtasks": [
-   "pick up the pillow",
+   "grasp the duvet edge",
+   "pull the duvet",
    "spread the duvet",
-   "grasp the top corners",
-   "pull toward the headboard",
-   "smooth the duvet",
-   "place the pillow"
+   "straighten the duvet"
   ]
  }
 }

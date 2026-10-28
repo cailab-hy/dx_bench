@@ -17,7 +17,7 @@
    "name": "duvet",
    "kind": "duvet",
    "xyz": [
-    1.9809999999999999,
+    2.6006183365963333,
     19.888499997615813,
     0.5500000014901162
    ],
@@ -29,11 +29,11 @@
    "name": "pillow",
    "kind": "pillow",
    "xyz": [
-    1.946394455321112,
+    2.0297276843337926,
     20.658499997615813,
     0.6100000014901161
    ],
-   "yaw": 0.2923661060027553,
+   "yaw": -0.036257832302896656,
    "variant": null,
    "cloth_state": null
   }
@@ -49,18 +49,16 @@
    "\uce68\ub300 \uc815\ub9ac\ud574 \uc918",
    "Please make the bed.",
    "Tidy up the bed.",
-   "Straighten the duvet and put the pillow back.",
+   "Straighten the duvet.",
    "Can you make the bed for me?",
-   "Spread the blanket over the bed and fix the pillow.",
-   "\uc774\ubd88 \ud3b4\uace0 \ubca0\uac1c \uc815\ub9ac\ud574 \uc918"
+   "Spread the blanket over the bed.",
+   "\uc774\ubd88 \ud3b4 \uc918"
   ],
   "subtasks": [
-   "pick up the pillow",
+   "grasp the duvet edge",
+   "pull the duvet",
    "spread the duvet",
-   "grasp the top corners",
-   "pull toward the headboard",
-   "smooth the duvet",
-   "place the pillow"
+   "straighten the duvet"
   ]
  }
 }

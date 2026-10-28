@@ -130,39 +130,40 @@ def test_bed02_garments_score_flat_start_and_stack():
     assert r["success"] and r["score"] == pytest.approx(1.0), r
 
 
-# ------------------------------------------------------------------ BED-01 (real 1.5 x 1.4 m duvet, D-41)
+# ------------------------------------------------------------------ BED-01 (D-41 target area, D-55 rubric)
 BED = P.BedSpec(mattress_min=(1.49, 19.03), mattress_max=(2.47, 20.91), mattress_top_z=0.53,
                 headboard_center=(1.98, 20.66), cover_head_gap=0.45)
 SPREAD = sheet(1.98, 19.76, 0.55, 1.5, 1.4, 40)  # the DX blanket's made-bed footprint (y 19.06 .. 20.46)
 
 
 def test_bed01_made_bed_success():
-    r = P.evaluate_bed01(SPREAD, (1.98, 20.62, 0.6), (3.0, 18.0, 0.0), BED)
+    r = P.evaluate_bed01(SPREAD, BED)
     assert r["success"] and r["score"] == pytest.approx(1.0), r
 
 
 def test_bed01_whole_mattress_target_was_impossible():
     old = P.BedSpec(**{**BED.__dict__, "cover_head_gap": 0.0})
-    assert P.evaluate_bed01(SPREAD, (1.98, 20.62, 0.6), (3.0, 18.0, 0.0), old)["coverage"] < 0.9
+    assert P.evaluate_bed01(SPREAD, old)["coverage"] < 0.9
 
 
-def test_bed01_untouched_pillow_scores_nothing():
-    duvet = sheet(1.98, 19.2, 0.6, 1.0, 0.4, 30)  # folded at the foot, pillow never moved
-    r = P.evaluate_bed01(duvet, (1.98, 20.62, 0.6), (1.98, 20.62, 0.6), BED, pillow_was_moved=False)
-    assert not r["stages"]["duvet_spread"] and not r["stages"]["pillow_placed"] and r["score"] == 0.0
+def test_bed01_folded_at_the_foot_scores_nothing():
+    duvet = sheet(1.98, 19.2, 0.6, 1.0, 0.4, 30)
+    r = P.evaluate_bed01(duvet, BED)
+    assert not r["stages"]["duvet_covers"] and not r["success"] and r["score"] == 0.0
 
 
-def test_bed01_uneven_overhang():
-    duvet = sheet(1.98 + 0.25, 19.76, 0.55, 1.5, 1.4, 40)  # shifted 25 cm to one side
-    r = P.evaluate_bed01(duvet, (1.98, 20.62, 0.6), (3.0, 18.0, 0.0), BED)
-    assert not r["stages"]["duvet_even"]
+def test_bed01_covered_but_uneven_succeeds_without_the_neat_half():
+    duvet = sheet(1.98 + 0.25, 19.76, 0.55, 1.5, 1.4, 40)  # shifted 25 cm to one side: covers 80-90 %, uneven
+    r = P.evaluate_bed01(duvet, BED)
+    assert r["stages"]["duvet_covers"] and not r["stages"]["duvet_neat"], r
+    assert r["success"] and r["score"] == pytest.approx(0.5)
 
 
 def test_bed01_duvet_on_floor_fails_only_when_much_of_it_is():
     corner = np.r_[SPREAD, sheet(0.9, 19.9, 0.01, 0.3, 0.3, 5)]  # a corner brushing the floor: no failure
-    assert P.evaluate_bed01(corner, (1.98, 20.62, 0.6), (3.0, 18.0, 0.0), BED)["failure"] is None
+    assert P.evaluate_bed01(corner, BED)["failure"] is None
     half = np.r_[SPREAD[:800], sheet(0.9, 19.9, 0.01, 0.5, 1.4, 30)]
-    r = P.evaluate_bed01(half, (1.98, 20.62, 0.6), (3.0, 18.0, 0.0), BED)
+    r = P.evaluate_bed01(half, BED)
     assert r["failure"] == "duvet_on_floor" and r["score"] == 0.0
 
 

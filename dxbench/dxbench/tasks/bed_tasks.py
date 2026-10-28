@@ -353,22 +353,9 @@ class Bed01MakeBedTask(BedTaskBase):
                              long_axis=1 if (bed[1][1] - bed[0][1]) > (bed[1][0] - bed[0][0]) else 0,
                              # D-41: cover the mattress up to the DX blanket's head edge (pillow zone left free)
                              cover_head_gap=float(m[1][1]) - float(self.layout["parts_aabb"]["Bed/Blanket"][1][1]))
-        self._pillow0 = None
-        self._moved = None
 
     def evaluate(self, env) -> list[dict]:
-        out = []
-        n = env.num_envs
-        if self._pillow0 is None or env.episode_length_buf.max() <= 1:
-            self._pillow0 = [self.nodes(env, "pillow", e).mean(axis=0) for e in range(n)]
-            self._moved = [False] * n
-        for e in range(n):
-            pc = self.nodes(env, "pillow", e).mean(axis=0)
-            if np.linalg.norm(pc[:2] - self._pillow0[e][:2]) > 0.3:
-                self._moved[e] = True
-            out.append(P.evaluate_bed01(self.nodes(env, "duvet", e), pc, self._pillow0[e], self.bed,
-                                        pillow_was_moved=self._moved[e]))
-        return out
+        return [P.evaluate_bed01(self.nodes(env, "duvet", e), self.bed) for e in range(env.num_envs)]
 
 
 TASKS = {"BED-01": (Bed01MakeBedTask, 240.0), "BED-02": (Bed02FoldTask, 240.0), "BED-03": (Bed03LaundryTask, 180.0)}

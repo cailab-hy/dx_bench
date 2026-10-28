@@ -203,24 +203,22 @@ def gen_bed01(diff: str, seed: int, split: str) -> SceneSpec:
     top = float(hi[2])
     cx, cy = 0.5 * (lo[0] + hi[0]), 0.5 * (lo[1] + hi[1])
     head_y = float(hi[1]) - 0.25
-    if diff == "easy":     # duvet folded at the foot (state file carries the fold at the mattress middle). The real
-        # 2.0 x 1.55 m duvet (2026-10-22) spawns flat with its head edge 2 cm short of the mattress end, its foot edge
-        # hanging 14 cm over the foot end; folded, it covers the foot half double and drapes over the foot end.
+    # D-55 levels after the pi0.5 "Make the Bed" rubric (pillow not scored; it stays at the head end). The 2.0 x 1.55 m
+    # duvet made up: head edge 2 cm short of the mattress end, 28 cm over each long side. Start coverage <= ~0.7.
+    if diff == "easy":     # slid 60-66 cm towards the far side: pull its near edge back (no driving). At 50-60 cm
+        # 0.75-0.77 stayed covered; 20-25 % of the nodes lie on the far floor (failure at 30 %)
+        duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(0.60, 0.66)), float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2,
+                                           top + 0.02], math.pi / 2)
+    elif diff == "medium":  # head part folded back over the foot half (make_cloth_states folds it)
         duvet = ObjSpec("duvet", "duvet", [cx, float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2, top + 0.02], math.pi / 2)
-        pillow_xyz = [cx + float(rng.uniform(-0.1, 0.1)), head_y, top + 0.08]
-    elif diff == "medium":  # crumpled on the bed
-        duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(-0.1, 0.1)), cy + float(rng.uniform(-0.2, 0.2)),
-                                           top + 0.15], float(rng.uniform(-0.4, 0.4)) + math.pi / 2)
-        pillow_xyz = [cx + float(rng.uniform(-0.15, 0.15)), head_y - float(rng.uniform(0.0, 0.3)), top + 0.08]
-    else:                   # half of the duvet off the open long side, pillow on the floor at the head end
-        # (2026-10-22: the pillow used to land 15 cm in front of the robot base origin, i.e. under the robot, and the
-        # hanging duvet rested on the robot; the robot now starts 1.3 m from the mattress, the pillow lies by the head)
-        # centre 25 cm inside the open mattress edge: after the crumple (shrink 0.55-0.8) of the 1.55 m wide duvet,
-        # 20-40 cm hang over the side; 5 cm outside the edge the whole (1.4 m) duvet slid onto the floor
-        duvet = ObjSpec("duvet", "duvet", [float(lo[0]) + 0.25, cy, top + 0.05], math.pi / 2)
-        pillow_xyz = [float(lo[0]) - 0.5 + float(rng.uniform(-0.1, 0.1)), float(hi[1]) - float(rng.uniform(0.0, 0.2)), 0.08]
-    objs = [duvet, ObjSpec("pillow", "pillow", pillow_xyz, float(rng.uniform(-0.3, 0.3)))]
-    robot = {"xy": [float(lo[0]) - (1.3 if diff == "hard" else 0.9), cy], "yaw": 0.0,  # facing the open long side (+x)
+    else:                   # folded, then gathered into a bundle on the foot half or on the open long edge
+        duvet = ObjSpec("duvet", "duvet", [cx, float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2, top + 0.02], math.pi / 2,
+                        variant="bundle_foot" if seed % 2 == 0 else "bundle_edge")
+    pillow_xyz = [cx + float(rng.uniform(-0.05, 0.05)), head_y, top + 0.08]
+    objs = [duvet, ObjSpec("pillow", "pillow", pillow_xyz, float(rng.uniform(-0.1, 0.1)))]
+    # facing the open long side (+x), 0.9 m from it on every level (D-55: at 1.3 m the hard start robot hit the pillar
+    # by the window and tipped over)
+    robot = {"xy": [float(lo[0]) - 0.9, cy], "yaw": 0.0,
              "torso": "upright", "head_pitch": HEAD_PITCH_BED}
     return SceneSpec(scene_id=f"bed01_{diff}_{seed:03d}" if split == "eval" else f"bed01_{diff}_train_{seed}",
                      task="BED-01", difficulty=diff, seed=seed, robot=robot, objects=objs, language=language("BED-01"))

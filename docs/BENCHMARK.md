@@ -7,7 +7,7 @@ IsaacLab-Arena 0.3.1, PhysX). Source of the task definitions: "DX Hub 실내 서
 
 | ID | Instruction | Success | Partial score |
 |---|---|---|---|
-| BED-01 | "Make the bed." / "침대 정리해 줘" | The duvet covers ≥ 90 % of the mattress top. The left/right overhang differs by ≤ 15 cm. The pillow is within 20 cm of the headboard centre. The pillow was moved | pillow cleared 0.1, duvet spread 0.5, even 0.2, pillow placed 0.2. **Fail** if the duvet touches the floor |
+| BED-01 | "Make the bed." / "침대 정리해 줘" | The duvet covers ≥ 80 % of the mattress top except the pillow zone (D-55, after the π0.5 "Make the Bed" rubric; the pillow stays at the head and is not scored) | covers 0.5, neat (≥ 90 % covered and left/right overhang difference ≤ 15 cm) 0.5. **Fail** if ≥ 30 % of the duvet lies on the floor |
 | BED-02 | "Fold the clothes." / "옷 개어 줘" | Garment flattened, 3 folds done, fold bbox ≤ 35 × 30 cm (+2 cm), on the stack spot (desk, 40 cm in from the front edge straight behind the garments, radius 12 cm; D-32) | flattened 0.3, each fold 0.15, on the stack 0.25 |
 | BED-03 | "Put the clothes in the laundry basket." / "방에 있는 옷 정리해 줘" | Every loose garment is inside the basket. No distractor (doll, book) and no folded towel is in it | fraction of garments in the basket − 0.2 per wrong item. **Fail** if the basket tips over (> 45°) |
 
@@ -18,7 +18,7 @@ The predicates are pure numpy and are tested in `dxbench/tests/test_predicates.p
 
 | Task | easy | medium | hard |
 |---|---|---|---|
-| BED-01 | Duvet folded at the foot of the bed; pillow at the head | Duvet crumpled on the bed; pillow displaced | Half the duvet on the floor; pillow on the floor |
+| BED-01 | Duvet slid 60-66 cm towards the far side (start coverage 0.66-0.71) | Head half folded back over the foot half (0.55-0.59) | Folded, then bundled on the foot half or on the open long edge (0.31-0.58) |
 | BED-02 | Small towel flat on the desk | One T-shirt crumpled on the desk | Pile of 3 shirts and 2 towels |
 | BED-03 | Basket + 2 garments on the open floor, each within 2.0 m of the basket | 3 garments on the floor + 1 shirt on the bed | 4 on the floor + shirt and towel on the bed + distractors (doll, book, folded towel) |
 

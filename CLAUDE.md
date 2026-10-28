@@ -80,4 +80,7 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
   16+1회 풀린다. 그래서 천·베개·로봇 외 강체는 모두 `objects.SOLVER_ITERS` = 4(D-54, prestartup `bed_tasks.solver_iterations`가 장면의 모든
   변형체·강체에 씀). 새 물체를 넣을 때 16 같은 큰 값을 주면 전체가 느려진다. 실험용 덮어쓰기: `DX_CLOTH_ITERS`/`DX_RIGID_ITERS`/
   `DX_CLOTH_SELFCOL`/`DX_CLOTH_PAIRFREQ`(기본 실행은 설정 안 함).
+- **RB-Y1 팔 도달(실제 env, 그리퍼 아래 방향, `policies/reach_diag.py`, 2026-10-28)**: 침대(z 0.56, 베이스 앞 프레임 6 cm)에서 deep은
+  베이스 앞 0.79-0.84 m만 됨(더 가까우면 arm_3·arm_5 관절 한계, 더 멀면 팔·몸통이 침대에 닿음), crouch는 ~0.77 m까지. 책상 높이(z 0.78) lean은
+  옆 0.36 m에서 앞 0.72 m가 끝(그리퍼 25° 기울이면 더 나빠짐). `reach_check.py`(기구학만)는 이보다 넓게 나온다.
 - 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.

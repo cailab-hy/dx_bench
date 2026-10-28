@@ -276,39 +276,38 @@ class BedSpec:
     mattress_min: tuple  # world xy of the mattress top rectangle
     mattress_max: tuple
     mattress_top_z: float
-    headboard_center: tuple  # world xy where the pillow should sit (headboard side, centred)
+    headboard_center: tuple  # world xy of the pillow at the head (not scored since D-55)
     long_axis: int = 1       # 0: x, 1: y — the bed length axis (DX bed: along y)
     floor_z: float = 0.0
     cover_head_gap: float = 0.0  # D-41: the duvet covers the mattress up to this far from the head end (pillow zone)
     floor_frac: float = 0.3      # D-41: failure when this fraction of the duvet lies on the floor
 
 
-def evaluate_bed01(duvet: np.ndarray, pillow_pos, pillow_initial_pos, spec: BedSpec,
-                   pillow_was_moved: bool | None = None) -> dict:
-    """Weights: pillow cleared 0.1, duvet covers >= 90 % of the mattress top except the pillow zone 0.5, left/right
-    overhang difference <= 15 cm 0.2, pillow back within 20 cm of the headboard centre after having been moved 0.2.
-    Failure: >= floor_frac of the duvet on the floor. D-41: the 1.5 x 1.4 m duvet covers at most 79 % of the whole
-    1.88 m mattress (the DX blanket stops 0.45 m short of the head), the pillow scored 'placed' before it was ever
-    touched, and one duvet corner brushing the floor ended the episode."""
+BED01_COVER = 0.80  # D-55: success = the duvet covers >= 80 % of the target area (pi0.5 "covers the sheets")
+BED01_NEAT_COVER = 0.90  # neat: >= 90 % covered and even left / right overhang (pi0.5 "straightened very neatly")
+BED01_EVEN_TOL = 0.15
+
+
+def evaluate_bed01(duvet: np.ndarray, spec: BedSpec) -> dict:
+    """D-55 (2026-10-28, after the pi0.5 'Make the Bed' rubric, pillows left out): covers (coverage of the mattress
+    top except the pillow zone >= BED01_COVER) 0.5 and success; neat (coverage >= BED01_NEAT_COVER and left / right
+    overhang difference <= BED01_EVEN_TOL) +0.5. The pillow stays at the head and is not scored (the assisted grasp
+    does not take the 13 cm volume pillow). Failure: >= floor_frac of the duvet on the floor. D-41: the target area
+    stops at the DX blanket's head edge (pillow zone)."""
     hi = list(spec.mattress_max)
     hi[spec.long_axis] -= spec.cover_head_gap
     cov = grid_coverage(duvet, spec.mattress_min, tuple(hi), spec.mattress_top_z - 0.03, spec.mattress_top_z + 0.25)
-    covered = cov >= 0.9
+    covers = cov >= BED01_COVER
     side = 1 - spec.long_axis  # the axis across the bed
     lo, hi = spec.mattress_min[side], spec.mattress_max[side]
     over_lo = max(0.0, lo - float(duvet[:, side].min()))
     over_hi = max(0.0, float(duvet[:, side].max()) - hi)
-    even = abs(over_lo - over_hi) <= 0.15
-    moved = bool(pillow_was_moved) if pillow_was_moved is not None else \
-        bool(np.linalg.norm(np.asarray(pillow_pos)[:2] - np.asarray(pillow_initial_pos)[:2]) > 0.3)
-    placed = bool(moved and np.linalg.norm(np.asarray(pillow_pos)[:2] - np.asarray(spec.headboard_center)) <= 0.20
-                  and pillow_pos[2] >= spec.mattress_top_z - 0.02)
+    neat = bool(cov >= BED01_NEAT_COVER and abs(over_lo - over_hi) <= BED01_EVEN_TOL)
     touching_floor = bool((duvet[:, 2] <= spec.floor_z + 0.03).mean() >= spec.floor_frac)
-    score = 0.1 * moved + 0.5 * covered + 0.2 * (even and covered) + 0.2 * placed
-    return {"stages": {"pillow_cleared": moved, "duvet_spread": covered, "duvet_even": bool(even and covered),
-                       "pillow_placed": placed}, "coverage": cov, "overhang": (over_lo, over_hi),
-            "score": 0.0 if touching_floor else float(score),
-            "success": bool(covered and even and placed and moved and not touching_floor),
+    score = 0.5 * covers + 0.5 * neat
+    return {"stages": {"duvet_covers": bool(covers), "duvet_neat": neat}, "coverage": cov,
+            "overhang": (over_lo, over_hi), "score": 0.0 if touching_floor else float(score),
+            "success": bool(covers and not touching_floor),
             "failure": "duvet_on_floor" if touching_floor else None}
 
 
@@ -322,10 +321,9 @@ class TaskText:
 TEXT = {
     # high[0] is the canonical instruction (evaluation easy); the rest are paraphrases drawn by scene_gen.diversify
     "BED-01": TaskText(high=["Make the bed.", "침대 정리해 줘", "Please make the bed.", "Tidy up the bed.",
-                             "Straighten the duvet and put the pillow back.", "Can you make the bed for me?",
-                             "Spread the blanket over the bed and fix the pillow.", "이불 펴고 베개 정리해 줘"],
-                       subtasks=["pick up the pillow", "spread the duvet", "grasp the top corners",
-                                 "pull toward the headboard", "smooth the duvet", "place the pillow"]),
+                             "Straighten the duvet.", "Can you make the bed for me?",
+                             "Spread the blanket over the bed.", "이불 펴 줘"],
+                       subtasks=["grasp the duvet edge", "pull the duvet", "spread the duvet", "straighten the duvet"]),
     "BED-02": TaskText(high=["Fold the clothes.", "옷 개어 줘", "Please fold the laundry on the desk.",
                              "Fold the clothes on the table.", "Can you fold these clothes?",
                              "Fold the towels and shirts and stack them.", "책상 위 빨래 개 줘"],

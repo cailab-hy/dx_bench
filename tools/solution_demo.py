@@ -6,8 +6,9 @@ robot stands still. The observer camera is recorded at 15 Hz with the step name 
     ~/miniforge3/envs/dx_arena/bin/python tools/solution_demo.py --demo_scene benchmarks/dx_bed_v0/scenes/bed01_easy_000.json \
         --demo_out outputs/solution/bed01_easy_000
 
-BED-01 easy : pillow off the bed -> the folded half of the duvet back over the head side -> pillow back on the head end
-BED-01 medium / hard : pillow off -> the whole duvet carried back to its spread shape -> pillow back
+BED-01 (D-55, duvet only) : grasps restricted to what the robot reaches from the open side / foot end (hard: also the
+far side), at most two hands, each carrying a 5 cm patch of the top layer towards the made-bed position; greedy,
+largest error first
 BED-02 easy (towel) / medium (T-shirt) : (crumpled: flatten) -> fold left -> fold right -> fold in half -> onto the stack
 Writes <out>/observer.mp4 (annotated) and <out>/result.json (predicates after every step).
 """
@@ -26,8 +27,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 from dxbench.utils.arena_runtime import ArenaRuntime  # noqa: E402
 
 FONT = "/usr/share/fonts/opentype/noto/NotoSansCJK-Medium.ttc"  # face 1 = Korean
-STAGE_KO = {"pillow_cleared": "베개 치움", "duvet_spread": "이불 펴짐", "duvet_even": "좌우 고름",
-            "pillow_placed": "베개 제자리", "flatten": "펴기", "fold_left": "왼쪽 접기", "fold_right": "오른쪽 접기",
+STAGE_KO = {"duvet_covers": "이불 덮음 (80 %)", "duvet_neat": "반듯함 (90 %, 좌우 고름)", "flatten": "펴기", "fold_left": "왼쪽 접기", "fold_right": "오른쪽 접기",
             "fold_half": "반 접기", "on_stack": "쌓기"}
 
 
@@ -233,43 +233,84 @@ def main():
         print(f"[solution] {label}: score {r['score']:.2f} {r['stages']}", flush=True)
 
     if spec.task == "BED-01":
+        # D-55: duvet only (the pillow stays at the head). Hands may only grab where the RB-Y1 can reach from the floor
+        # around the bed: within REACH of the open long side or of the foot end (and of the far long side on hard,
+        # after walking round the foot), at most two hands at once >= 0.35 m apart, each pinching a 5 cm patch and
+        # carrying it rigidly (all layers it holds) towards the made-bed position of the grabbed point.
         m = task.bed
         lo, hi = m.mattress_min, m.mattress_max
         top = m.mattress_top_z
-        pil = nodes("pillow")
-        pc = pil.mean(0)
-        park = torch.tensor([hi[0] + 0.55, 0.5 * (lo[1] + hi[1]) + 0.4, 0.07], device=dev)
-        caption["t"] = "1. 베개를 침대 밖으로 치운다"
-        fn, secs = carry(pil.clone(), pil + (park - pc), 3.0, arc=0.35)
-        run(secs, [("pillow", torch.arange(len(pil), device=dev), fn)])
-        run(1.0)
-        step_done("pillow off")
-        duv = nodes("duvet")
+        REACH = 0.5
+        far_ok = spec.difficulty == "hard"
         rest = U.scene["duvet"].data.default_nodal_state_w.torch[0, :, :3] - org
-        if spec.difficulty == "easy":
-            caption["t"] = "2. 접힌 이불을 머리 쪽으로 펼친다"
-            ids = torch.nonzero(rest[:, 1] > rest[:, 1].max() - 0.03).flatten()  # head edge (folded over to the foot)
-            tgt = rest[ids].clone()
-            tgt[:, 2] = top + 0.02
-            fn, secs = carry(duv[ids].clone(), tgt, 4.5, arc=0.45, hold=0.6)
-            run(secs, [("duvet", ids, fn)])
-        else:
-            caption["t"] = "2. 뭉친 이불을 침대 위에 펼친다"
-            tgt = rest.clone()
-            tgt[:, 2] = torch.clamp(tgt[:, 2], min=top + 0.02)
-            allid = torch.arange(len(duv), device=dev)
-            fn, secs = carry(duv.clone(), tgt, 5.0, arc=0.35, hold=0.6)
-            run(secs, [("duvet", allid, fn)])
+        made = rest.clone()
+        made[:, 0] += 0.5 * (lo[0] + hi[0]) - float(rest[:, 0].mean())  # easy spawns shifted: centre it
+        made[:, 1] += (hi[1] - 0.02) - float(rest[:, 1].max())
+        on_bed = (made[:, 0] >= lo[0]) & (made[:, 0] <= hi[0])
+        made[:, 2] = torch.where(on_bed, torch.full_like(made[:, 2], top + 0.03), torch.full_like(made[:, 2], top))
+
+        def reach(p):
+            ok = (p[..., 0] <= lo[0] + REACH) | (p[..., 1] <= lo[1] + REACH)
+            if far_ok:
+                ok |= p[..., 0] >= hi[0] - REACH
+            return ok
+
+        def top_layer(cur):
+            """Nodes on the visible top surface: none of the duvet lies above them within 3 cm (a hand reaches only
+            those; under a fold or in a bundle the layers lie ~5 mm apart)."""
+            dxy = torch.cdist(cur[:, :2], cur[:, :2])
+            above = (dxy < 0.03) & (cur[None, :, 2] > cur[:, None, 2] + 0.004)
+            return ~above.any(dim=1)
+
+        def grasp_pins(picks, secs, lift=0.15):
+            pins = []
+            for k in picks:
+                cur = nodes("duvet")
+                # one layer only: a 5 cm patch within 3 mm of the grabbed node's height (taking every layer of a fold
+                # slid the whole fold instead of opening it, 2026-10-28)
+                ids = torch.nonzero(((cur[:, :2] - cur[k, :2]).norm(dim=-1) < 0.05)
+                                    & ((cur[:, 2] - cur[k, 2]).abs() < 0.003)).flatten()
+                d = made[k] - cur[k]
+                p0 = cur[ids].clone()
+                n = int(secs / dt)
+                hold_n = int((secs + 0.4) / dt)
+                up = torch.tensor([0.0, 0.0, 1.0], device=dev)
+
+                def fn(kk, p0=p0, d=d, n=n, hold_n=hold_n):
+                    if kk >= hold_n:
+                        return None
+                    s_ = smooth((kk + 1) / n)
+                    return p0 + d * s_ + up * (lift * math.sin(math.pi * s_))
+                pins.append(("duvet", ids, fn))
+            return pins
+
+        res["grasps"] = []
+        max_grasps = {"easy": 4, "medium": 8}.get(spec.difficulty, 12)
+        for g in range(max_grasps):
+            r = evaluate()
+            cur = nodes("duvet")
+            err = (cur[:, :2] - made[:, :2]).norm(dim=-1)
+            cand = reach(cur) & reach(made) & (err > 0.05) & top_layer(cur)
+            if (r["stages"].get("duvet_neat") and r["success"]) or not bool(cand.any()):
+                break
+            e = torch.where(cand, err, torch.zeros_like(err))
+            k1 = int(e.argmax())
+            far = ((cur[:, :2] - cur[k1, :2]).norm(dim=-1) >= 0.35) & ((made[:, :2] - made[k1, :2]).norm(dim=-1) >= 0.35)
+            far &= (made[:, :2] - made[k1, :2]).norm(dim=-1) <= 1.0  # two hands of one robot
+            e2 = torch.where(cand & far, err, torch.zeros_like(err))
+            picks = [k1] + ([int(e2.argmax())] if float(e2.max()) > 0.05 else [])
+            dist = float(err[picks].max())
+            secs = max(2.0, dist / 0.3)
+            side = lambda p: "가까운 쪽" if p[0] <= lo[0] + REACH else ("발치" if p[1] <= lo[1] + REACH else "먼 쪽")
+            caption["t"] = f"잡기 {g + 1}: {side(cur[k1])}을 잡아 {dist:.2f} m 당김 (손 {len(picks)}개)"
+            res["grasps"].append({"hands": len(picks), "from": [side(cur[k]) for k in picks],
+                                  "dist_m": round(dist, 3)})
+            run(secs + 0.4, grasp_pins(picks, secs))
+            run(1.0)
+            step_done(f"grasp {g + 1}")
+        caption["t"] = "완료" if eval_state["r"] and eval_state["r"]["success"] else "끝 (미완료)"
         run(2.0)
-        step_done("duvet spread")
-        caption["t"] = "3. 베개를 머리맡 가운데에 놓는다"
-        pil = nodes("pillow")
-        pc = pil.mean(0)
-        hb = torch.tensor([m.headboard_center[0], m.headboard_center[1], top + 0.11], device=dev)
-        fn, secs = carry(pil.clone(), pil + (hb - pc), 3.0, arc=0.4)
-        run(secs, [("pillow", torch.arange(len(pil), device=dev), fn)])
-        run(2.0)
-        step_done("pillow placed")
+        step_done("final")
     else:
         name = next(o.name for o in spec.objects if o.kind in ("towel", "tshirt"))
         kind = spec.obj(name).kind

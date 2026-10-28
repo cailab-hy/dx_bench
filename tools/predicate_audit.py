@@ -79,8 +79,7 @@ def eval_scene(spec):
         bed = P.BedSpec(mattress_min=tuple(m[0][:2]), mattress_max=tuple(m[1][:2]), mattress_top_z=float(m[1][2]),
                         headboard_center=(0.5 * (m[0][0] + m[1][0]), float(m[1][1]) - 0.25), long_axis=1,
                         cover_head_gap=float(m[1][1]) - float(LAYOUT["parts_aabb"]["Bed/Blanket"][1][1]))
-        pillow = np.array(objs["pillow"]["xyz"])
-        return P.evaluate_bed01(nodes_of(objs["duvet"]), pillow, pillow, bed, pillow_was_moved=False)
+        return P.evaluate_bed01(nodes_of(objs["duvet"]), bed)
     raise ValueError(t)
 
 

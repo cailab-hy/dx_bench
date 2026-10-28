@@ -186,74 +186,18 @@ def main():
                     return p0 + (goal - c) * s_
 
                 drops.append((o.name, ids, n0[ids].clone(), put_path, 1.5))
-    if spec.task == "BED-01" and spec.difficulty in ("medium", "hard"):
-        # crumple the duvet physically like a person bundling it: three of its corners carried in 40 cm arcs onto one
-        # spot (medium: near the bed middle; hard: on the open long edge, so the bundle hangs over the side). Two random
-        # points pulled together left the 2.0 x 1.55 m duvet still covering the mattress (start score 0.49, 7/10
-        # "spread", 2026-10-22).
-        for _ in range(int(1.0 * 15)):
-            hold_step(act)
-        mat = load_layout()["parts_aabb"]["Bed/Mattress"]
-        org = U.scene.env_origins[0]
-        for o in spec.objects:
-            if o.kind == "duvet":
-                n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
-                c0 = n0.mean(dim=0)
-                cy = 0.5 * (mat[0][1] + mat[1][1])
-                if spec.difficulty == "medium":
-                    g = [0.5 * (mat[0][0] + mat[1][0]) + float(rng.uniform(-0.15, 0.15)), cy + float(rng.uniform(-0.3, 0.1))]
-                else:
-                    g = [mat[0][0] + 0.05, cy + float(rng.uniform(-0.3, 0.3))]
-                g = torch.as_tensor(g, device=U.device, dtype=n0.dtype) + org[:2]
-                d = n0[:, :2] - c0[:2]
-                corners = [int(torch.argmax(d @ torch.as_tensor(v, device=U.device, dtype=n0.dtype)))
-                           for v in ((1, 1), (1, -1), (-1, 1), (-1, -1))]
-                for k in [corners[i] for i in rng.permutation(4)[:3]]:
-                    ids = torch.nonzero((n0 - n0[k]).norm(dim=-1) < 0.04).flatten()
-                    pull = (g - n0[k, :2]) * float(rng.uniform(0.75, 0.95))
-
-                    def gather(p0, s_, pull=pull):
-                        t = p0.clone()
-                        t[:, :2] += pull * s_
-                        t[:, 2] += 0.4 * math.sin(math.pi * s_)  # up and back down on the gathered spot
-                        return t
-
-                    drops.append((o.name, ids, n0[ids].clone(), gather, 2.5))
-    if spec.task == "BED-01" and spec.difficulty == "easy":
-        # fold the duvet like a person (2026-10-22): pin its head-side edge, carry it in a 35 cm high arc (4 s) to the foot
-        # side of the mattress middle, release. Writing mirrored positions instead left the render mesh wrong (a
-        # strip, or nothing until the cloth moved) and crumpled the 65 x 65 duvet into a ball.
-        mat = load_layout()["parts_aabb"]["Bed/Mattress"]
-        fold = 0.5 * (mat[0][1] + mat[1][1]) + float(U.scene.env_origins[0][1])
-        # the pillow lies on the duvet's head edge and rode along with it, dragging the whole duvet off the foot end:
-        # park it on the floor beyond the bed while folding (its pose is not saved; the episode spawns it from the
-        # scene JSON, clear of the folded duvet)
-        if "pillow" in [o.name for o in spec.objects]:
-            pl = U.scene["pillow"]
-            pp = pl.data.nodal_pos_w.torch.clone()
-            pp[0, :, 0] += 1.2
-            pp[0, :, 2] += 0.01 - pp[0, :, 2].min()
-            pl.write_nodal_pos_to_sim_index(pp)
-            pl.write_nodal_velocity_to_sim_index(torch.zeros_like(pp))
-        for k in range(int(2.0 * 15)):  # let the spawned sheet land on the mattress first (folding it mid-fall
-            hold_step(act)              # bunched the duvet into a 1.0 x 0.5 m heap)
-            if TRACE and k % 3 == 0:
-                _trace(U, spec, f"presettle {k / 15:.2f}s")
-        for o in spec.objects:
-            if o.kind == "duvet":
-                n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
-                ids = torch.nonzero(n0[:, 1] > n0[:, 1].max() - 0.02).flatten()
-
-                def fold_path(p0, s_, fold=fold):
-                    t = p0.clone()
-                    ang = math.pi * s_
-                    r = p0[:, 1] - fold  # rotate the edge about the fold line, 2 cm extra lift for the layer below
-                    t[:, 1] = fold + r * math.cos(ang)
-                    t[:, 2] = p0[:, 2] + 0.35 * math.sin(ang) + 0.02 * s_  # a flat 35 cm high arc
-                    return t
-
-                drops.append((o.name, ids, n0[ids].clone(), fold_path, 4.0))
-    if drops:
+    if spec.task == "BED-01" and "pillow" in [o.name for o in spec.objects]:
+        # the pillow lies on the duvet's head part and rode along with any fold / gather, dragging the duvet: park it
+        # on the floor beyond the bed while shaping (its pose is not saved; the episode spawns it from the scene JSON)
+        pl = U.scene["pillow"]
+        pp = pl.data.nodal_pos_w.torch.clone()
+        pp[0, :, 0] += 1.2
+        pp[0, :, 2] += 0.01 - pp[0, :, 2].min()
+        pl.write_nodal_pos_to_sim_index(pp)
+        pl.write_nodal_velocity_to_sim_index(torch.zeros_like(pp))
+    # BED-01 levels (D-55): easy = spawned shifted towards the far side (scene JSON), only settles here; medium = the
+    # head part folded back over the foot half; hard = gathered into a bundle
+    def run_drops(drops):
         sim, dt = U.sim, U.physics_dt
         t_max = max(d[4] for d in drops)
         n_all = int((t_max + 0.5) / dt)
@@ -274,6 +218,69 @@ def main():
             U.scene.update(dt)
             if TRACE and i % 48 == 0:
                 _trace(U, spec, f"drop {i * dt:.2f}s")
+    if spec.task == "BED-01" and spec.difficulty in ("medium", "hard"):
+        # fold the duvet like a person (2026-10-22): pin its head-side edge, carry it in a 35 cm high arc (4 s) over
+        # the fold line, release. Writing mirrored positions instead left the render mesh wrong (a strip, or nothing
+        # until the cloth moved) and crumpled the 65 x 65 duvet into a ball. Fold line 15 cm on the foot side of the
+        # mattress middle (D-55): at the middle 0.69-0.81 of the target stayed covered
+        mat = load_layout()["parts_aabb"]["Bed/Mattress"]
+        fold = 0.5 * (mat[0][1] + mat[1][1]) - 0.15 + float(U.scene.env_origins[0][1])
+        for k in range(int(2.0 * 15)):  # let the spawned sheet land on the mattress first (folding it mid-fall
+            hold_step(act)              # bunched the duvet into a 1.0 x 0.5 m heap)
+            if TRACE and k % 3 == 0:
+                _trace(U, spec, f"presettle {k / 15:.2f}s")
+        for o in spec.objects:
+            if o.kind == "duvet":
+                n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
+                ids = torch.nonzero(n0[:, 1] > n0[:, 1].max() - 0.02).flatten()
+
+                def fold_path(p0, s_, fold=fold):
+                    t = p0.clone()
+                    ang = math.pi * s_
+                    r = p0[:, 1] - fold  # rotate the edge about the fold line, 2 cm extra lift for the layer below
+                    t[:, 1] = fold + r * math.cos(ang)
+                    t[:, 2] = p0[:, 2] + 0.35 * math.sin(ang) + 0.02 * s_  # a flat 35 cm high arc
+                    return t
+
+                drops.append((o.name, ids, n0[ids].clone(), fold_path, 4.0))
+    if spec.task == "BED-01" and spec.difficulty == "hard":
+        # crumple the duvet physically like a person bundling it: all four corners carried in 40 cm arcs onto one spot
+        # (variant "bundle_foot": on the foot half; "bundle_edge": on the open long edge, the bundle hangs over the
+        # side). D-55: the duvet is folded like medium first, then bundled; bundling the spread duvet alone (three or
+        # four corners) left 0.72-0.86 of the target covered.
+        run_drops(drops)
+        drops = []
+        for _ in range(int(1.0 * 15)):
+            hold_step(act)
+        mat = load_layout()["parts_aabb"]["Bed/Mattress"]
+        org = U.scene.env_origins[0]
+        for o in spec.objects:
+            if o.kind == "duvet":
+                n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
+                c0 = n0.mean(dim=0)
+                cy = 0.5 * (mat[0][1] + mat[1][1])
+                if (o.variant or "bundle_foot") == "bundle_foot":
+                    g = [0.5 * (mat[0][0] + mat[1][0]) + float(rng.uniform(-0.15, 0.15)),
+                         mat[0][1] + 0.45 + float(rng.uniform(-0.1, 0.1))]
+                else:
+                    g = [mat[0][0] + 0.05, cy + float(rng.uniform(-0.3, 0.1))]
+                g = torch.as_tensor(g, device=U.device, dtype=n0.dtype) + org[:2]
+                d = n0[:, :2] - c0[:2]
+                corners = [int(torch.argmax(d @ torch.as_tensor(v, device=U.device, dtype=n0.dtype)))
+                           for v in ((1, 1), (1, -1), (-1, 1), (-1, -1))]
+                for k in [corners[i] for i in rng.permutation(4)]:
+                    ids = torch.nonzero((n0 - n0[k]).norm(dim=-1) < 0.04).flatten()
+                    pull = (g - n0[k, :2]) * float(rng.uniform(0.75, 0.95))
+
+                    def gather(p0, s_, pull=pull):
+                        t = p0.clone()
+                        t[:, :2] += pull * s_
+                        t[:, 2] += 0.4 * math.sin(math.pi * s_)  # up and back down on the gathered spot
+                        return t
+
+                    drops.append((o.name, ids, n0[ids].clone(), gather, 2.5))
+    if drops:
+        run_drops(drops)
     steps = int((a.settle_s + (2.0 if drops else 0.0)) * 15)  # a dropped heap keeps collapsing for ~5 s
     for k in range(steps):
         hold_step(act)
