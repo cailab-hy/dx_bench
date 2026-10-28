@@ -186,7 +186,7 @@ powerprofilesctl set performance                  # laptop: ~1.3x faster simulat
 adb reverse tcp:8012 tcp:8012                     # headset localhost:8012 -> PC (again after every reconnect)
 python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw/bed02_vr \
   --external_environment_class_path dxbench.tasks.bed_tasks:DxBed02Environment dx_bed02 \
-  --scene data/scenes_train/bed02_easy_train_10000.json --physics_hz 360   # task flags go after the task name
+  --scene data/scenes_train/bed02_easy_train_10000.json   # task flags (e.g. --physics_hz) go after the task name
 ```
 
 - In the headset browser open **http://localhost:8012**. The page lists its checks (WebXR, connection, video);
@@ -195,8 +195,9 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
 - Press **A** to start recording, do the task. The episode is saved automatically when the task succeeds.
   Hold **B** to throw it away. Either way the scene resets for the next episode. An episode that reaches the task
   time limit (simulated time: BED-01 / BED-02 240 s, BED-03 180 s) without success is not kept.
-- `--physics_hz 360` is fine for BED-02 / BED-03 (towel, T-shirt); keep the default 480 Hz for BED-01, where the
-  large duvet drifts at 360 Hz (DECISIONS D-11). Other tasks: `DxBed01Environment dx_bed01` / `DxBed03Environment dx_bed03`.
+- Physics rate: `run_teleop.py` uses **120 Hz** for BED-02 / BED-03 (towel, T-shirt; 2.5x faster than 360 Hz, the
+  grasp holds as well with the support ring, DECISIONS D-51) and 480 Hz for BED-01 (duvet, not tested at 120 Hz).
+  Override with the task flag `--physics_hz`. Other tasks: `DxBed01Environment dx_bed01` / `DxBed03Environment dx_bed03`.
 - More flags: `--vr_port` (default 8012), `--max_episodes`, `--realtime` (pace to 15 Hz wall time when the sim is
   faster than real time). Task flag `--ik_every_n` (default 4 in `run_teleop.py`, 1 in evaluation and the oracles):
   the arm IK is solved on every n-th physics step (DECISIONS D-50).
@@ -215,9 +216,9 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
 | Y (hold 1 s) | Recenter: your forward = robot forward, the panel in front of you |
 
 Notes:
-- With three cameras and cloth the simulation runs at about **0.2x real time** (BED-03, 360 Hz, RTX 5000 Ada laptop;
-  ~0.26x with the `performance` power profile): move slowly and let the robot catch up. The 0.5x of stage 1 was a
-  small test scene without cameras. The panel's status lines show recording, the torso posture and the base mode / speed.
+- With three cameras and cloth the simulation runs at about **0.58x real time** (BED-03 at 120 Hz, RTX 6000 Ada
+  workstation; 360 Hz was 0.22x there and 0.26x on the RTX 5000 Ada laptop with the `performance` power profile):
+  move a little slower than natural and let the robot catch up. BED-01 (480 Hz) is much slower. The panel's status lines show recording, the torso posture and the base mode / speed.
 - To carry a garment, hold it with the trigger, release the grip, then drive (the base is locked while a grip is held).
 - If a controller loses tracking, that arm stops; the grippers keep their state, so a held garment is not dropped.
 - Grasping is the assisted pad grasp (`pad_grasp`): close the gripper with the fingertips touching the cloth, between

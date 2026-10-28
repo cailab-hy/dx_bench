@@ -23,7 +23,7 @@ N=20 P=3 RAW=data/raw/bed03_oracle tools/collect_demos.sh data/scenes_train/bed0
 # B start, ENTER save, BACKSPACE discard
 $A dxbench/dxbench/teleop/run_teleop.py --teleop_device keyboard --record data/raw/bed03_human --visualizer kit \
    --external_environment_class_path dxbench.tasks.bed_tasks:DxBed03Environment dx_bed03 \
-   --scene data/scenes_train/bed03_easy_train_10000.json --physics_hz 360
+   --scene data/scenes_train/bed03_easy_train_10000.json   # physics 120 Hz (BED-01: 480), D-51
 
 # Quest 2/3 over USB: adb reverse tcp:8012 tcp:8012, then open http://localhost:8012 in the headset browser
 # grip = clutch, trigger = gripper, A start, B (hold) discard, X pause, Y (hold) recenter,

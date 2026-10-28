@@ -71,5 +71,7 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - DX 가구가 동적 강체·관절이면 방 안의 천이 떨린다 → prestartup `fix_bed`가 모두 정적으로(D-44).
 - 천 상태 생성은 순간이동(정점 위치 쓰기)으로 크게 접거나 구기지 말 것: 큰 이불이 NaN·뭉침. 속도 고정으로 물리적으로 접고 구긴다(`make_cloth_states.py`).
 - 저장한 천 상태도 완전히 정지 상태는 아니다: 구겨진 옷은 에피소드 20 s 동안 조금씩 풀린다(D-44 이전 측정: 정점 평균 6–15 cm, 가구 떨림 포함).
-- 보조 잡기 기본은 `pad_grasp`(D-34/35): 손끝이 천에서 4 mm 안, 닫히는 방향 가운데 ±2.5 cm 안의 천만 잡힌다. oracle·원격조작은 천에 닿을 때까지 내려갈 것(`oracle_bed03.pinch_dz`). 잡기 기록은 `result.json`의 `grasp_stats`.
+- 보조 잡기 기본은 `pad_grasp`(D-34/35): 손끝이 천에서 4 mm 안, 닫히는 방향 가운데 ±2.5 cm 안의 천만 잡힌다. oracle·원격조작은 천에 닿을 때까지 내려갈 것(`oracle_bed03.pinch_dz`). 잡기 기록은 `result.json`의 `grasp_stats`(`step_drift` = 천 계산이 한 스텝에 잡힌 정점을 끌어낸 거리).
+  지지 정점(패드 중심 5 cm)은 모든 천에 기본(`--pad_support all`, D-51): 없으면 120 Hz에서 잡힌 천이 손끝에서 7–11 cm 떨어져 매달린다.
+  원격조작 물리 주기 기본 120 Hz(BED-01은 480), 평가·oracle은 task 기본 480 Hz.
 - 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.

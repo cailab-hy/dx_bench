@@ -393,7 +393,7 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
                 if args_cli.grasp_assist == "pad":
                     add_pad_grasp(env_cfg, cloth, squeeze=args_cli.pad_squeeze, tip_margin=args_cli.pad_tip_margin,
                                   capture_c=args_cli.pad_capture_c,
-                                  support_cloths=[o.name for o in spec.objects  # D-37
+                                  support_cloths=[o.name for o in spec.objects  # D-37, D-51
                                                   if o.kind == "duvet" or args_cli.pad_support == "all"],
                                   support_r=args_cli.pad_support_r, support_gain=args_cli.pad_support_gain,
                                   gain=args_cli.pad_gain, pin_mode=args_cli.pad_pin_mode)
@@ -433,8 +433,8 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         parser.add_argument("--pad_support_gain", type=float, default=1.0)
         parser.add_argument("--pad_gain", type=float, default=1.0)
         parser.add_argument("--pad_pin_mode", default="velocity", choices=["velocity", "posvel"])
-        parser.add_argument("--pad_support", default="duvet", choices=["duvet", "all"],
-                            help="pad assist: cloths that get the support ring (D-37: duvet only)")
+        parser.add_argument("--pad_support", default="all", choices=["duvet", "all"],
+                            help="pad assist: cloths that get the support ring (D-51: all; D-37: duvet only)")
         parser.add_argument("--pad_capture_c", type=float, default=0.025,  # D-35
                             help="pad assist: catch only cloth within this distance (m) of the closing midplane")
         parser.add_argument("--episode_s", type=float, default=None)
