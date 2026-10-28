@@ -189,7 +189,8 @@ class PadGraspAction(ActionTerm):
                 if len(ids) >= c.min_nodes:
                     self._pins[(e, h, name)] = {"ids": ids, "loc0": loc[ids].clone(), "t": 0, "prev": None,
                                                 "tip_to_cloth": diag.get(f"{name}_tip_to_cloth"),
-                                                "out_max": 0.0, "out_sum": 0.0, "out_n": 0, "sup": None}
+                                                "out_max": 0.0, "out_sum": 0.0, "out_n": 0, "sup": None,
+                                                "pred": None, "drift_sum": 0.0, "drift_n": 0}
                     if name in c.support_cloths and c.support_r > 0:
                         sm = ((loc[:, :2].norm(dim=-1) <= c.support_r) & (loc[:, 2] >= -hs.pad_h)
                               & (loc[:, 2] <= c.tip_margin) & ~m)
@@ -242,7 +243,14 @@ class PadGraspAction(ActionTerm):
                 tgt = o[e, h] + tl @ G[e, h].T
                 v_ff = (tgt - pin["prev"]) / self._dt if pin["prev"] is not None else torch.zeros_like(tgt)
                 pin["prev"] = tgt.clone()
-                vel[e, pin["ids"]] = c.gain * (tgt - pos[e, pin["ids"]]) / self._dt + v_ff
+                x = pos[e, pin["ids"]]
+                if pin["pred"] is not None:  # what the cloth solve did to the pinned nodes in the last step
+                    d = x - pin["pred"]
+                    pin["drift_sum"] = pin["drift_sum"] + d.norm(dim=-1).mean()  # on the device: no host sync
+                    pin["drift_n"] += 1
+                v = c.gain * (tgt - x) / self._dt + v_ff
+                vel[e, pin["ids"]] = v
+                pin["pred"] = x + v * self._dt
                 if posw is not None:  # put the pinned nodes on the target and give them the target velocity
                     posw[e, pin["ids"]] = tgt
                     vel[e, pin["ids"]] = v_ff
@@ -267,6 +275,7 @@ class PadGraspAction(ActionTerm):
                            "tip_to_cloth": pin["tip_to_cloth"], "out_max": round(pin["out_max"], 4),
                            "out_mean": round(pin["out_sum"] / max(pin["out_n"], 1), 4),
                            "hold_s": round(pin["t"] * self._dt, 2),
+                           "step_drift": round(float(pin["drift_sum"]) / max(pin["drift_n"], 1), 5),
                            **({"slipped": pin["slipped"]} if pin.get("slipped") else {})})
 
     def pinned_offsets(self, e: int, h: int, name: str):
