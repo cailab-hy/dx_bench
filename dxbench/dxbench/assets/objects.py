@@ -40,6 +40,10 @@ TOWEL_SIZE = (0.80, 0.40)
 TOWEL_GSM = 375.0
 CLOTH_THICKNESS = 0.0015  # FEM surface thickness (m): bending stiffness (matched to the towel video) and mass
 # (density x thickness x area); the 5 mm geometric thickness is CLOTH_HALF below
+# PhysX GPU solver position iterations of every cloth / pillow / non-robot rigid body (D-54). The GPU solver runs the
+# scene-wide maximum for everything, so a 16 here (the old cloth value and the USD default of the basket) also made
+# the robot (4 + 1) solve 16 + 1 times per step: 97 -> 75 ms per teleop control step at 120 Hz with all at 4
+SOLVER_ITERS = 4
 CLOTH_HALF = 0.0025  # half of the real ~5 mm thickness (user 2026-10-22): collision rest offset + render shell (D-44)
 CLOTH_LINEAR_DAMPING = 3.0  # 1/s on every node: stands in for air drag, which PhysX FEM cloth lacks (D-45). At 0 a
 # carried towel / tee swings +-40 cm like a pendulum for seconds (reports/swing); 3 stops it within ~1 swing (3-4 cm),
@@ -82,7 +86,7 @@ def tshirt(name: str, variant: str = "m_blue", xyz=(0.0, 0.0, 0.0), yaw: float =
 
 
 def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, rgb=(0.9, 0.85, 0.6),
-               spacing_m: float = 0.023, iters: int = 16, self_collision: bool = True,
+               spacing_m: float = 0.023, iters: int = SOLVER_ITERS, self_collision: bool = True,
                youngs_modulus: float = 1.0e6, density: float = 120.0, friction: tuple = (0.72, 0.6),
                thickness: float = CLOTH_THICKNESS, poisson: float = 0.25, grid_m: float | None = None,
                bend: float = TOWEL_BEND, linear_damping: float = CLOTH_LINEAR_DAMPING) -> DeformableObject:
@@ -164,7 +168,7 @@ def pillow(name: str = "pillow", xyz=(0.0, 0.0, 0.0), yaw: float = 0.0) -> Defor
     """Volume-deformable pillow 66 x 42 x 13 cm with the DX PillowPhysics values (E 4 kPa, density 35)."""
     cfg = sim_utils.MeshCuboidCfg(
         size=(0.66, 0.42, 0.13), edge_refinement=4.0,
-        deformable_props=sim_utils.DeformableBodyPropertiesCfg(solver_position_iteration_count=16),
+        deformable_props=sim_utils.DeformableBodyPropertiesCfg(solver_position_iteration_count=SOLVER_ITERS),
         physics_material=sim_utils.DeformableBodyMaterialCfg(youngs_modulus=4000.0, poissons_ratio=0.3, density=35.0,
                                                              static_friction=0.7, dynamic_friction=0.6),
         collision_props=[PhysxCollisionCfg(contact_offset=0.01, rest_offset=0.002)],

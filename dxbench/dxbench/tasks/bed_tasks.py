@@ -95,54 +95,41 @@ def fix_bed(env, env_ids):
             UsdPhysics.Joint(p).CreateJointEnabledAttr(False)
 
 
-def cloth_solver_overrides(env, env_ids):
-    """Prestartup, experiments only (cloth cost study 2026-10-28; benchmark runs leave the variables unset): PhysX
-    surface-deformable solver settings on every garment / towel / duvet of every env. DX_CLOTH_ITERS = position
-    iterations (default 16), DX_CLOTH_SELFCOL = 0/1 self-collision, DX_CLOTH_PAIRFREQ = collision pair updates per
-    step (0 = adaptive)."""
+def solver_iterations(env, env_ids):
+    """Prestartup (D-54): PhysX solver position iterations of every deformable (garments, towel, duvet, pillow) and
+    every enabled non-robot rigid body (basket, ...) = `objects.SOLVER_ITERS`. The GPU solver runs the scene-wide
+    maximum for all bodies, so one 16 (the basket's USD default, the tee USD) made the robot solve 16 + 1 times.
+    Experiment overrides (2026-10-28 cost study; benchmark runs leave them unset): DX_CLOTH_ITERS, DX_RIGID_ITERS,
+    DX_CLOTH_SELFCOL = 0/1 self-collision, DX_CLOTH_PAIRFREQ = collision pair updates per step (0 = adaptive)."""
     import os
 
     import isaaclab.sim as sim_utils
-    from pxr import Sdf, Usd
+    from pxr import PhysxSchema, Sdf, Usd, UsdPhysics
 
-    keys = {"DX_CLOTH_ITERS": ("solverPositionIterationCount", Sdf.ValueTypeNames.Int, int),
-            "DX_CLOTH_SELFCOL": ("selfCollision", Sdf.ValueTypeNames.Bool, lambda v: bool(int(v))),
-            "DX_CLOTH_PAIRFREQ": ("collisionPairUpdateFrequency", Sdf.ValueTypeNames.Int, int)}
-    todo = {k: v for k, v in keys.items() if os.environ.get(k)}
-    if not todo:
-        return
+    from dxbench.assets.objects import SOLVER_ITERS
+
+    cloth = {"solverPositionIterationCount": (Sdf.ValueTypeNames.Int, int(os.environ.get("DX_CLOTH_ITERS", SOLVER_ITERS)))}
+    for env_key, attr, typ, conv in (("DX_CLOTH_SELFCOL", "selfCollision", Sdf.ValueTypeNames.Bool, lambda v: bool(int(v))),
+                                     ("DX_CLOTH_PAIRFREQ", "collisionPairUpdateFrequency", Sdf.ValueTypeNames.Int, int)):
+        if os.environ.get(env_key):
+            cloth[attr] = (typ, conv(os.environ[env_key]))
+    rigid_it = int(os.environ.get("DX_RIGID_ITERS", SOLVER_ITERS))
     stage = sim_utils.get_current_stage()
-    n = 0
-    for p in Usd.PrimRange(stage.GetPrimAtPath("/World/envs")):
-        if "OmniPhysicsDeformableBodyAPI" in p.GetAppliedSchemas() and "PhysxBaseDeformableBodyAPI" in p.GetAppliedSchemas():
-            for env_key, (attr, typ, conv) in todo.items():
-                p.CreateAttribute(f"physxDeformableBody:{attr}", typ).Set(conv(os.environ[env_key]))
-            n += 1
-    print(f"[cloth_overrides] {n} deformable(s): " + ", ".join(f"{k}={os.environ[k]}" for k in todo), flush=True)
-
-
-def rigid_solver_overrides(env, env_ids):
-    """Prestartup, experiments only (2026-10-28): DX_RIGID_ITERS = solver position iterations of every dynamic rigid
-    body that is not part of the robot (basket, ...). Prints the bodies and their previous values."""
-    import os
-
-    import isaaclab.sim as sim_utils
-    from pxr import PhysxSchema, Usd, UsdPhysics
-
-    it = os.environ.get("DX_RIGID_ITERS")
-    stage = sim_utils.get_current_stage()
-    seen = []
+    nd, rigid = 0, []
     for p in Usd.PrimRange(stage.GetPrimAtPath("/World")):
-        if not p.HasAPI(UsdPhysics.RigidBodyAPI) or "/Robot" in str(p.GetPath()):
-            continue
-        en = UsdPhysics.RigidBodyAPI(p).GetRigidBodyEnabledAttr().Get()
-        api = PhysxSchema.PhysxRigidBodyAPI(p) if p.HasAPI(PhysxSchema.PhysxRigidBodyAPI) else None
-        old = api.GetSolverPositionIterationCountAttr().Get() if api else None
-        if it and en is not False:
-            api = api or PhysxSchema.PhysxRigidBodyAPI.Apply(p)
-            api.CreateSolverPositionIterationCountAttr().Set(int(it))
-        seen.append(f"{p.GetPath()} enabled={en} iters={old}")
-    print(f"[rigid_overrides] DX_RIGID_ITERS={it}: " + "; ".join(s for s in seen if "enabled=False" not in s), flush=True)
+        schemas = p.GetAppliedSchemas()
+        if "OmniPhysicsDeformableBodyAPI" in schemas and "PhysxBaseDeformableBodyAPI" in schemas:
+            for attr, (typ, v) in cloth.items():
+                p.CreateAttribute(f"physxDeformableBody:{attr}", typ).Set(v)
+            nd += 1
+        elif p.HasAPI(UsdPhysics.RigidBodyAPI) and "/Robot" not in str(p.GetPath()):
+            if UsdPhysics.RigidBodyAPI(p).GetRigidBodyEnabledAttr().Get() is False:
+                continue
+            api = PhysxSchema.PhysxRigidBodyAPI(p) if p.HasAPI(PhysxSchema.PhysxRigidBodyAPI) else \
+                PhysxSchema.PhysxRigidBodyAPI.Apply(p)
+            api.CreateSolverPositionIterationCountAttr().Set(rigid_it)
+            rigid.append(p.GetName())
+    print(f"[solver_iterations] {nd} deformable(s) {cloth}, rigid {rigid} -> {rigid_it}", flush=True)
 
 
 def load_cloth_states(env, env_ids, states: dict):
@@ -192,8 +179,7 @@ class BedTaskBase(TaskBase):
             lighting = EventTermCfg(func=apply_care_room_lighting, mode="prestartup",
                                     params={"lighting": dict(self.spec.lighting)})
             floor_plane = EventTermCfg(func=replace_care_room_floor, mode="prestartup")
-            cloth_overrides = EventTermCfg(func=cloth_solver_overrides, mode="prestartup")
-            rigid_overrides = EventTermCfg(func=rigid_solver_overrides, mode="prestartup")
+            solver_iterations = EventTermCfg(func=solver_iterations, mode="prestartup")  # D-54
             load_cloth_states = EventTermCfg(func=load_cloth_states, mode="reset", params={"states": states})
 
         return _Events()
