@@ -31,6 +31,7 @@ ap.add_argument("--motion", default="robot", choices=["smooth", "robot"],
                      "15 Hz like the policy, then stop; smooth: 0.4 m straight carry")
 ap.add_argument("--lift", type=float, default=0.6, help="lift height (m)")
 ap.add_argument("--fric", type=float, default=None, help="cloth friction override (static; dynamic = 0.83x)")
+ap.add_argument("--iters", type=int, default=16, help="cloth solver position iterations")
 ap.add_argument("--tag", default=None)
 AppLauncher.add_app_launcher_args(ap)
 args = ap.parse_args()
@@ -72,7 +73,7 @@ def T(x):
 
 
 def cloth_cfg():
-    props = sim_utils.DeformableBodyPropertiesCfg(solver_position_iteration_count=16, self_collision=True,
+    props = sim_utils.DeformableBodyPropertiesCfg(solver_position_iteration_count=args.iters, self_collision=True,
                                                   linear_damping=args.ld)
     if args.cloth == "tee":
         return sim_utils.UsdFileCfg(usd_path=str(REPO / "dxbench/dxbench/assets/objects/tshirt_m95_wine.usda"))
@@ -104,7 +105,7 @@ def build():
 
     sim = sim_utils.SimulationContext(sim_utils.SimulationCfg(device=args.device, dt=DT, render_interval=32))
     scene = InteractiveScene(SceneCfg(num_envs=1, env_spacing=5.0))
-    from pxr import Usd
+    from pxr import Sdf, Usd
 
     stage = sim_utils.get_current_stage()
     if args.cloth == "tee":  # the tee USD: set the damping on its prims (it carries its own material)
@@ -113,6 +114,7 @@ def build():
         split_single_mesh_cloth(stage, str(mesh.GetPath()), HALF)
         mesh.GetAttribute("physxCollision:restOffset").Set(HALF)
         mesh.GetAttribute("physxDeformableBody:linearDamping").Set(float(args.ld))
+        mesh.CreateAttribute("physxDeformableBody:solverPositionIterationCount", Sdf.ValueTypeNames.Int).Set(args.iters)
         for p in Usd.PrimRange(root):
             for name, v in (("physxDeformableMaterial:bendDamping", args.bd),
                             ("physxDeformableMaterial:elasticityDamping", args.ed)):
