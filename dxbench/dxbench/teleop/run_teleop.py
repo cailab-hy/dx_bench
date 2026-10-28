@@ -38,8 +38,8 @@ def _args(p):
 def main():
     if "--enable_cameras" not in sys.argv:
         sys.argv.insert(1, "--enable_cameras")
-    if "--ik_every_n" not in sys.argv:  # task flag (after the task name): arm IK on every 4th physics step
-        sys.argv += ["--ik_every_n", "4"]
+    if "--ik_every_n" not in sys.argv:  # task flag (after the task name): arm IK once per control step at 120 Hz
+        sys.argv += ["--ik_every_n", "8"]
     if "--physics_hz" not in sys.argv:  # D-51: 120 Hz (2.5x faster than 360); BED-01 duvet keeps 480 (D-11, untested)
         sys.argv += ["--physics_hz", "480" if "dx_bed01" in sys.argv else "120"]
     rt = ArenaRuntime(add_args=_args)

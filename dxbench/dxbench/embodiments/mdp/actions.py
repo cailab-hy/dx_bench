@@ -86,6 +86,7 @@ class ParallelGripperAction(_RobotTerm):
     def __init__(self, cfg, env):
         super().__init__(cfg, env)
         self._f = self._ids(["gripper_finger_r1", "gripper_finger_r2", "gripper_finger_l1", "gripper_finger_l2"])
+        self._fresh = True
 
     @property
     def action_dim(self) -> int:
@@ -98,9 +99,13 @@ class ParallelGripperAction(_RobotTerm):
             g = (g > self.cfg.binary_threshold).float()
         o = g * FINGER_MAX
         self._processed = torch.stack([-o[:, 0], o[:, 0], -o[:, 1], o[:, 1]], dim=1)
+        self._fresh = True
 
     def apply_actions(self):
-        self._asset.set_joint_position_target_index(target=self._processed, joint_ids=self._f)
+        # the targets stay in the joint target buffer: write them on the first physics step of a control step only
+        if self._fresh:
+            self._asset.set_joint_position_target_index(target=self._processed, joint_ids=self._f)
+            self._fresh = False
 
     def reset(self, env_ids: Sequence[int] | None = None) -> None:
         self._raw[env_ids] = 1.0
@@ -205,6 +210,7 @@ class TorsoPresetAction(_RobotTerm):
         self._tt = torch.ones(self.num_envs, device=self.device)
         self._prev = torch.zeros(self.num_envs, device=self.device)
         self._dt = env.physics_dt
+        self._active = 1  # physics steps left to write (host count): idle torso targets stay in the joint target buffer
 
     @property
     def action_dim(self) -> int:
@@ -231,8 +237,12 @@ class TorsoPresetAction(_RobotTerm):
             self._dur[new] = (span * (math.pi / 2) / self.cfg.ramp_rad_s).clamp(min=1e-3)
             self._tt[new] = 0.0
             self._goal_idx = self._idx.clone()
+            self._active = max(self._active, math.ceil(float(self._dur.max()) / self._dt) + 1)
 
     def apply_actions(self):
+        if self._active <= 0:  # no ramp running: nothing changes (was ~0.4 ms of kernels per physics step)
+            return
+        self._active -= 1
         goal = self._presets[self._idx]
         self._tt = self._tt + self._dt
         s = (self._tt / self._dur).clamp(0.0, 1.0)
@@ -251,6 +261,7 @@ class TorsoPresetAction(_RobotTerm):
         self._tt[env_ids] = 1.0
         self._dur[env_ids] = 1.0
         self._prev[env_ids] = 0.0
+        self._active = max(self._active, 1)
 
 
 @configclass
@@ -284,6 +295,7 @@ class HomingDiffIKAction(DifferentialInverseKinematicsAction):
     def __init__(self, cfg, env):
         super().__init__(cfg, env)
         self._homing = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._homing_any = False  # host copy: `self._homing.any()` every physics step was a GPU -> CPU sync
         self._dt = env.physics_dt
         self._substep = 0
 
@@ -292,6 +304,7 @@ class HomingDiffIKAction(DifferentialInverseKinematicsAction):
             self._homing[:] = True
         else:
             self._homing[env_ids] = True
+        self._homing_any = True
 
     @property
     def homing(self) -> torch.Tensor:
@@ -308,7 +321,10 @@ class HomingDiffIKAction(DifferentialInverseKinematicsAction):
         if self._substep % self.cfg.ik_every == 0:
             super().apply_actions()
         self._substep += 1
+        if not self._homing_any:
+            return
         if not self._homing.any():
+            self._homing_any = False
             return
         q = self._asset.data.joint_pos.torch[:, self._joint_ids]
         q_home = self._asset.data.default_joint_pos.torch[:, self._joint_ids]
@@ -331,6 +347,7 @@ class HomingDiffIKAction(DifferentialInverseKinematicsAction):
             self._homing[:] = False
         else:
             self._homing[env_ids] = False
+        self._homing_any = bool(self._homing.any())
 
 
 @configclass

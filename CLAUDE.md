@@ -74,4 +74,6 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - 보조 잡기 기본은 `pad_grasp`(D-34/35): 손끝이 천에서 4 mm 안, 닫히는 방향 가운데 ±2.5 cm 안의 천만 잡힌다. oracle·원격조작은 천에 닿을 때까지 내려갈 것(`oracle_bed03.pinch_dz`). 잡기 기록은 `result.json`의 `grasp_stats`(`step_drift` = 천 계산이 한 스텝에 잡힌 정점을 끌어낸 거리).
   지지 정점(패드 중심 5 cm)은 모든 천에 기본(`--pad_support all`, D-51): 없으면 120 Hz에서 잡힌 천이 손끝에서 7–11 cm 떨어져 매달린다.
   원격조작 물리 주기 기본 120 Hz(BED-01은 480), 평가·oracle은 task 기본 480 Hz.
+- 물리 스텝마다 도는 액션 코드(`apply_actions`)에 GPU→CPU 동기화(`.any()`, `.tolist()`, `float()`, `len(nonzero)`)를 넣지 말 것(D-52):
+  CPU가 GPU를 기다리느라 다음 스텝을 미리 넘기지 못한다. 제어 스텝에 한 번이면 되는 판단은 `process_actions`/첫 물리 스텝에서.
 - 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.

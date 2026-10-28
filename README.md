@@ -199,8 +199,8 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
   grasp holds as well with the support ring, DECISIONS D-51) and 480 Hz for BED-01 (duvet, not tested at 120 Hz).
   Override with the task flag `--physics_hz`. Other tasks: `DxBed01Environment dx_bed01` / `DxBed03Environment dx_bed03`.
 - More flags: `--vr_port` (default 8012), `--max_episodes`, `--realtime` (pace to 15 Hz wall time when the sim is
-  faster than real time). Task flag `--ik_every_n` (default 4 in `run_teleop.py`, 1 in evaluation and the oracles):
-  the arm IK is solved on every n-th physics step (DECISIONS D-50).
+  faster than real time). Task flag `--ik_every_n` (default 8 in `run_teleop.py` = once per control step at 120 Hz,
+  1 in evaluation and the oracles): the arm IK is solved on every n-th physics step (DECISIONS D-50, D-52).
 
 | Control | Action |
 |---|---|
@@ -216,7 +216,7 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
 | Y (hold 1 s) | Recenter: your forward = robot forward, the panel in front of you |
 
 Notes:
-- With three cameras and cloth the simulation runs at about **0.58x real time** (BED-03 at 120 Hz, RTX 6000 Ada
+- With three cameras and cloth the simulation runs at about **0.67x real time** (BED-03 at 120 Hz, RTX 6000 Ada
   workstation; 360 Hz was 0.22x there and 0.26x on the RTX 5000 Ada laptop with the `performance` power profile):
   move a little slower than natural and let the robot catch up. BED-01 (480 Hz) is much slower. The panel's status lines show recording, the torso posture and the base mode / speed.
 - To carry a garment, hold it with the trigger, release the grip, then drive (the base is locked while a grip is held).

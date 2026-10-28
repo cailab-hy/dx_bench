@@ -87,6 +87,7 @@ class PadGraspAction(ActionTerm):
         self.trapped: dict[tuple[int, str], torch.Tensor] = {}
         self.wheel_events: list[dict] = []
         self._step = 0
+        self._ctrl_start = True
 
     @property
     def action_dim(self) -> int:
@@ -101,7 +102,7 @@ class PadGraspAction(ActionTerm):
         return self._raw
 
     def process_actions(self, actions):
-        pass
+        self._ctrl_start = True  # the gripper command only changes here: edges / wheel traps once per control step
 
     def grip_frames(self):
         """(N,H,3) fingertip centre, (N,H,3,3) world rotation whose columns are w, c, a; (N,H) half gap."""
@@ -135,11 +136,11 @@ class PadGraspAction(ActionTerm):
                                          c.wheel_cloth_z)
         return out
 
-    def apply_actions(self):
-        # runs every physics step: one host sync for the edge / wheel-trap flags (each .any() / .tolist() waits for
-        # the GPU; the per-wheel loop with one sync per cloth and env was ~1.1 ms of the ~2 ms per call, 2026-10-27)
+    def _edges_and_traps(self):
+        """Gripper open / close edges (capture, release) and cloth under the drive wheels: once per control step, with
+        one host sync (the gripper command changes only at a control step; a wheel moves <= 2 cm in one, 2026-10-28).
+        Before, this ran every physics step and its sync made the CPU wait for the GPU each step."""
         c = self.cfg
-        self._step += 1
         closed = self._closed_cmd()
         masks = self._wheel_masks()
         N, H = closed.shape
@@ -157,9 +158,8 @@ class PadGraspAction(ActionTerm):
                     self.trapped[(e, name)] = ids
                     if (e, name) not in prev:
                         self.wheel_events.append({"env": e, "cloth": name, "step": self._step, "nodes": int(len(ids))})
-        # grip frames only when a close or a held pin needs them (same values: they only read the robot state)
         o = G = half = None
-        if closing or self._pins:
+        if closing:
             o, G, half = self.grip_frames()
         for e, h in opened:
             for name in c.cloth_names:
@@ -189,7 +189,8 @@ class PadGraspAction(ActionTerm):
                 if len(ids) >= c.min_nodes:
                     self._pins[(e, h, name)] = {"ids": ids, "loc0": loc[ids].clone(), "t": 0, "prev": None,
                                                 "tip_to_cloth": diag.get(f"{name}_tip_to_cloth"),
-                                                "out_max": 0.0, "out_sum": 0.0, "out_n": 0, "sup": None,
+                                                "out_max": torch.zeros((), device=self.device),
+                                                "out_sum": torch.zeros((), device=self.device), "out_n": 0, "sup": None,
                                                 "pred": None, "drift_sum": 0.0, "drift_n": 0}
                     if name in c.support_cloths and c.support_r > 0:
                         sm = ((loc[:, :2].norm(dim=-1) <= c.support_r) & (loc[:, 2] >= -hs.pad_h)
@@ -210,8 +211,20 @@ class PadGraspAction(ActionTerm):
             pin["slipped"] = "wheel"
             self._record(e, h, name, pin)
             self.grasped[e, h] = max(0, int(self.grasped[e, h]) - len(pin["ids"]))
+
+    def apply_actions(self):
+        # runs every physics step without a host sync (each .tolist() / float() waits for the GPU and stalls the CPU,
+        # which then cannot queue the next physics step: CPU and GPU took turns at ~50 % each, 2026-10-28)
+        c = self.cfg
+        self._step += 1
+        if self._ctrl_start:
+            self._ctrl_start = False
+            self._edges_and_traps()
         if not self._pins and not self.trapped:
             return
+        o = G = half = None
+        if self._pins:
+            o, G, half = self.grip_frames()
         n_snap = max(1, round(c.snap_s / self._dt))
         by_cloth: dict[str, list] = {name: [] for (_e, name) in self.trapped}
         for (e, h, name), pin in self._pins.items():
@@ -237,8 +250,8 @@ class PadGraspAction(ActionTerm):
                     cur = (pos[e, pin["ids"]] - o[e, h]) @ G[e, h]
                     out = torch.stack([cur[:, 0].abs() - hs.pad_w / 2, cur[:, 1].abs() - clim,
                                        cur[:, 2], -hs.pad_h - cur[:, 2]], -1).clamp(min=0.0).amax(-1)
-                    pin["out_max"] = max(pin["out_max"], float(out.max()))
-                    pin["out_sum"] += float(out.mean())
+                    pin["out_max"] = torch.maximum(pin["out_max"], out.max())  # on the device: no host sync
+                    pin["out_sum"] = pin["out_sum"] + out.mean()
                     pin["out_n"] += 1
                 tgt = o[e, h] + tl @ G[e, h].T
                 v_ff = (tgt - pin["prev"]) / self._dt if pin["prev"] is not None else torch.zeros_like(tgt)
@@ -272,8 +285,8 @@ class PadGraspAction(ActionTerm):
 
     def _record(self, e, h, name, pin):
         self.stats.append({"env": e, "hand": h, "cloth": name, "nodes": int(len(pin["ids"])),
-                           "tip_to_cloth": pin["tip_to_cloth"], "out_max": round(pin["out_max"], 4),
-                           "out_mean": round(pin["out_sum"] / max(pin["out_n"], 1), 4),
+                           "tip_to_cloth": pin["tip_to_cloth"], "out_max": round(float(pin["out_max"]), 4),
+                           "out_mean": round(float(pin["out_sum"]) / max(pin["out_n"], 1), 4),
                            "hold_s": round(pin["t"] * self._dt, 2),
                            "step_drift": round(float(pin["drift_sum"]) / max(pin["drift_n"], 1), 5),
                            **({"slipped": pin["slipped"]} if pin.get("slipped") else {})})
