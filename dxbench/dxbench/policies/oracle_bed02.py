@@ -42,6 +42,7 @@ class Bed02OraclePolicyCfg(PolicyCfg):
     arc_h: float = 0.10           # fold arc height
     max_v: float = 0.25
     max_w: float = 0.6
+    half_inset: float = 0.04      # half fold: pinch points this far in from the towel's ends (along its long axis)
     work_preset_steps: int = 1    # lean: crouch cannot reach z 0.8-0.9 near the centre line at x 0.6 (reach_desk_0.0.json)
     debug: bool = False           # print per-arm base-frame target / TCP / error every 15 steps
     device: str = "cuda:0"
@@ -57,6 +58,10 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         self.debug = bool(config.debug)
         self._h = Bed03OraclePolicy.__new__(Bed03OraclePolicy)  # reuse the geometry / nav helpers
         self._h.cfg = config
+        import os
+
+        if os.environ.get("DX_B02_HALF_INSET"):  # experiments (2026-10-28 reach study)
+            self.cfg.half_inset = float(os.environ["DX_B02_HALF_INSET"])
         self.reset()
 
     def reset(self, env_ids: torch.Tensor | None = None) -> None:
@@ -140,7 +145,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         if move == "half2":   # far long edge (v1) by both corners -> near long edge (v0): the strip ends up close
             label = "fold in half"  # to the robot, where both hands reach its ends for the side folds
             arms = [(s, c[:2] + u * uu + v * (v1 - 0.04), c[:2] + u * uu + v * (v0 + 0.04))
-                    for s, uu in (("right", u1 - 0.04), ("left", u0 + 0.04))]
+                    for s, uu in (("right", u1 - self.cfg.half_inset), ("left", u0 + self.cfg.half_inset))]
         elif move == "right":  # right end of the strip -> 3 cm past the centre line
             label, ve = "fold the right side", end_v(+1)
             arms = [("right", c[:2] + u * (u1 - 0.04) + v * ve, c[:2] - u * 0.03 + v * ve)]
