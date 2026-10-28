@@ -95,6 +95,32 @@ def fix_bed(env, env_ids):
             UsdPhysics.Joint(p).CreateJointEnabledAttr(False)
 
 
+def cloth_solver_overrides(env, env_ids):
+    """Prestartup, experiments only (cloth cost study 2026-10-28; benchmark runs leave the variables unset): PhysX
+    surface-deformable solver settings on every garment / towel / duvet of every env. DX_CLOTH_ITERS = position
+    iterations (default 16), DX_CLOTH_SELFCOL = 0/1 self-collision, DX_CLOTH_PAIRFREQ = collision pair updates per
+    step (0 = adaptive)."""
+    import os
+
+    import isaaclab.sim as sim_utils
+    from pxr import Sdf, Usd
+
+    keys = {"DX_CLOTH_ITERS": ("solverPositionIterationCount", Sdf.ValueTypeNames.Int, int),
+            "DX_CLOTH_SELFCOL": ("selfCollision", Sdf.ValueTypeNames.Bool, lambda v: bool(int(v))),
+            "DX_CLOTH_PAIRFREQ": ("collisionPairUpdateFrequency", Sdf.ValueTypeNames.Int, int)}
+    todo = {k: v for k, v in keys.items() if os.environ.get(k)}
+    if not todo:
+        return
+    stage = sim_utils.get_current_stage()
+    n = 0
+    for p in Usd.PrimRange(stage.GetPrimAtPath("/World/envs")):
+        if "OmniPhysicsDeformableBodyAPI" in p.GetAppliedSchemas() and "PhysxBaseDeformableBodyAPI" in p.GetAppliedSchemas():
+            for env_key, (attr, typ, conv) in todo.items():
+                p.CreateAttribute(f"physxDeformableBody:{attr}", typ).Set(conv(os.environ[env_key]))
+            n += 1
+    print(f"[cloth_overrides] {n} deformable(s): " + ", ".join(f"{k}={os.environ[k]}" for k in todo), flush=True)
+
+
 def load_cloth_states(env, env_ids, states: dict):
     """Reset: write saved (settled) nodal positions for each garment, zero velocities. states: {name: npz path}."""
     if env_ids is None:
@@ -140,6 +166,7 @@ class BedTaskBase(TaskBase):
             lighting = EventTermCfg(func=apply_care_room_lighting, mode="prestartup",
                                     params={"lighting": dict(self.spec.lighting)})
             floor_plane = EventTermCfg(func=replace_care_room_floor, mode="prestartup")
+            cloth_overrides = EventTermCfg(func=cloth_solver_overrides, mode="prestartup")
             load_cloth_states = EventTermCfg(func=load_cloth_states, mode="reset", params={"states": states})
 
         return _Events()

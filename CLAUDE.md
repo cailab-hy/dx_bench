@@ -76,4 +76,7 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
   원격조작 물리 주기 기본 120 Hz(BED-01은 480), 평가·oracle은 task 기본 480 Hz.
 - 물리 스텝마다 도는 액션 코드(`apply_actions`)에 GPU→CPU 동기화(`.any()`, `.tolist()`, `float()`, `len(nonzero)`)를 넣지 말 것(D-52):
   CPU가 GPU를 기다리느라 다음 스텝을 미리 넘기지 못한다. 제어 스텝에 한 번이면 되는 판단은 `process_actions`/첫 물리 스텝에서.
+- 천 계산 반복 횟수(16 → 4)·자기충돌은 속도에 거의 영향 없음(120 Hz 카메라 3대 98.7 → 97.3 ms, 2026-10-28): PhysX 비용은 물리 1스텝당
+  고정 비용(약 6.6 ms)이라 스텝 수에 비례한다(105 Hz 91.7, 90 Hz 84.4 ms). 실험용 덮어쓰기: `DX_CLOTH_ITERS`/`DX_CLOTH_SELFCOL`/`DX_CLOTH_PAIRFREQ`
+  (`bed_tasks.cloth_solver_overrides`, 기본 실행은 설정 안 함).
 - 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.
