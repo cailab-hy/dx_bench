@@ -17,11 +17,11 @@
    "name": "cloth_0",
    "kind": "towel",
    "xyz": [
-    -3.716861049971383,
+    -3.6602870166571275,
     19.017362101319222,
     0.7300000238418579
    ],
-   "yaw": 1.6913061128774554,
+   "yaw": 1.631051219836176,
    "variant": "11_applegreen",
    "cloth_state": "benchmarks/dx_bed_v0/states/bed02_easy_003_cloth_0.npz"
   }

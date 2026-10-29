@@ -1,15 +1,13 @@
 """Scripted oracle for BED-01 Easy (D-55: the duvet slid 60-66 cm towards the far side) on `rby1_ik` - privileged.
 
-PROTOTYPE, NOT WORKING (2026-10-29): 0/2 easy scenes. The pick lands in the reachable window (0.81 m ahead) but the
-relative IK from the home pose ends 13 cm away (joint limits on the way; the reach diagnostic got there only after
-visiting nearer targets), and the base misses the side spots by 0.2-0.35 m (yaw-0 navigation to a lateral goal).
+Status (2026-10-29, D-57): 9/10 easy evaluation scenes (score 1.0), 27/30 training scenes collected
+(data/raw/bed01_oracle_easy). Crouch only - deep's elbow (arm_3) sits at its limit and the hand ran off to 0.92-0.96 m;
+side moves go through a waypoint backed off from the bed (turning in place 6 cm from the frame missed by 0.2-0.35 m).
 
-The near edge of the duvet lies 0.34-0.40 m in from the open side of the mattress. In the running env (reach_diag,
-2026-10-28, base front 6 cm from the bed frame, gripper down, z 0.56) deep reaches 0.79-0.84 m ahead of the base:
-nearer, the wrist (arm_5) and elbow (arm_3) sit at their limits; farther, the arm / torso touches the bed. Crouch
-covers up to ~0.77 m. So the edge (0.77-0.83 m ahead) is just reachable, and the arm cannot pull back in deep:
-the base reverses instead while the arm holds. Each pull:
-1. drive to the bed side so the right hand (base y -0.20) is in front of the pull spot, torso deep,
+The near edge of the duvet lies 0.29-0.31 m in from the open side of the mattress (D-57: easy slides 57-59 cm). In the
+running env (reach_diag, base front 6 cm from the bed frame, gripper down, z 0.57) crouch reaches 0.78 m ahead of the
+base (~0.35 m into the mattress); the base reverses to pull while the arm holds. Each pull:
+1. drive to the bed side so the right hand (base y -0.20) is in front of the pull spot, torso crouch,
 2. pinch the duvet's near edge 4 cm in (pad grasp: fingertips 2 mm into the cloth),
 3. lift 3 cm and reverse the base so the edge ends beyond the near side of the mattress (the made-up overhang),
 4. release, arm home, torso upright.
@@ -38,10 +36,15 @@ class Bed01EasyOracleCfg(PolicyCfg):
     hand_y: float = -0.20            # right hand lateral offset in the base frame
     frame_gap: float = 0.06          # base front to the bed frame
     edge_in: float = 0.01            # pinch this far in from the duvet's near edge
-    crouch_max_x: float = 0.77       # picks nearer than this (base frame) in crouch, farther in deep
+    crouch_max_x: float = 0.78       # crouch reaches 0.78 m ahead at the bed (reach_diag); deep is not used: its elbow
+                                     # (arm_3) sits at the limit and the hand ran off to 0.92-0.96 m on every path
     overhang: float = 0.25           # the near edge should end this far beyond the mattress side
     reverse_v: float = 0.12          # base speed while pulling back (m/s)
     spots: tuple = (0.0, 0.45, -0.45)  # pull spots along the bed (m from the target-area middle, + = head)
+    via_x: float = 0.75              # arm waypoint (base frame) before a deep pick: straight from home the relative IK
+                                     # ran into the arm_3 / arm_5 limits and ended 13 cm off (2026-10-29)
+    back_off: float = 0.45           # side moves go through a waypoint this far back from the bed (turning in place
+                                     # 6 cm from the frame the base missed lateral goals by 0.2-0.35 m)
     max_v: float = 0.2
     max_w: float = 0.6
     device: str = "cuda:0"
@@ -78,8 +81,8 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
         self.t_phase += 1
         idx = int(U.action_manager.get_term("torso").preset_index[0])
         work = getattr(self, "work", PRESET_DEEP)
-        want = work if self.phase in ("deep", "above", "descend", "close", "pull", "release") else 0
-        if idx != want and self.phase not in ("plan", "approach", "finished"):
+        want = work if self.phase in ("deep", "via", "above", "descend", "close", "pull", "release") else 0
+        if idx != want and self.phase not in ("plan", "side", "approach", "finished"):
             a[14] = (1.0 if idx < want else -1.0) if self.t_phase % 2 == 1 else 0.0
         tcp = self._tcp_b(observation)
         bed, task = self._bed()
@@ -92,12 +95,22 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 self.spot_y = y_mid + c.spots[self.spot_i]
                 bx = lo[0] - 0.025 - c.frame_gap - BASE_FRONT_X
                 self.goal = (np.array([bx, self.spot_y - c.hand_y]), 0.0)
+                self.via = np.array([bx - c.back_off, self.spot_y - c.hand_y])
                 self.plan_log.append({"spot": self.spot_i, "spot_y": round(self.spot_y, 3), "goal": self.goal[0].tolist()})
-                self._set("approach", "grasp the duvet edge")
+                p, _ = self._base(U)
+                lateral = abs(float(p[1]) - float(self.goal[0][1])) > 0.05
+                self._set("side" if lateral else "approach", "grasp the duvet edge")
+        elif self.phase == "side":  # back off and move along the bed, facing it again
+            (v, w), ok = self._nav(U, self.via, 0.0)
+            a[15:17] = (v, w)
+            if ok or self.t_phase > 400:
+                self._set("approach")
         elif self.phase == "approach":
             (v, w), ok = self._nav(U, self.goal[0], self.goal[1])
             a[15:17] = (v, w)
-            if ok or self.t_phase > 200:
+            if ok or self.t_phase > 300:
+                p, yaw = self._base(U)
+                self.plan_log.append({"spot": self.spot_i, "base": np.round(p[:2], 3).tolist(), "yaw": round(yaw, 3)})
                 self._set("deep")
         elif self.phase == "deep":
             if idx == getattr(self, "work", PRESET_DEEP) and self.t_phase > 30 and not getattr(self, "picked", False):
@@ -116,12 +129,18 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                     p[2] = float(n[near, 2].max()) if near.any() else p[2]
                     self.edge_x = float(n[j, 0])
                     self.pick = self._to_base(U, p)
-                    self.work = 2 if self.pick[0] < c.crouch_max_x else PRESET_DEEP
+                    self.work = 2
+                    if self.pick[0] > c.crouch_max_x:
+                        self.plan_log.append({"spot": self.spot_i, "out_of_reach": round(float(self.pick[0]), 3)})
                     self.picked = True
                     self.plan_log.append({"spot": self.spot_i, "edge_x": round(self.edge_x, 3), "preset": self.work,
                                           "pick_base": np.round(self.pick, 3).tolist()})
             elif getattr(self, "picked", False) and idx == self.work and self.t_phase > 30:
                 self.picked = False
+                self._set("via" if self.work == PRESET_DEEP else "above")
+        elif self.phase == "via":
+            a[0:6], err = self._servo(observation, np.array([c.via_x, self.pick[1], self.pick[2] + 0.12]), max_dp=0.015)
+            if err < 0.02 or self.t_phase > 75:
                 self._set("above")
         elif self.phase == "above":
             a[0:6], err = self._servo(observation, self.pick + [0, 0, 0.08])
@@ -143,7 +162,8 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 if self.t_phase > 15:
                     got = int(U.action_manager.get_term("cloth_assist").grasped[0, 0])
                     self.plan_log.append({"spot": self.spot_i, "grasped": got,
-                                          "tip_err": round(float(np.linalg.norm(tcp - self.pick)), 4)})
+                                          "tip_err": round(float(np.linalg.norm(tcp - self.pick)), 4),
+                                          "tcp": np.round(tcp, 3).tolist()})
                     if got == 0:
                         self.spot_i += 1
                         self._set("release")

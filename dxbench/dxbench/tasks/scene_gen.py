@@ -174,8 +174,13 @@ def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
     cx = float(hi[0]) - 0.25
     objs = []
     if diff == "easy":
-        objs.append(ObjSpec("cloth_0", "towel", [cx + float(rng.uniform(-0.03, 0.03)), cy + float(rng.uniform(-0.1, 0.1)),
-                                                 top + 0.005], float(rng.uniform(-0.2, 0.2)) + math.pi / 2,
+        # D-56 (2026-10-29, user): towel centre 0.20-0.22 m from the front edge (was 0.25 +- 0.03), yaw +-0.1 rad (was
+        # +-0.2): leaning, the robot stops with its base front only ~2 cm under the desk (the chest meets the desk edge)
+        # and the right arm reaches ~0.69 m ahead at desk height, so the half fold's far corners (0.70-0.81 m ahead)
+        # were missed; the near long edge now lies about at the desk front, without hanging over it
+        objs.append(ObjSpec("cloth_0", "towel", [cx + 0.04 + float(rng.uniform(-0.01, 0.01)),
+                                                 cy + float(rng.uniform(-0.1, 0.1)),
+                                                 top + 0.005], float(rng.uniform(-0.1, 0.1)) + math.pi / 2,
                             _towel(split, seed)))
     elif diff == "medium":
         objs.append(ObjSpec("cloth_0", "tshirt", [cx - 0.05, cy, top + 0.08], float(rng.uniform(-0.6, 0.6)) + math.pi / 2,
@@ -205,9 +210,11 @@ def gen_bed01(diff: str, seed: int, split: str) -> SceneSpec:
     head_y = float(hi[1]) - 0.25
     # D-55 levels after the pi0.5 "Make the Bed" rubric (pillow not scored; it stays at the head end). The 2.0 x 1.55 m
     # duvet made up: head edge 2 cm short of the mattress end, 28 cm over each long side. Start coverage <= ~0.7.
-    if diff == "easy":     # slid 60-66 cm towards the far side: pull its near edge back (no driving). At 50-60 cm
-        # 0.75-0.77 stayed covered; 20-25 % of the nodes lie on the far floor (failure at 30 %)
-        duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(0.60, 0.66)), float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2,
+    if diff == "easy":     # slid 57-59 cm towards the far side: pull its near edge back (no driving). The edge then
+        # lies 0.29-0.31 m in from the open side, within the crouch reach at the bed (0.78 m ahead of the base, ~0.35 m
+        # in; deep runs into the arm_3 limit) - at 60-66 cm (0.34-0.40 m in) the oracle could not reach it (2026-10-29).
+        # At 55 cm the duvet sometimes stayed >= 80 % covered (start score 0.5)
+        duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(0.57, 0.59)), float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2,
                                            top + 0.02], math.pi / 2)
     elif diff == "medium":  # head part folded back over the foot half (make_cloth_states folds it)
         duvet = ObjSpec("duvet", "duvet", [cx, float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2, top + 0.02], math.pi / 2)

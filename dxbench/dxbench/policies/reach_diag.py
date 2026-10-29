@@ -36,6 +36,11 @@ class ReachDiag(Bed03OraclePolicy, PolicyBase[ReachDiagCfg]):
         self.preset = int(os.environ.get("DX_DIAG_PRESET", 3))
         self.z = float(os.environ.get("DX_DIAG_Z", 0.60))
         self.xs = [float(v) for v in os.environ.get("DX_DIAG_XS", "0.60,0.70,0.80,0.90").split(",")]
+        # DX_DIAG_SEQ="x,z;x,z;..": visit these (x, z) targets in order instead of DX_DIAG_XS at DX_DIAG_Z
+        seq = os.environ.get("DX_DIAG_SEQ")
+        self.seq = [tuple(float(v) for v in t.split(",")) for t in seq.split(";")] if seq else None
+        if self.seq:
+            self.xs = [t[0] for t in self.seq]
         self.bed = os.environ.get("DX_DIAG_BED", "0") == "1"
         self.y = float(os.environ.get("DX_DIAG_Y", -0.20))
         th = np.radians(float(os.environ.get("DX_DIAG_PITCH", 0.0)))  # gripper tilt about the base y axis
@@ -76,7 +81,7 @@ class ReachDiag(Bed03OraclePolicy, PolicyBase[ReachDiagCfg]):
             if self.i >= len(self.xs):
                 self._set("finished")
             else:
-                tgt = np.array([self.xs[self.i], self.y, self.z])
+                tgt = np.array([self.xs[self.i], self.y, self.seq[self.i][1] if self.seq else self.z])
                 a[0:6], err = self._servo(observation, tgt, max_dp=0.015, R_des=self.R)
                 self.best = min(self.best, err)
                 if self.t_phase > 120:
@@ -85,7 +90,7 @@ class ReachDiag(Bed03OraclePolicy, PolicyBase[ReachDiagCfg]):
                     q = r.data.joint_pos.torch[0, ids].cpu().numpy()
                     lim = r.data.joint_pos_limits.torch[0, ids].cpu().numpy()
                     margin = np.minimum(q - lim[:, 0], lim[:, 1] - q)
-                    self.plan_log.append({"x": self.xs[self.i], "min_err": round(self.best, 4), "final_err": round(err, 4),
+                    self.plan_log.append({"x": self.xs[self.i], "z": float(tgt[2]), "min_err": round(self.best, 4), "final_err": round(err, 4),
                                           "tcp": np.round(self._tcp_b(observation), 3).tolist(),
                                           "joint_margin_rad": np.round(margin, 3).tolist()})
                     self.best, self.i = 9.0, self.i + 1

@@ -28,7 +28,7 @@ import torch
 from isaaclab_arena.assets.register import register_policy
 from isaaclab_arena.policy.policy_base import PolicyBase, PolicyCfg
 
-from dxbench.policies.oracle_bed03 import BASE_FRONT_X, Bed03OraclePolicy, _T, pinch_dz
+from dxbench.policies.oracle_bed03 import BASE_FRONT_X, Bed03OraclePolicy, _T, pinch_dz, wrap
 
 # TCP height above the cloth surface when pinching: oracle_bed03.pinch_dz (fingertips 8 mm above for the cylinder
 # assist, 2 mm into the cloth for the pad assist)
@@ -37,7 +37,12 @@ ARM = {"right": (0, 12), "left": (6, 13)}  # action offset of the 6-D arm delta,
 
 @dataclass
 class Bed02OraclePolicyCfg(PolicyCfg):
-    edge_margin: float = 0.03     # base front to desk edge (the half fold pinches the far edge ~0.74 m ahead)
+    # base front to the desk's front edge, negative = under the desk (D-56, 2026-10-29). The desk is a table (apron
+    # rails from 0.645 m), so the base rolls under it until the robot touches it: leaning at -0.023 m (the chest meets
+    # the desk edge), upright -0.225 (but upright reaches only 0.39-0.42 m ahead at desk height), the rby1-sdk
+    # 30/-60/30 deg pose -0.063 (policies/drive_in_diag.py, reach_diag.py). The robot leans 25 cm back and then rolls in
+    # (leaning at the desk pushed it back 6 cm)
+    edge_margin: float = -0.01
     above_dz: float = 0.06
     arc_h: float = 0.10           # fold arc height
     max_v: float = 0.25
@@ -62,6 +67,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
 
         if os.environ.get("DX_B02_HALF_INSET"):  # experiments (2026-10-28 reach study)
             self.cfg.half_inset = float(os.environ["DX_B02_HALF_INSET"])
+        if os.environ.get("DX_B02_DEBUG"):
+            self.debug = True
         self.reset()
 
     def reset(self, env_ids: torch.Tensor | None = None) -> None:
@@ -189,9 +196,27 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         if self.phase == "approach":
             if self.goal is None:
                 desk = task.layout["parts_aabb"].get("CareDesk") or task.layout["furniture_aabb"]["CareDesk"]
-                _, c, *_ = self._towel(U)
-                bx = float(desk[1][0]) + BASE_FRONT_X + self.cfg.edge_margin  # robot on the +x side, facing -x
-                self.goal = (np.array([bx, float(c[1])]), math.pi)
+                n0, c, *_ = self._towel(U)
+                # face the towel's long edge squarely (2026-10-29): the towel lies with up to +-0.2 rad of yaw, and
+                # facing -x one far corner of the half fold was 0.81 m ahead (the other 0.59 m) - past the arm's reach
+                xy = n0[:, :2] - c[:2]
+                _, V = np.linalg.eigh(xy.T @ xy)
+                ux, uy = V[:, 1]
+                sg = -1.0 if uy > 0 else 1.0  # robot left = sg * u, with the heading near pi
+                yaw = math.atan2(-sg * ux, sg * uy)
+                dev = max(-0.25, min(0.25, wrap(yaw - math.pi)))
+                yaw = math.pi + dev
+                f = np.array([math.cos(yaw), math.sin(yaw)])
+                # base front edge_margin under the desk; a turned base sticks out further on one side
+                front_x = float(desk[1][0]) + self.cfg.edge_margin + 0.25 * abs(math.sin(dev))
+                bx = front_x - BASE_FRONT_X * f[0]
+                d = (float(c[0]) - bx) / f[0]  # towel centre straight ahead of the base
+                self.goal = (np.array([bx, float(c[1]) - d * f[1]]), yaw)
+                # lean 25 cm back, then drive in (2026-10-29): leaning at the goal swept the upper body / arms into the
+                # desk and pushed the base back 6 cm (front only ~4 cm under the desk instead of 12)
+                self.final_goal = self.goal
+                self.goal = (self.goal[0] - 0.25 * f, yaw)
+                self.plan_log.append({"approach_yaw_dev": round(dev, 3), "goal": self.final_goal[0].round(3).tolist()})
                 self.table_z = float(desk[1][2])
             (v, w), ok = h._nav(U, self.goal[0], self.goal[1])
             a[15:17] = (v, w)
@@ -201,6 +226,13 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         elif self.phase == "crouch":
             a[14] = torso_to(self.cfg.work_preset_steps)
             if tidx == self.cfg.work_preset_steps and self.t_phase > 60:
+                self._set("drive_in")
+        elif self.phase == "drive_in":  # leaning, roll the base in under the desk edge
+            (v, w), ok = h._nav(U, self.final_goal[0], self.final_goal[1])
+            a[15:17] = (v, w)
+            if ok or self.t_phase > 200:
+                p_, _ = h._base(U)
+                self.plan_log.append({"base_after_drive_in": np.round(p_[:2], 3).tolist()})
                 self.moves = ["half2", "right", "left", "stack"]
                 self._set("plan")
         elif self.phase == "plan":
