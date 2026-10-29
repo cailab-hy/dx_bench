@@ -63,7 +63,12 @@ class Bed02OraclePolicyCfg(PolicyCfg):
     reaxis: bool = False          # side folds: re-estimate the strip's long axis (it turns during the half fold)
     order: str = ""               # move order override, e.g. "right,left,half2,stack" (empty: the default sequence)
     side_over_r: float | None = None  # the right side fold's offset regardless of order (None: first / second rule)
+    tighten: float = 0.05         # right_t / left_t moves: pull the flap near the crease this far towards the centre
     put_dz: float = 0.012         # put height above the cloth there (the flap is released from this high)
+    side_dv_r: float = 0.0        # right side fold: shift the put this far into the desk (along v; the held right
+                                  # flap's end twisted ~4 cm towards the robot at 480 Hz)
+    hold_first_side: bool = False  # keep the first side flap pinched until the second side fold is laid (480 Hz: the
+                                   # right flap sprang back flat on release while the left one stayed)
     release_wait: int = 0         # side folds: hold the laid flap this many steps before opening (lets it settle)
     side_pick_d: float | None = None  # side folds: pinch this far from the fold line (None: 4 cm from the end, ~0.16 m)
     side_corners: bool = False    # side folds as two one-hand moves: the end's near corner, then its far corner
@@ -100,6 +105,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
     def reset(self, env_ids: torch.Tensor | None = None) -> None:
         self.__dict__.pop("u_span", None)
         self.__dict__.pop("n_side", None)
+        self.held = None
         self.phase = "init"
         self.t_phase = 0
         self.subtask = "pick up a shirt"
@@ -225,7 +231,10 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         corner = None
         if move[-2:] in ("_n", "_f"):  # side_corners: right_n / right_f / left_n / left_f
             move, corner = move[:-2], move[-1]
-        if move in ("right", "left") and corner in (None, "n"):
+        tighten = move.endswith("_t")
+        if tighten:  # right_t / left_t: pull the laid flap's part near the crease towards the centre
+            move = move[:-2]
+        if move in ("right", "left") and corner in (None, "n") and not tighten:
             self.n_side = getattr(self, "n_side", 0) + 1
         over = self.cfg.side_over if (getattr(self, "n_side", 1) <= 1 or self.cfg.side_over2 is None) else self.cfg.side_over2
         if move == "right" and self.cfg.side_over_r is not None:  # per-side override (480 Hz: the right flap needed more)
@@ -241,8 +250,11 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             label, ve = "fold the right side", end_v(+1)
             pick_u = u1 - 0.04 if self.cfg.side_pick_d is None else u1 - 0.25 * span + self.cfg.side_pick_d
             put_u = 2 * (u1 - 0.25 * span) - pick_u - over
-            arms = [("right", c[:2] + u * pick_u + v * ve, c[:2] + u * put_u + v * ve)]
-            if corner:
+            arms = [("right", c[:2] + u * pick_u + v * ve, c[:2] + u * put_u + v * (ve + self.cfg.side_dv_r))]
+            if tighten:
+                tu = u1 - 0.06  # just inside the folded right edge (the crease), on the flap
+                arms = [("right", c[:2] + u * tu + v * ve, c[:2] + u * (tu - self.cfg.tighten) + v * ve)]
+            elif corner:
                 vn, vf = self._strip_v(pu, pv, u1 - 0.08, u1)
                 vc = vn + 0.03 if corner == "n" else vf - 0.03
                 arms = [("right", c[:2] + u * pick_u + v * vc, c[:2] + u * put_u + v * vc)]
@@ -258,7 +270,10 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             pick_u = u0 + 0.04 if self.cfg.side_pick_d is None else u0 + 0.25 * span - self.cfg.side_pick_d
             put_u = 2 * (u0 + 0.25 * span) - pick_u + over
             arms = [("left", c[:2] + u * pick_u + v * ve, c[:2] + u * put_u + v * ve)]
-            if corner:
+            if tighten:
+                tu = u0 + 0.06
+                arms = [("left", c[:2] + u * tu + v * ve, c[:2] + u * (tu + self.cfg.tighten) + v * ve)]
+            elif corner:
                 vn, vf = self._strip_v(pu, pv, u0, u0 + 0.08)
                 vc = vn + 0.03 if corner == "n" else vf - 0.03
                 arms = [("left", c[:2] + u * pick_u + v * vc, c[:2] + u * put_u + v * vc)]
@@ -284,13 +299,13 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         out = []
         for side, pick, put in arms:
             grip_dz = pinch_dz(U)
-            z_pick = (local_top(pick) if move == "half2" else local_bottom(pick)) + grip_dz
+            z_pick = (local_top(pick) if (move == "half2" or tighten) else local_bottom(pick)) + grip_dz
             if put is None:  # a holding hand: pinches in place for the whole move
                 out.append({"side": side, "pick": np.r_[pick, z_pick], "put": np.r_[pick, z_pick], "hold": True})
                 continue
             z_put = local_top(put) + self.cfg.put_dz + grip_dz
             out.append({"side": side, "pick": np.r_[pick, z_pick], "put": np.r_[put, z_put]})
-        return {"move": move, "label": label, "arms": out}
+        return {"move": move, "label": label, "arms": out, "tighten": tighten}
 
     # ------------------------------------------------------------------ main
     def get_action(self, env: gym.Env, observation) -> torch.Tensor:
@@ -300,6 +315,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         h = self._h
         a = np.zeros(17, dtype=np.float32)
         a[12:14] = 1.0
+        if getattr(self, "held", None) is not None:  # a held flap stays pinched between moves
+            a[ARM[self.held[0]][1]] = 0.0
         self.t_phase += 1
         tidx = int(U.action_manager.get_term("torso").preset_index[0])
 
@@ -377,7 +394,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             targets = {}
             if self.phase == "carry":  # shared fold arc: rises to arc_h and comes down past the line
                 D = max(float(np.linalg.norm(arm["put"][:2] - arm["pick"][:2])) for arm in arms if not arm.get("hold"))
-                arc = self.cfg.side_arc if (self.mv["move"].split("_")[0] in ("right", "left") and self.cfg.side_arc) else self.cfg.arc_h
+                arc = (0.02 if self.mv.get("tighten") else self.cfg.side_arc
+                       if (self.mv["move"].split("_")[0] in ("right", "left") and self.cfg.side_arc) else self.cfg.arc_h)
                 # ~0.8 cm of path per step; half speed while a hand lags > 2.5 cm, wait while it lags > 4 cm (the arms
                 # trail the arc by up to 15 cm at 1.2 cm per step with the towel pinned)
                 e_ = self.last_err if self.last_err is not None else 0.0
@@ -396,19 +414,30 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 elif self.phase == "carry":
                     s_ = self.arc_s
                     tgt = pick + (put - pick) * s_
-                    arc = self.cfg.side_arc if (self.mv["move"].split("_")[0] in ("right", "left") and self.cfg.side_arc) else self.cfg.arc_h
+                    arc = (0.02 if self.mv.get("tighten") else self.cfg.side_arc
+                       if (self.mv["move"].split("_")[0] in ("right", "left") and self.cfg.side_arc) else self.cfg.arc_h)
                     tgt[2] = pick[2] + 0.03 + (put[2] - pick[2] - 0.03) * s_ + arc * math.sin(math.pi * s_)
                     mdp = 0.02
                 else:  # release: open in place first (pins drop when the fingers open), then rise 12 cm and stay
                     tgt, mdp = put + [0, 0, 0.0 if self.t_phase <= 8 else 0.12], 0.015
                 targets[arm["side"]] = (tgt, mdp)
+            held_grip = {}
+            if self.held is not None and self.held[0] not in targets:  # the held first flap: stay closed in place,
+                hs, hput = self.held                                   # open with the second fold's release
+                if self.phase == "release":
+                    targets[hs] = (hput + [0, 0, 0.0 if self.t_phase <= 8 else 0.12], 0.015)
+                    held_grip[hs] = 1.0
+                else:
+                    targets[hs] = (hput, 0.012)
+                    held_grip[hs] = 0.0
             errs = []
             for side, (tgt, mdp) in targets.items():
                 off, gi = ARM[side]
                 tb = h._to_base(U, tgt)
                 a[off:off + 6], e = self._servo(observation, tb, side, max_dp=mdp)
-                a[gi] = grip
-                errs.append(e)
+                a[gi] = held_grip.get(side, grip)
+                if side not in held_grip:
+                    errs.append(e)
                 if self.debug and (self.t_phase % 15 == 1 or self.phase == "close" and self.t_phase == 2):
                     tcp7 = observation["policy"][f"tcp_{side}"][0].cpu().numpy()
                     tilt = self.tilt[side]  # TCP z axis vs base z (0 = pointing down)
@@ -447,12 +476,20 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 else:
                     if self.debug:
                         self.plan_log[-1]["folds_held"] = self._fold_fracs(U, task)
-                    self._set("release")
+                    if (self.cfg.hold_first_side and side_move and self.held is None
+                            and getattr(self, "n_side", 0) == 1 and len(self.mv["arms"]) == 1):
+                        arm0 = self.mv["arms"][0]
+                        self.held = (arm0["side"], arm0["put"])  # keep pinching it: no release, next move
+                        self._set("plan")
+                    else:
+                        self._set("release")
             elif self.phase == "release" and self.t_phase > 30:
                 # no joint homing between moves: from the READY pose with the lean torso the relative IK drifted away
                 # from desk targets (v5 / v9); the next move starts from this raised pose instead
                 if self.debug:
                     self.plan_log[-1]["folds_after"] = self._fold_fracs(U, task)
+                if self.held is not None and self.held[0] not in [arm["side"] for arm in self.mv["arms"]]:
+                    self.held = None  # released together with this move
                 self._set("plan")
         elif self.phase == "rehome":
             homing = [bool(U.action_manager.get_term(f"{arm['side']}_arm").homing[0]) for arm in self.mv["arms"]]
