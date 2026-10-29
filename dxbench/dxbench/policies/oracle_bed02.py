@@ -48,12 +48,24 @@ class Bed02OraclePolicyCfg(PolicyCfg):
     max_v: float = 0.25
     max_w: float = 0.6
     half_inset: float = 0.04      # half fold: pinch points this far in from the towel's ends (along its long axis)
+    half_vin: float = 0.04        # ... and this far in from its far long edge
     nudge: float = 0.08           # after the half fold, slide the strip this far into the desk (away from its edge)
-    side_over: float = 0.04       # side folds: lay the end this far past its mirror image (it landed 2-6 cm short)
+    # side folds: lay the end this far past its mirror image (negative = short of it). The flap's part near the fold
+    # line lands further out than the pinched end, so laying the end short of its mirror puts the whole flap on it:
+    # 2026-10-29 sweep (120 Hz, 5 scenes) +0.06: 0/5, 0: 0/5, -0.04: 4/5, -0.06 / -0.04: 5/5
+    side_over: float = -0.06
+    side_over2: float | None = -0.04  # the second side fold's (None = side_over): both ends meet at the centre
+                                     # and the second, laid past its mirror, dragged the first flap (2026-10-29)
     side_arc: float | None = 0.16  # side folds' arc height (None = arc_h); a page flip of the flap pinched 0.16 m
                                    # from the fold line is a semicircle of that radius
     hold_in: float = 0.0          # side folds: the other hand holds the strip this far inside the fold line (0 = off;
                                   # 0.06 broke the half fold more often and doubled the time, 2026-10-29)
+    reaxis: bool = False          # side folds: re-estimate the strip's long axis (it turns during the half fold)
+    order: str = ""               # move order override, e.g. "right,left,half2,stack" (empty: the default sequence)
+    side_over_r: float | None = None  # the right side fold's offset regardless of order (None: first / second rule)
+    put_dz: float = 0.012         # put height above the cloth there (the flap is released from this high)
+    release_wait: int = 0         # side folds: hold the laid flap this many steps before opening (lets it settle)
+    side_pick_d: float | None = None  # side folds: pinch this far from the fold line (None: 4 cm from the end, ~0.16 m)
     side_corners: bool = False    # side folds as two one-hand moves: the end's near corner, then its far corner
                                   # (0/10, the half fold opened, 2026-10-29)
     side_two_hands: bool = False  # side folds with both hands on the two corners of the strip end (crumpled the towel:
@@ -87,6 +99,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
 
     def reset(self, env_ids: torch.Tensor | None = None) -> None:
         self.__dict__.pop("u_span", None)
+        self.__dict__.pop("n_side", None)
         self.phase = "init"
         self.t_phase = 0
         self.subtask = "pick up a shirt"
@@ -143,6 +156,26 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             u, v = self.axes
         return n, c, u, v, xy @ u, xy @ v
 
+    def _fold_fracs(self, U, task):
+        """Debug: per fold line, the fraction of mirror pairs within 5 cm and their median distance (fold_done)."""
+        from scipy.spatial import cKDTree
+
+        from dxbench.tasks import predicates as P
+
+        n = (_T(U.scene[self.target].data.nodal_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
+        kind = task.spec.obj(self.target).kind
+        uv = task._rest_uv(U, self.target)
+        out = {}
+        for k, (ax, c) in P.FOLD_LINES[kind].items():
+            a = np.nonzero(uv[:, ax] - c > 0.05)[0]
+            m = uv[a].copy()
+            m[:, ax] = 2 * c - m[:, ax]
+            dr, j = cKDTree(uv).query(m)
+            ok = dr < 0.02
+            d = np.linalg.norm(n[a[ok]] - n[j[ok]], axis=1)
+            out[k[5:]] = (round(float((d < 0.05).mean()), 2), round(float(np.median(d)), 3))
+        return out
+
     @staticmethod
     def _strip_v(pu, pv, ua, ub):
         """Near / far edge (along v) of the strip between u = ua and ub."""
@@ -154,6 +187,15 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
     def _plan(self, U, move, task):
         """Per-arm pick / put points (world xyz) of one fold move. All arms of a move ride one shared arc."""
         n, c, u, v, pu, pv = self._towel(U)
+        if self.cfg.reaxis and move.split("_")[0] in ("right", "left"):
+            # the strip turned during the half fold / nudge (3-7 cm skew of the side flaps at 480 Hz, 2026-10-29):
+            # side folds use its current long axis (sign kept from the frozen frame)
+            xy = n[:, :2] - c[:2]
+            _, V = np.linalg.eigh(xy.T @ xy)
+            u2 = V[:, 1] * (1.0 if float(V[:, 1] @ u) >= 0 else -1.0)
+            v2 = np.array([-u2[1], u2[0]])
+            v2 = v2 * (1.0 if float(v2 @ v) >= 0 else -1.0)
+            u, v, pu, pv = u2, v2, xy @ u2, xy @ v2
         u0, u1, v0, v1 = float(pu.min()), float(pu.max()), float(pv.min()), float(pv.max())
 
         def local_top(xy, r=0.025):
@@ -174,7 +216,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
 
         if move == "half2":   # far long edge (v1) by both corners -> near long edge (v0): the strip ends up close
             label = "fold in half"  # to the robot, where both hands reach its ends for the side folds
-            arms = [(s, c[:2] + u * uu + v * (v1 - 0.04), c[:2] + u * uu + v * (v0 + 0.06))
+            arms = [(s, c[:2] + u * uu + v * (v1 - self.cfg.half_vin), c[:2] + u * uu + v * (v0 + 0.02 + self.cfg.half_vin))
                     for s, uu in (("right", u1 - self.cfg.half_inset), ("left", u0 + self.cfg.half_inset))]
         elif move == "nudge":  # D-56: the strip lies at the desk front after the half fold and the side folds tipped it
             label = "fold in half"  # over the edge (3/3 on the floor, 2026-10-29): slide it 8 cm into the desk first
@@ -183,7 +225,12 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         corner = None
         if move[-2:] in ("_n", "_f"):  # side_corners: right_n / right_f / left_n / left_f
             move, corner = move[:-2], move[-1]
-        if move == "right" and not hasattr(self, "u_span"):  # the strip's length before the side folds: after the right
+        if move in ("right", "left") and corner in (None, "n"):
+            self.n_side = getattr(self, "n_side", 0) + 1
+        over = self.cfg.side_over if (getattr(self, "n_side", 1) <= 1 or self.cfg.side_over2 is None) else self.cfg.side_over2
+        if move == "right" and self.cfg.side_over_r is not None:  # per-side override (480 Hz: the right flap needed more)
+            over = self.cfg.side_over_r
+        if move in ("right", "left") and not hasattr(self, "u_span"):  # the strip's length before the side folds: after the right
             self.u_span = u1 - u0  # fold it is ~0.6 m and the left fold line computed from it lay 5 cm short (2026-10-29)
         span = getattr(self, "u_span", u1 - u0)
         if move in ("half2", "nudge"):  # planned above
@@ -192,8 +239,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             # fold_done checks mirror pairs; laying it 3 cm past the centre overshot by ~7 cm, stretched the flap and
             # opened the half fold, 2026-10-29)
             label, ve = "fold the right side", end_v(+1)
-            pick_u = u1 - 0.04
-            put_u = 2 * (u1 - 0.25 * span) - pick_u - self.cfg.side_over
+            pick_u = u1 - 0.04 if self.cfg.side_pick_d is None else u1 - 0.25 * span + self.cfg.side_pick_d
+            put_u = 2 * (u1 - 0.25 * span) - pick_u - over
             arms = [("right", c[:2] + u * pick_u + v * ve, c[:2] + u * put_u + v * ve)]
             if corner:
                 vn, vf = self._strip_v(pu, pv, u1 - 0.08, u1)
@@ -208,8 +255,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 arms.append(("left", c[:2] + u * hu + v * ve, None))  # was dragged 5-9 cm)
         elif move == "left":
             label, ve = "fold the left side", end_v(-1)
-            pick_u = u0 + 0.04
-            put_u = 2 * (u0 + 0.25 * span) - pick_u + self.cfg.side_over
+            pick_u = u0 + 0.04 if self.cfg.side_pick_d is None else u0 + 0.25 * span - self.cfg.side_pick_d
+            put_u = 2 * (u0 + 0.25 * span) - pick_u + over
             arms = [("left", c[:2] + u * pick_u + v * ve, c[:2] + u * put_u + v * ve)]
             if corner:
                 vn, vf = self._strip_v(pu, pv, u0, u0 + 0.08)
@@ -241,7 +288,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             if put is None:  # a holding hand: pinches in place for the whole move
                 out.append({"side": side, "pick": np.r_[pick, z_pick], "put": np.r_[pick, z_pick], "hold": True})
                 continue
-            z_put = local_top(put) + 0.012 + grip_dz
+            z_put = local_top(put) + self.cfg.put_dz + grip_dz
             out.append({"side": side, "pick": np.r_[pick, z_pick], "put": np.r_[put, z_put]})
         return {"move": move, "label": label, "arms": out}
 
@@ -313,6 +360,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self.plan_log.append({"base_after_drive_in": np.round(p_[:2], 3).tolist()})
                 self.moves = (["half2", "nudge", "right_n", "right_f", "left_n", "left_f", "stack"]
                               if self.cfg.side_corners else ["half2", "nudge", "right", "left", "stack"])
+                if self.cfg.order:
+                    self.moves = self.cfg.order.split(";")
                 self._set("plan")
         elif self.phase == "plan":
             if not self.moves:
@@ -388,11 +437,22 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             elif self.phase == "lift" and (err < 0.015 or self.t_phase > 30):
                 self.arc_s = 0.0
                 self._set("carry")
-            elif self.phase == "carry" and ((self.arc_s >= 1.0 and err < 0.03) or self.t_phase > 450):
-                self._set("release")
+            elif self.phase == "carry" and ((self.arc_s >= 1.0 and err < 0.03 and self.t_phase >= 0) or self.t_phase > 450):
+                side_move = self.mv["move"].split("_")[0] in ("right", "left")
+                if self.cfg.release_wait > 0 and side_move and not self.mv.get("waited"):
+                    self.mv["waited"] = True  # stay closed at the put pose (the carry targets hold at s = 1)
+                    self._set("carry")
+                    self.t_phase = -self.cfg.release_wait
+                    self.arc_s = 1.0
+                else:
+                    if self.debug:
+                        self.plan_log[-1]["folds_held"] = self._fold_fracs(U, task)
+                    self._set("release")
             elif self.phase == "release" and self.t_phase > 30:
                 # no joint homing between moves: from the READY pose with the lean torso the relative IK drifted away
                 # from desk targets (v5 / v9); the next move starts from this raised pose instead
+                if self.debug:
+                    self.plan_log[-1]["folds_after"] = self._fold_fracs(U, task)
                 self._set("plan")
         elif self.phase == "rehome":
             homing = [bool(U.action_manager.get_term(f"{arm['side']}_arm").homing[0]) for arm in self.mv["arms"]]
