@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Oracle demonstrations (raw recording, only successful episodes kept) over training scenes, P at a time, until N saved.
 #   N=20 P=3 POLICY=dxbench.policies.oracle_bed03.Bed03OraclePolicy RAW=data/raw/bed03_oracle \
-#   (EXTRA="--physics_hz 120": task flags appended after the scene)
+#   (EXTRA="--physics_hz 120": task flags appended after the scene; BED-02 already defaults to 120 Hz, D-59)
 #     tools/collect_demos.sh data/scenes_train/bed03_easy_train_*.json
 set -u
 cd "$(dirname "$0")/.."

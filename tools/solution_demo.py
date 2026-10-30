@@ -36,6 +36,7 @@ def _args(p):
     p.add_argument("--demo_out", required=True)
     p.add_argument("--eye", type=float, nargs=3, default=None, help="observer eye offset from the target (m)")
     p.add_argument("--target", type=float, nargs=3, default=None, help="observer target (env frame, m)")
+    p.add_argument("--demo_hz", type=int, default=None, help="physics rate (task default 480)")
 
 
 def main():
@@ -49,7 +50,8 @@ def main():
     rest = [x for x in sys.argv[1:]]
     sys.argv = [sys.argv[0], "--enable_cameras", *rest, "--external_environment_class_path",
                 f"dxbench.tasks.bed_tasks:DxBed0{spec.task[-1]}Environment", env_name, "--scene", a0.demo_scene,
-                "--no_assist", "--embodiment", "rby1_joint", "--observer", "--observer_res", "1280", "720"]
+                "--no_assist", "--embodiment", "rby1_joint", "--observer", "--observer_res", "1280", "720",
+                *(["--physics_hz", str(a0.demo_hz)] if a0.demo_hz else [])]
     rt = ArenaRuntime(add_args=_args, argv=None)
     env = rt.make_env()
     a = rt.args

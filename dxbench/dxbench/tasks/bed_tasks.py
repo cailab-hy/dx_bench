@@ -359,6 +359,7 @@ class Bed01MakeBedTask(BedTaskBase):
 
 
 TASKS = {"BED-01": (Bed01MakeBedTask, 240.0), "BED-02": (Bed02FoldTask, 240.0), "BED-03": (Bed03LaundryTask, 180.0)}
+PHYSICS_HZ = {"BED-01": 480, "BED-02": 120, "BED-03": 480}  # default physics rate per task (D-59)
 
 
 # ------------------------------------------------------------------------------------------ assets from spec
@@ -421,7 +422,7 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         global CURRENT_TASK
         CURRENT_TASK = task
         cloth = task.cloth_names
-        base_cb = physics_callback(args_cli.physics_hz, args_cli.ik_every_n)
+        base_cb = physics_callback(args_cli.physics_hz or PHYSICS_HZ[spec.task], args_cli.ik_every_n)
 
         def cb(env_cfg):
             env_cfg = base_cb(env_cfg)
@@ -456,7 +457,8 @@ class _DxBedEnvironmentBase(ExampleEnvironmentBase):
         parser.add_argument("--scene", required=True, help="scene JSON (path, absolute or relative to the repo)")
         parser.add_argument("--embodiment", default="rby1_ik", choices=["rby1_joint", "rby1_ik"])
         parser.add_argument("--gains", default="tuned", choices=["tuned", "original"])
-        parser.add_argument("--physics_hz", type=int, default=480)
+        parser.add_argument("--physics_hz", type=int, default=None,
+                            help="physics rate (Hz); default per task: BED-02 120, BED-01 / BED-03 480 (D-59)")
         parser.add_argument("--untiled_cameras", action="store_true")
         parser.add_argument("--no_assist", action="store_true", help="disable the assisted cloth grasp")
         parser.add_argument("--assist_radius", type=float, default=0.025)  # D-U11 (cylinder)

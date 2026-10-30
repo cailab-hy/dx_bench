@@ -197,6 +197,7 @@ python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw
   time limit (simulated time: BED-01 / BED-02 240 s, BED-03 180 s) without success is not kept.
 - Physics rate: `run_teleop.py` uses **120 Hz** for BED-02 / BED-03 (towel, T-shirt; 2.5x faster than 360 Hz, the
   grasp holds as well with the support ring, DECISIONS D-51) and 480 Hz for BED-01 (duvet, not tested at 120 Hz).
+  Evaluation and the oracles use the task default: 120 Hz for BED-02, 480 Hz for BED-01 / BED-03 (DECISIONS D-59).
   Override with the task flag `--physics_hz`. Other tasks: `DxBed01Environment dx_bed01` / `DxBed03Environment dx_bed03`.
 - More flags: `--vr_port` (default 8012), `--max_episodes`, `--realtime` (pace to 15 Hz wall time when the sim is
   faster than real time). Task flag `--ik_every_n` (default 8 in `run_teleop.py` = once per control step at 120 Hz,

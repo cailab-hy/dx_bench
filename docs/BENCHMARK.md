@@ -34,7 +34,8 @@ The predicates are pure numpy and are tested in `dxbench/tests/test_predicates.p
 ## Robot and interfaces
 
 - Embodiments `rby1_joint` (24-D, policies) and `rby1_ik` (17-D, teleop and oracles): see `docs/action_space.md`.
-- Control 15 Hz; physics 480 Hz (DECISIONS D-11).
+- Control 15 Hz; physics 480 Hz for BED-01 / BED-03 (DECISIONS D-11) and 120 Hz for BED-02 (D-59: cloth folding is
+  rate-sensitive and the demos are collected at 120 Hz). The task flag `--physics_hz` overrides it.
 - Cameras: head plus two wrist cameras, 480 × 640 RGB.
 - **Assisted cloth grasp:** closing the gripper pins the cloth nodes within 2.5 cm of the TCP axis to the hand
   (5 cm until 2026-10-18; D-U11). This is the same scale as the attachment grasps of GarmentLab / GarmentPile
