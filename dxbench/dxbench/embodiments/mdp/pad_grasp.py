@@ -291,6 +291,10 @@ class PadGraspAction(ActionTerm):
                            "step_drift": round(float(pin["drift_sum"]) / max(pin["drift_n"], 1), 5),
                            **({"slipped": pin["slipped"]} if pin.get("slipped") else {})})
 
+    def held_cloths(self, e: int) -> set[str]:
+        """Garments a hand holds in env e (pinned nodes). BED-03 does not count a held garment as in the basket."""
+        return {name for (e_, _h, name) in self._pins if e_ == e}
+
     def pinned_offsets(self, e: int, h: int, name: str):
         """Grip-frame (w, c, a) of the pinned nodes now (diagnostics: are they between the pads?)."""
         pin = self._pins.get((e, h, name))

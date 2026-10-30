@@ -146,10 +146,13 @@ def point_in_basket(p, basket_pos, basket_quat, spec: BasketSpec = BasketSpec())
 
 
 def evaluate_bed03(clothes: dict[str, np.ndarray], distractors: dict[str, tuple], basket_pos, basket_quat,
-                   folded: dict[str, np.ndarray] | None = None, spec: BasketSpec = BasketSpec()) -> dict:
+                   folded: dict[str, np.ndarray] | None = None, spec: BasketSpec = BasketSpec(),
+                   held: set[str] | None = None) -> dict:
     """Score = clothes in basket / all clothes - 0.2 per distractor or folded garment in the basket (clip 0..1).
-    Failure: basket tipped over (> 45 deg)."""
-    inb = {k: cloth_in_basket(v, basket_pos, basket_quat, spec) for k, v in clothes.items()}
+    A garment still held by a hand (`held`) is not in the basket: hanging from the gripper inside the basket volume
+    ended most oracle episodes before the last release (D-60). Failure: basket tipped over (> 45 deg)."""
+    held = held or set()
+    inb = {k: k not in held and cloth_in_basket(v, basket_pos, basket_quat, spec) for k, v in clothes.items()}
     bad = [k for k, (p, _q) in distractors.items() if point_in_basket(p, basket_pos, basket_quat, spec)]
     bad += [k for k, v in (folded or {}).items() if cloth_in_basket(v, basket_pos, basket_quat, spec)]
     n = max(1, len(clothes))

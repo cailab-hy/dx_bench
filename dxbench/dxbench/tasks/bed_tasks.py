@@ -243,12 +243,14 @@ class Bed03LaundryTask(BedTaskBase):
         folded = [o.name for o in self.spec.objects if o.kind in CLOTH_KINDS and _is_folded(o)]
         dis = [o.name for o in self.spec.objects if o.kind in ("doll", "book")]
         bspec = P.basket_spec(next((o.variant for o in self.spec.objects if o.kind == "basket"), None))
+        held_by = getattr(env.action_manager._terms.get("cloth_assist"), "held_cloths", None)  # pad_grasp (D-60)
         out = []
         for e in range(env.num_envs):
             bp, bq = self.rigid_pose(env, "laundry_basket", e)
             out.append(P.evaluate_bed03({c: self.nodes(env, c, e) for c in clothes},
                                         {d: self.rigid_pose(env, d, e) for d in dis}, bp, bq,
-                                        folded={c: self.nodes(env, c, e) for c in folded}, spec=bspec))
+                                        folded={c: self.nodes(env, c, e) for c in folded}, spec=bspec,
+                                        held=held_by(e) if held_by else None))
         return out
 
 

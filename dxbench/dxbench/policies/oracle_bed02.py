@@ -70,7 +70,14 @@ class Bed02OraclePolicyCfg(PolicyCfg):
     hold_first_side: bool = False  # keep the first side flap pinched until the second side fold is laid (480 Hz: the
                                    # right flap sprang back flat on release while the left one stayed)
     release_wait: int = 0         # side folds: hold the laid flap this many steps before opening (lets it settle)
-    side_pick_d: float | None = None  # side folds: pinch this far from the fold line (None: 4 cm from the end, ~0.16 m)
+    side_pick_d: float | None = None  # side folds: pinch this far from the fold line (None: side_end_in from the end)
+    # D-61 (2026-10-30, with the mirror-diagonal towel mesh): 4 cm in, the free tip beyond the pinch flopped back during
+    # the page flip (tip 8 cm short, the part near the line 3.5 cm too deep; right flap 39 % right after the fold), 1.5 cm
+    # in: 88-100 %
+    side_end_in: float = 0.015    # side folds pinch this far in from the strip end
+    # stack move: pinched 3 cm from the folded strip's ends (its creases), the carry slid both flaps (right 0.99 -> 0.6);
+    # 15 cm in the pads hold the flap and the layers under it together (0.94 / 0.92 at the end; 8 cm 0.75, 17 cm 0.88)
+    stack_in: float = 0.15
     side_corners: bool = False    # side folds as two one-hand moves: the end's near corner, then its far corner
                                   # (0/10, the half fold opened, 2026-10-29)
     side_two_hands: bool = False  # side folds with both hands on the two corners of the strip end (crumpled the towel:
@@ -248,7 +255,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             # fold_done checks mirror pairs; laying it 3 cm past the centre overshot by ~7 cm, stretched the flap and
             # opened the half fold, 2026-10-29)
             label, ve = "fold the right side", end_v(+1)
-            pick_u = u1 - 0.04 if self.cfg.side_pick_d is None else u1 - 0.25 * span + self.cfg.side_pick_d
+            pick_u = u1 - self.cfg.side_end_in if self.cfg.side_pick_d is None else u1 - 0.25 * span + self.cfg.side_pick_d
             put_u = 2 * (u1 - 0.25 * span) - pick_u - over
             arms = [("right", c[:2] + u * pick_u + v * ve, c[:2] + u * put_u + v * (ve + self.cfg.side_dv_r))]
             if tighten:
@@ -267,7 +274,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 arms.append(("left", c[:2] + u * hu + v * ve, None))  # was dragged 5-9 cm)
         elif move == "left":
             label, ve = "fold the left side", end_v(-1)
-            pick_u = u0 + 0.04 if self.cfg.side_pick_d is None else u0 + 0.25 * span - self.cfg.side_pick_d
+            pick_u = u0 + self.cfg.side_end_in if self.cfg.side_pick_d is None else u0 + 0.25 * span - self.cfg.side_pick_d
             put_u = 2 * (u0 + 0.25 * span) - pick_u + over
             arms = [("left", c[:2] + u * pick_u + v * ve, c[:2] + u * put_u + v * ve)]
             if tighten:
@@ -287,7 +294,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         else:                  # folded towel -> stack spot with both hands (each on its own end), translated together
             label = "place on the stack"
             shift = np.asarray(task.stack_xy, dtype=float) - c[:2]
-            ends = [("right", u1 - 0.03, end_v(+1)), ("left", u0 + 0.03, end_v(-1))]
+            ends = [("right", u1 - self.cfg.stack_in, end_v(+1)), ("left", u0 + self.cfg.stack_in, end_v(-1))]
             arms = [(s_, c[:2] + u * uu + v * ve, c[:2] + u * uu + v * ve + shift) for s_, uu, ve in ends]
         def local_bottom(xy, r=0.025):
             """Lowest cloth layer under the grasp (10th percentile): after the half fold the pinch must hold both
@@ -488,6 +495,12 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 # from desk targets (v5 / v9); the next move starts from this raised pose instead
                 if self.debug:
                     self.plan_log[-1]["folds_after"] = self._fold_fracs(U, task)
+                    import os
+
+                    if os.environ.get("DX_B02_SNAP"):  # debug: the towel after each move -> <dir>/<i>_<move>.npz
+                        snap = (_T(U.scene[self.target].data.nodal_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
+                        k = sum(1 for e_ in self.plan_log if "move" in e_)
+                        np.savez(f"{os.environ['DX_B02_SNAP']}/{k}_{self.mv['move']}.npz", nodes=snap)
                 if self.held is not None and self.held[0] not in [arm["side"] for arm in self.mv["arms"]]:
                     self.held = None  # released together with this move
                 self._set("plan")

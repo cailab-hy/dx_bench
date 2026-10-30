@@ -176,3 +176,43 @@ def grid_rectangle_spawn(spacing: float):
         return stage.GetPrimAtPath(prim_path)
 
     return spawn
+
+
+
+def mirrored_diag_rectangle_spawn(edge_refinement: float):
+    """`spawn_mesh_rectangle` with Isaac Lab's edge refinement, then the cells of the x > 0 half re-split along their
+    other diagonal (D-61). Edge halving keeps the first triangle pair's diagonal, so every cell of the plain rectangle
+    splits the same way: the mesh is chiral, and a towel side fold at x > 0 is not the mirror image of the one at
+    x < 0 - folded at x > 0 the flap sprang open (right flap 0.94 -> 0.5 while the left one stayed, any fold order;
+    checkerboard diagonals: both sides ~0.6). Mirrored about x = 0, both halves fold like the plain mesh's x < 0 half.
+    The vertices and their order are unchanged, so saved cloth states and rest (u, v) caches still match. Use with
+    cfg.edge_refinement = 1.0 (the refinement is done here)."""
+    from isaaclab.sim.utils import clone
+
+    @clone
+    def spawn(prim_path, cfg, translation=None, orientation=None, **kwargs):
+        import math
+
+        import trimesh
+        from isaaclab.sim.spawners.meshes.meshes import _spawn_mesh_geom_from_mesh
+        from isaaclab.sim.utils import get_current_stage
+
+        hx, hy = cfg.size[0] / 2, cfg.size[1] / 2
+        v = np.array([(-hx, -hy, 0.0), (hx, -hy, 0.0), (hx, hy, 0.0), (-hx, hy, 0.0)])
+        verts, _ = trimesh.remesh.subdivide_to_size(v, np.array([(0, 1, 2), (0, 2, 3)]),
+                                                    max_edge=math.hypot(*cfg.size) / edge_refinement)
+        xs, ys = np.unique(verts[:, 0].round(7)), np.unique(verts[:, 1].round(7))
+        assert len(xs) * len(ys) == len(verts), "refined rectangle is not a full grid"
+        idx = {(i, j): k for k, (i, j) in enumerate(zip(np.searchsorted(xs, verts[:, 0].round(7)),
+                                                        np.searchsorted(ys, verts[:, 1].round(7))))}
+        tris = []
+        for i in range(len(xs) - 1):
+            for j in range(len(ys) - 1):
+                a, b, c, d = idx[i, j], idx[i + 1, j], idx[i + 1, j + 1], idx[i, j + 1]
+                tris += [(a, b, c), (a, c, d)] if xs[i] + xs[i + 1] < 0 else [(a, b, d), (b, c, d)]
+        mesh = trimesh.Trimesh(vertices=verts.astype(np.float32), faces=np.array(tris), process=False)
+        stage = get_current_stage()
+        _spawn_mesh_geom_from_mesh(prim_path, cfg, mesh, translation, orientation, None, stage=stage)
+        return stage.GetPrimAtPath(prim_path)
+
+    return spawn

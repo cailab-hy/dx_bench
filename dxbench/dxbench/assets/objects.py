@@ -20,7 +20,7 @@ from isaaclab_arena.assets.object_base import ObjectType
 from isaaclab_arena.utils.physics_backend import PhysicsBackend
 from isaaclab_arena.utils.pose import Pose
 
-from dxbench.assets.thick_cloth import grid_rectangle_spawn, thick_spawn
+from dxbench.assets.thick_cloth import grid_rectangle_spawn, mirrored_diag_rectangle_spawn, thick_spawn
 
 OBJ = Path(__file__).resolve().parent / "objects"
 TSHIRTS = ("s_red", "m_blue", "l_gray", "m_white", "m95_blue", "m95_wine", "m95_green")  # m95_*: real product (D-36)
@@ -89,14 +89,18 @@ def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.
                spacing_m: float = 0.023, iters: int = SOLVER_ITERS, self_collision: bool = True,
                youngs_modulus: float = 1.0e6, density: float = 120.0, friction: tuple = (0.72, 0.6),
                thickness: float = CLOTH_THICKNESS, poisson: float = 0.25, grid_m: float | None = None,
-               bend: float = TOWEL_BEND, linear_damping: float = CLOTH_LINEAR_DAMPING) -> DeformableObject:
+               bend: float = TOWEL_BEND, linear_damping: float = CLOTH_LINEAR_DAMPING,
+               mirror_diag: bool = False) -> DeformableObject:
     """grid_m: a regular node grid of this spacing (thick_cloth.grid_rectangle_spawn) instead of Isaac Lab's
-    edge-halving refinement (spacing_m), which jumps 2.0 m sheets from 3.1 cm to 1.6 cm nodes."""
+    edge-halving refinement (spacing_m), which jumps 2.0 m sheets from 3.1 cm to 1.6 cm nodes.
+    mirror_diag: the same refined nodes, cell diagonals mirrored about the centre line across the long side
+    (thick_cloth.mirrored_diag_rectangle_spawn, D-61)."""
     import math
 
     diag = math.hypot(*size)
+    refine = max(1.0, diag / (1.45 * spacing_m))
     cfg = sim_utils.MeshRectangleCfg(
-        size=size, edge_refinement=1.0 if grid_m else max(1.0, diag / (1.45 * spacing_m)),
+        size=size, edge_refinement=1.0 if grid_m or mirror_diag else refine,
         deformable_props=sim_utils.DeformableBodyPropertiesCfg(
             solver_position_iteration_count=iters, self_collision=self_collision, linear_damping=linear_damping,
         ),
@@ -106,7 +110,9 @@ def rect_cloth(name: str, size=(0.7, 0.45), xyz=(0.0, 0.0, 0.0), yaw: float = 0.
             surface_bend_stiffness=bend),
         collision_props=[PhysxCollisionCfg(contact_offset=0.008, rest_offset=CLOTH_HALF)],
         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=rgb))
-    cfg.func = thick_spawn(grid_rectangle_spawn(grid_m) if grid_m else spawn_mesh_rectangle, CLOTH_HALF)
+    spawner = (grid_rectangle_spawn(grid_m) if grid_m else mirrored_diag_rectangle_spawn(refine) if mirror_diag
+               else spawn_mesh_rectangle)
+    cfg.func = thick_spawn(spawner, CLOTH_HALF)
     return DeformableObject(name=name, spawner_cfg=cfg, initial_pose=_pose(xyz, yaw))
 
 
@@ -120,7 +126,8 @@ def towel(name: str, xyz=(0.0, 0.0, 0.0), yaw: float = 0.0, small: bool = False,
     the stage-3 procedural towel (0.7 x 0.45, small 0.5 x 0.3), kept for old scenes."""
     if color is not None:
         return rect_cloth(name, TOWEL_SIZE, xyz, yaw, rgb=srgb_to_linear(TOWEL_COLORS[color]),
-                          youngs_modulus=TOWEL_YOUNGS, density=TOWEL_GSM / 1000.0 / CLOTH_THICKNESS, friction=(0.9, 0.75))
+                          youngs_modulus=TOWEL_YOUNGS, density=TOWEL_GSM / 1000.0 / CLOTH_THICKNESS,
+                          friction=(0.9, 0.75), mirror_diag=True)  # D-61: side folds mirror each other
     return rect_cloth(name, (0.5, 0.3) if small else (0.7, 0.45), xyz, yaw, rgb=(0.95, 0.9, 0.7),
                       youngs_modulus=TOWEL_YOUNGS)
 

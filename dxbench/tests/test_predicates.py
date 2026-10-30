@@ -33,6 +33,13 @@ def test_bed03_all_in_basket_success():
     assert r["success"] and r["score"] == pytest.approx(1.0)
 
 
+def test_bed03_held_garment_does_not_count():
+    # D-60: a garment hanging from the gripper inside the basket volume is not in the basket until released
+    clothes = {"shirt": sheet(1.0, 2.0, 0.08, 0.3, 0.2), "towel": sheet(1.05, 2.0, 0.12, 0.25, 0.2)}
+    r = P.evaluate_bed03(clothes, {}, *BASKET, held={"towel"})
+    assert not r["success"] and r["score"] == pytest.approx(0.5) and not r["stages"]["in_basket/towel"]
+
+
 def test_bed03_partial_and_rotated_basket():
     clothes = {"in": sheet(1.0, 2.0, 0.08, 0.2, 0.2), "out": sheet(2.0, 2.0, 0.0, 0.3, 0.3)}
     r = P.evaluate_bed03(clothes, {}, np.array([1.0, 2.0, 0.0]), yaw_q(0.7))
