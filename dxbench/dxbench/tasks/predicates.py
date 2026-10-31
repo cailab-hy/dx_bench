@@ -212,6 +212,12 @@ FOLD_LINES = {"towel": {"fold_left": (0, -0.20), "fold_right": (0, 0.20), "fold_
 # flat projected area as `projected_area` counts it (2 cm cells; 2.3 cm nodes leave some cells empty), measured on the
 # settled flat states (BED-02 easy towel, BED-03 easy tee), 2026-10-21
 REST_AREA = {"towel": 0.288, "tshirt": 0.351}
+# D-64 (user 2026-10-31): towels are folded once more, across the strip's middle (u = 0), to a square of 1/8 the flat
+# area. Folding the 4-layer strip shears its layers by 3-6 cm (the outer layer travels further round the crease), so the
+# side / half mirror pairs drift apart: those folds count once reached during the episode, and the last fold is judged
+# by the final footprint - long side <= 0.375 x the flat length and projected area <= 0.25 x REST_AREA (the folded
+# square: 0.26 m / 0.05-0.07 m2; the 4-layer strip: 0.35-0.38 m / 0.08 m2)
+QUARTER_FOLD = {"towel": (0.375, 0.25)}
 
 
 def rest_uv(rest_xyz: np.ndarray, spawn_xy, spawn_yaw: float) -> np.ndarray:
@@ -245,25 +251,37 @@ def fold_done(nodes: np.ndarray, uv: np.ndarray, axis: int, c: float, tol: float
 
 def evaluate_bed02_garments(garments: list[dict], spec: FoldSpec) -> dict:
     """D-41 BED-02 score over all garments (mean). Each garment dict: name, kind, nodes (V,3), uv (V,2) rest frame,
-    start_flat (bool), start_centroid (2,). Per garment: flatten 0.3 (only when it started crumpled - a flat start
-    re-weights folds / stack to sum to 1), folds 0.15 each (topological `fold_done`), on the stack 0.25 = any fold
-    done + centroid within stack_radius of the stack spot + moved >= 8 cm from its start + resting on the desk.
-    Success: every garment has all three folds and is on the stack."""
+    start_flat (bool), start_centroid (2,), optional seen (set, updated in place: folds reached earlier in the episode).
+    Per garment: flatten 0.3 (only when it started crumpled - a flat start re-weights folds / stack to sum to 1), folds
+    0.15 each (topological `fold_done`), on the stack 0.25 = any fold done + centroid within stack_radius of the stack
+    spot + moved >= 8 cm from its start + resting on the desk. Towels (D-64): the side / half folds count once reached
+    (`seen`), plus fold_quarter (final footprint, QUARTER_FOLD). Success: every garment has all its folds and is on the
+    stack."""
     stages, scores, succ = {}, [], []
     multi = len(garments) > 1
     for g in garments:
         n, kind = g["nodes"], g["kind"]
         flattened = projected_area(n[:, :2]) >= 0.8 * REST_AREA[kind]
         folds = {k: fold_done(n, g["uv"], ax, c) for k, (ax, c) in FOLD_LINES[kind].items()}
+        if kind in QUARTER_FOLD:
+            seen = g.get("seen")
+            if seen is not None:
+                seen.update(k for k, v in folds.items() if v)
+                folds = {k: v or k in seen for k, v in folds.items()}
+            fl, fa = QUARTER_FOLD[kind]
+            long_ = obb_extent_xy(n[:, :2])[0]
+            folds["fold_quarter"] = bool(all(folds.values()) and long_ <= fl * float(np.ptp(g["uv"][:, 0]))
+                                         and projected_area(n[:, :2]) <= fa * REST_AREA[kind])
         centre = n[:, :2].mean(axis=0)
         moved = float(np.linalg.norm(centre - np.asarray(g["start_centroid"])[:2])) >= 0.08
         on_stack = bool(any(folds.values()) and moved and n[:, 2].min() >= spec.table_z - 0.02
                         and np.linalg.norm(centre - np.asarray(spec.stack_center)) <= spec.stack_radius)
         flat_flag = flattened or any(folds.values())
+        full = 0.3 + 0.15 * len(folds) + 0.25  # 1.0 with three folds; towels (four folds) are re-weighted to 1
         if g["start_flat"]:
-            score = (0.15 * sum(folds.values()) + 0.25 * on_stack) / 0.7
+            score = (0.15 * sum(folds.values()) + 0.25 * on_stack) / (full - 0.3)
         else:
-            score = 0.3 * flat_flag + 0.15 * sum(folds.values()) + 0.25 * on_stack
+            score = (0.3 * flat_flag + 0.15 * sum(folds.values()) + 0.25 * on_stack) / full
         sfx = f"/{g['name']}" if multi else ""
         stages.update({f"flatten{sfx}": bool(flat_flag), **{f"{k}{sfx}": v for k, v in folds.items()},
                        f"on_stack{sfx}": on_stack})

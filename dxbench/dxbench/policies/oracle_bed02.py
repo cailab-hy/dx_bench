@@ -78,6 +78,15 @@ class Bed02OraclePolicyCfg(PolicyCfg):
     # stack move: pinched 3 cm from the folded strip's ends (its creases), the carry slid both flaps (right 0.99 -> 0.6);
     # 15 cm in the pads hold the flap and the layers under it together (0.94 / 0.92 at the end; 8 cm 0.75, 17 cm 0.88)
     stack_in: float = 0.15
+    # D-64 (user 2026-10-31): fold the 0.4 x 0.2 m strip once more to a 0.2 m square (8 layers). An arm crosses the body
+    # centre by ~0.1 m at most (reach_diag), so both hands first slide the strip `quarter_shift` towards the robot's
+    # right, then the right hand lays the right end on the left end; the square goes to the stack
+    quarter: bool = True
+    quarter_shift: float = 0.09
+    quarter_over: float = -0.04   # lay the end this far short of the far end (negative = short)
+    quarter_arc: float = 0.08     # (0.12: 4 / 3 scenes the same, the stack slid more)
+    quarter_stack_d: float = 0.06  # > 0: the square to the stack in both hands, pinched this far either side of its
+                                   # centre (one hand at the centre: the square turned and spread, area 0.07-0.08 m2)
     side_corners: bool = False    # side folds as two one-hand moves: the end's near corner, then its far corner
                                   # (0/10, the half fold opened, 2026-10-29)
     side_two_hands: bool = False  # side folds with both hands on the two corners of the strip end (crumpled the towel:
@@ -112,6 +121,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
     def reset(self, env_ids: torch.Tensor | None = None) -> None:
         self.__dict__.pop("u_span", None)
         self.__dict__.pop("n_side", None)
+        self.quartered = False
         self.held = None
         self.phase = "init"
         self.t_phase = 0
@@ -188,6 +198,16 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             d = np.linalg.norm(n[a[ok]] - n[j[ok]], axis=1)
             out[k[5:]] = (round(float((d < 0.05).mean()), 2), round(float(np.median(d)), 3))
         return out
+
+    def _arc(self):
+        """Carry arc height of the current move."""
+        if self.mv.get("tighten"):
+            return 0.02
+        if self.mv["move"] == "quarter":
+            return self.cfg.quarter_arc
+        if self.mv["move"].split("_")[0] in ("right", "left") and self.cfg.side_arc:
+            return self.cfg.side_arc
+        return self.cfg.arc_h
 
     @staticmethod
     def _strip_v(pu, pv, ua, ub):
@@ -291,6 +311,23 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             elif self.cfg.hold_in > 0:
                 hu = u0 + 0.25 * span + self.cfg.hold_in
                 arms.append(("right", c[:2] + u * hu + v * ve, None))
+        elif move == "shift":  # D-64: both hands slide the folded strip towards the robot's right (u)
+            label = "fold in half"
+            ends = [("right", u1 - self.cfg.stack_in, end_v(+1)), ("left", u0 + self.cfg.stack_in, end_v(-1))]
+            arms = [(s_, c[:2] + u * uu + v * ve, c[:2] + u * (uu + self.cfg.quarter_shift) + v * ve) for s_, uu, ve in ends]
+        elif move == "quarter":  # D-64: the right end over onto the left end (all four layers pinched)
+            label = "fold in half"
+            pick_u = u1 - self.cfg.side_end_in
+            put_u = u0 + self.cfg.side_end_in - self.cfg.quarter_over
+            ve = 0.5 * (v0 + v1)
+            arms = [("right", c[:2] + u * pick_u + v * ve, c[:2] + u * put_u + v * ve)]
+        elif getattr(self, "quartered", False):  # the square to the stack spot in the right hand, centre pinched
+            label = "place on the stack"
+            shift = np.asarray(task.stack_xy, dtype=float) - c[:2]
+            uc, vc = 0.5 * (u0 + u1), 0.5 * (v0 + v1)
+            dq = self.cfg.quarter_stack_d
+            ends = [("right", uc + dq, vc), ("left", uc - dq, vc)] if dq > 0 else [("right", uc, vc)]
+            arms = [(s_, c[:2] + u * uu + v * ve, c[:2] + u * uu + v * ve + shift) for s_, uu, ve in ends]
         else:                  # folded towel -> stack spot with both hands (each on its own end), translated together
             label = "place on the stack"
             shift = np.asarray(task.stack_xy, dtype=float) - c[:2]
@@ -384,6 +421,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self.plan_log.append({"base_after_drive_in": np.round(p_[:2], 3).tolist()})
                 self.moves = (["half2", "nudge", "right_n", "right_f", "left_n", "left_f", "stack"]
                               if self.cfg.side_corners else ["half2", "nudge", "right", "left", "stack"])
+                if self.cfg.quarter:
+                    self.moves[-1:-1] = ["shift", "quarter"]
                 if self.cfg.order:
                     self.moves = self.cfg.order.split(";")
                 self._set("plan")
@@ -401,8 +440,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             targets = {}
             if self.phase == "carry":  # shared fold arc: rises to arc_h and comes down past the line
                 D = max(float(np.linalg.norm(arm["put"][:2] - arm["pick"][:2])) for arm in arms if not arm.get("hold"))
-                arc = (0.02 if self.mv.get("tighten") else self.cfg.side_arc
-                       if (self.mv["move"].split("_")[0] in ("right", "left") and self.cfg.side_arc) else self.cfg.arc_h)
+                arc = self._arc()
                 # ~0.8 cm of path per step; half speed while a hand lags > 2.5 cm, wait while it lags > 4 cm (the arms
                 # trail the arc by up to 15 cm at 1.2 cm per step with the towel pinned)
                 e_ = self.last_err if self.last_err is not None else 0.0
@@ -421,8 +459,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 elif self.phase == "carry":
                     s_ = self.arc_s
                     tgt = pick + (put - pick) * s_
-                    arc = (0.02 if self.mv.get("tighten") else self.cfg.side_arc
-                       if (self.mv["move"].split("_")[0] in ("right", "left") and self.cfg.side_arc) else self.cfg.arc_h)
+                    arc = self._arc()
                     tgt[2] = pick[2] + 0.03 + (put[2] - pick[2] - 0.03) * s_ + arc * math.sin(math.pi * s_)
                     mdp = 0.02
                 else:  # release: open in place first (pins drop when the fingers open), then rise 12 cm and stay
@@ -503,6 +540,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                         np.savez(f"{os.environ['DX_B02_SNAP']}/{k}_{self.mv['move']}.npz", nodes=snap)
                 if self.held is not None and self.held[0] not in [arm["side"] for arm in self.mv["arms"]]:
                     self.held = None  # released together with this move
+                if self.mv["move"] == "quarter":
+                    self.quartered = True
                 self._set("plan")
         elif self.phase == "rehome":
             homing = [bool(U.action_manager.get_term(f"{arm['side']}_arm").homing[0]) for arm in self.mv["arms"]]

@@ -274,6 +274,7 @@ class Bed02FoldTask(BedTaskBase):
         self.stack_xy = (float(hi[0] - 0.40), cy)
         self._uv: dict[str, np.ndarray] = {}
         self._start: dict[int, dict] = {}
+        self._seen: dict[int, dict] = {}  # D-64: folds reached so far this episode, per env and garment
 
     def _rest_uv(self, env, name):
         """Flat rest frame (u, v) of a garment's nodes from its spawned (pre-state) mesh; cached, and written to
@@ -296,7 +297,7 @@ class Bed02FoldTask(BedTaskBase):
         return self._uv[name]
 
     def evaluate(self, env) -> list[dict]:
-        """D-41: every garment, topological folds (predicates.evaluate_bed02_garments)."""
+        """D-41: every garment, topological folds (predicates.evaluate_bed02_garments); D-64: towel folds latch."""
         spec = P.FoldSpec(rest_area=0.0, stack_center=self.stack_xy, table_z=self.table_z)
         out = []
         for e in range(env.num_envs):
@@ -310,9 +311,10 @@ class Bed02FoldTask(BedTaskBase):
                 if new_ep:
                     self._start.setdefault(e, {})[name] = (
                         P.projected_area(n[:, :2]) >= 0.8 * P.REST_AREA[o.kind], n[:, :2].mean(axis=0))
+                    self._seen.setdefault(e, {})[name] = set()
                 flat0, c0 = self._start[e][name]
                 gs.append({"name": name, "kind": o.kind, "nodes": n, "uv": self._rest_uv(env, name),
-                           "start_flat": flat0, "start_centroid": c0})
+                           "start_flat": flat0, "start_centroid": c0, "seen": self._seen[e][name]})
             out.append(P.evaluate_bed02_garments(gs, spec))
         return out
 

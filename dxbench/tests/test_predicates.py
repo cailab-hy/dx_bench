@@ -133,8 +133,20 @@ def test_bed02_garments_score_flat_start_and_stack():
         end = sgn * uv[:, 0] > 0.2
         f[end, 0] = sgn * 0.4 - f[end, 0]
     f[:, 1] += 0.25 + 0.1
-    r = P.evaluate_bed02_garments([dict(g, nodes=f)], spec)
-    assert r["success"] and r["score"] == pytest.approx(1.0), r
+    seen = set()
+    r = P.evaluate_bed02_garments([dict(g, nodes=f, seen=seen)], spec)
+    # D-64: a towel still needs the last fold (half + both ends + stack = 4 of 5 parts, re-weighted)
+    assert not r["success"] and r["score"] == pytest.approx((0.15 * 3 + 0.25) / 0.85), r
+    assert seen == {"fold_left", "fold_right", "fold_half"}
+    # last fold across u = 0, the layers sheared 6 cm: the side pairs drift apart, the latched folds still count
+    q = f.copy()
+    right = uv[:, 0] > 0
+    q[right, 0] = -q[right, 0]
+    q[right, 2] += 0.02
+    q[np.abs(uv[:, 0]) > 0.2, 1] += 0.06  # the flaps slid 6 cm off the layers under them
+    assert not P.evaluate_bed02_garments([dict(g, nodes=q)], spec)["stages"]["fold_left"]
+    r = P.evaluate_bed02_garments([dict(g, nodes=q, seen=seen)], spec)
+    assert r["stages"]["fold_quarter"] and r["success"] and r["score"] == pytest.approx(1.0), r
 
 
 # ------------------------------------------------------------------ BED-01 (D-41 target area, D-55 rubric)

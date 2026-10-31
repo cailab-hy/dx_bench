@@ -24,18 +24,6 @@
    "yaw": 1.5707963267948966,
    "variant": null,
    "cloth_state": "benchmarks/dx_bed_v0/states/bed01_easy_007_duvet.npz"
-  },
-  {
-   "name": "pillow",
-   "kind": "pillow",
-   "xyz": [
-    2.0207213800969575,
-    20.658499997615813,
-    0.6100000014901161
-   ],
-   "yaw": 0.05513713804903872,
-   "variant": null,
-   "cloth_state": null
   }
  ],
  "lighting": {

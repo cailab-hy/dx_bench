@@ -223,6 +223,8 @@ def gen_bed01(diff: str, seed: int, split: str) -> SceneSpec:
                         variant="bundle_foot" if seed % 2 == 0 else "bundle_edge")
     pillow_xyz = [cx + float(rng.uniform(-0.05, 0.05)), head_y, top + 0.08]
     objs = [duvet, ObjSpec("pillow", "pillow", pillow_xyz, float(rng.uniform(-0.1, 0.1)))]
+    if diff == "easy":  # D-63 (user): no pillow on the easy level (not scored, only clutter); drawn anyway so the seeds
+        objs = [duvet]  # keep the same layouts
     # facing the open long side (+x), 0.9 m from it on every level (D-55: at 1.3 m the hard start robot hit the pillar
     # by the window and tipped over)
     robot = {"xy": [float(lo[0]) - 0.9, cy], "yaw": 0.0,
