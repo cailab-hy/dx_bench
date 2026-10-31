@@ -3,7 +3,7 @@
     # keyboard (needs the GUI: add --visualizer kit); H = arms home
     python dxbench/dxbench/teleop/run_teleop.py --teleop_device keyboard --record data/raw/bed03_human --visualizer kit \
         --external_environment_class_path dxbench.tasks.bed_tasks:DxBed03Environment dx_bed03 \
-        --scene benchmarks/dx_bed_v0/scenes/bed03_easy_000.json   # physics 120 Hz unless --physics_hz (BED-01: 480)
+        --scene benchmarks/dx_bed_v0/scenes/bed03_easy_000.json   # physics: the task default (BED-02/03 120 Hz, BED-01 480)
     # Quest (adb reverse tcp:8012 tcp:8012; open http://localhost:8012 in the headset browser)
     python dxbench/dxbench/teleop/run_teleop.py --teleop_device vr --record data/raw/bed03_vr ...
     # headless end-to-end VR test (scripted operator through the real WebSocket)
@@ -40,8 +40,6 @@ def main():
         sys.argv.insert(1, "--enable_cameras")
     if "--ik_every_n" not in sys.argv:  # task flag (after the task name): arm IK once per control step at 120 Hz
         sys.argv += ["--ik_every_n", "8"]
-    if "--physics_hz" not in sys.argv:  # D-51: 120 Hz (2.5x faster than 360); BED-01 duvet keeps 480 (D-11, untested)
-        sys.argv += ["--physics_hz", "480" if "dx_bed01" in sys.argv else "120"]
     rt = ArenaRuntime(add_args=_args)
     env = rt.make_env()
     a = rt.args
@@ -71,7 +69,7 @@ def main():
 
         streamer = VideoStreamer(dev.server)
 
-    from dxbench.tasks import bed_tasks
+    from dxbench.tasks import task_env
 
     obs, _ = env.reset()
     dev.reset()
@@ -142,7 +140,7 @@ def main():
                 pass
             text = line1 + (f"\n{dev.base.status()}" if hasattr(dev, "base") else "")
             streamer.submit(imgs, text, "rec" if rec else "idle")
-        task = bed_tasks.CURRENT_TASK
+        task = task_env.CURRENT_TASK
         ended = bool(term[0]) or bool(trunc[0])
         if task is None:
             ev = {"success": False, "score": 0.0}

@@ -63,10 +63,10 @@ def main():
     from PIL import Image, ImageDraw, ImageFont
 
     from dxbench.embodiments.rby1_cfg import ARM_L, ARM_R, READY_ARMS
-    from dxbench.tasks import bed_tasks
-    from dxbench.tasks.bed_tasks import aim_observer
+    from dxbench.tasks import task_env
+    from dxbench.tasks.task_env import aim_observer
 
-    task = bed_tasks.CURRENT_TASK
+    task = task_env.CURRENT_TASK
     org = U.scene.env_origins[0]
     dev = U.device
     dt = U.physics_dt

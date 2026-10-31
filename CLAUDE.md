@@ -68,17 +68,20 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - **천은 env 안 충돌체 위에서만 제대로 렌더된다**(D-44): env 밖(전역 prim) 충돌체에 닿은 천 부분은 물리는 맞는데 렌더에서 사라진다. DX 방은 `/World/envs/env_0/...`(`paths.CARE_ROOM_PRIM`).
 - PhysX FEM 천에는 공기 저항이 없다: linear damping 0이면 들고 옮긴 천이 진자처럼 ±40 cm 몇 초간 흔들린다. 모든 천 `linear_damping` 3 /s(`objects.CLOTH_LINEAR_DAMPING`, 반팔티 USD에도, D-45). bend·elasticity 감쇠로는 안 줄어든다. PhysX가 주는 정점 속도로 흔들림을 재지 말 것(위치 차분 사용).
 - PhysX 표면 천의 `surfaceBendStiffness` 기본 0 = **굽힘 꺼짐**(영률로 계산되지 않음, D-46). 굽힘 값은 Pa(힌지 = 값 × 두께³), 반팔티 5e3·수건 2e4·이불 3e3(125 g, 감쇠 6 /s, 영률 1e4, D-47). 천 무게를 바꾸면 영률도 같은 비율로: 가벼운 정점은 속도 고정 잡기로 뻣뻣한 막을 끌지 못해 잡힌 점이 패드에서 벌어진다. 앞·뒤판이 접힌 옷 메시는 `restBendAnglesDefault = restShapeDefault`. `surfaceStretch/ShearStiffness`는 무시됨. 천 렌더 메시는 catmullClark(세분 0)여야 각지지 않는다.
-- DX 가구가 동적 강체·관절이면 방 안의 천이 떨린다 → prestartup `fix_bed`가 모두 정적으로(D-44).
+- DX 가구가 동적 강체·관절이면 방 안의 천이 떨린다 → prestartup `fix_furniture`(`assets/scenes.py`)가 모두 정적으로(D-44).
+- 방·과제 구조(D-65): 공통 env 생성·이벤트·task 기반 클래스·task 등록은 `tasks/task_env.py`, 방(배경·시작 전 이벤트)은 `assets/scenes.py`
+  `ROOMS`, 방 배치는 `tasks/<room>_layout.json`(`extract_layout.py --room`), 침실 과제는 `tasks/bed_tasks.py`. 새 방·과제: `docs/ADDING_A_ROOM.md`.
+  현재 task 객체는 `task_env.CURRENT_TASK`(옛 `bed_tasks.CURRENT_TASK`도 동작).
 - 천 상태 생성은 순간이동(정점 위치 쓰기)으로 크게 접거나 구기지 말 것: 큰 이불이 NaN·뭉침. 속도 고정으로 물리적으로 접고 구긴다(`make_cloth_states.py`).
 - 저장한 천 상태도 완전히 정지 상태는 아니다: 구겨진 옷은 에피소드 20 s 동안 조금씩 풀린다(D-44 이전 측정: 정점 평균 6–15 cm, 가구 떨림 포함).
 - 보조 잡기 기본은 `pad_grasp`(D-34/35): 손끝이 천에서 4 mm 안, 닫히는 방향 가운데 ±2.5 cm 안의 천만 잡힌다. oracle·원격조작은 천에 닿을 때까지 내려갈 것(`oracle_bed03.pinch_dz`). 잡기 기록은 `result.json`의 `grasp_stats`(`step_drift` = 천 계산이 한 스텝에 잡힌 정점을 끌어낸 거리).
   지지 정점(패드 중심 5 cm)은 모든 천에 기본(`--pad_support all`, D-51): 없으면 120 Hz에서 잡힌 천이 손끝에서 7–11 cm 떨어져 매달린다.
-  원격조작 물리 주기 기본 120 Hz(BED-01은 480). 평가·oracle의 task 기본 주기(`bed_tasks.PHYSICS_HZ`, D-59, D-62): BED-02·BED-03 120, BED-01 480.
+  평가·oracle·원격조작의 task 기본 물리 주기(`register_task`의 `TaskEntry.physics_hz`, D-59, D-62): BED-02·BED-03 120, BED-01 480.
 - 물리 스텝마다 도는 액션 코드(`apply_actions`)에 GPU→CPU 동기화(`.any()`, `.tolist()`, `float()`, `len(nonzero)`)를 넣지 말 것(D-52):
   CPU가 GPU를 기다리느라 다음 스텝을 미리 넘기지 못한다. 제어 스텝에 한 번이면 되는 판단은 `process_actions`/첫 물리 스텝에서.
 - **PhysX GPU 솔버 반복 횟수는 장면 전체의 최댓값**으로 모두에 적용된다(D-53): 천 16회·바구니 16회(USD 기본값)가 있으면 로봇(설정 4+1)도
-  16+1회 풀린다. 그래서 천·베개·로봇 외 강체는 모두 `objects.SOLVER_ITERS` = 4(D-54, prestartup `bed_tasks.solver_iterations`가 장면의 모든
-  변형체·강체에 씀). 새 물체를 넣을 때 16 같은 큰 값을 주면 전체가 느려진다. 실험용 덮어쓰기: `DX_CLOTH_ITERS`/`DX_RIGID_ITERS`/
+  16+1회 풀린다. 그래서 천·베개·로봇 외 강체는 모두 `objects.SOLVER_ITERS` = 4(D-54, prestartup `solver_iterations`가 장면의 모든
+  변형체·강체에 씀, `task_env.solver_iterations`). 새 물체를 넣을 때 16 같은 큰 값을 주면 전체가 느려진다. 실험용 덮어쓰기: `DX_CLOTH_ITERS`/`DX_RIGID_ITERS`/
   `DX_CLOTH_SELFCOL`/`DX_CLOTH_PAIRFREQ`(기본 실행은 설정 안 함).
 - **RB-Y1 팔 도달(실제 env, 그리퍼 아래 방향, `policies/reach_diag.py`, 2026-10-28)**: 침대(z 0.56, 베이스 앞 프레임 6 cm)에서 deep은
   베이스 앞 0.79-0.84 m만 됨(더 가까우면 arm_3·arm_5 관절 한계, 더 멀면 팔·몸통이 침대에 닿음), crouch는 ~0.77 m까지. 책상 높이(z 0.78) lean은

@@ -97,9 +97,9 @@ class EpisodeRecorder:
     # ------------------------------------------------------------ construction from a running env
     @classmethod
     def from_env(cls, U, root, policy_name: str = "", scene: str | None = None, device_name: str = "scripted"):
-        from dxbench.tasks import bed_tasks
+        from dxbench.tasks import task_env
 
-        task = bed_tasks.CURRENT_TASK
+        task = task_env.CURRENT_TASK
         spec = task.spec if task is not None else None
         r = U.scene["robot"]
         init = {"scene_json": scene, "scene_id": spec.scene_id if spec else None,

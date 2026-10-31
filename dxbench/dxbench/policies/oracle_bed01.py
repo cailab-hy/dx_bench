@@ -116,10 +116,10 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
         return ("right", "left") if self.cfg.two_arms else ("right",)
 
     def _bed(self):
-        from dxbench.tasks import bed_tasks
+        from dxbench.tasks import task_env
 
-        b = bed_tasks.CURRENT_TASK.bed
-        return b, bed_tasks.CURRENT_TASK
+        b = task_env.CURRENT_TASK.bed
+        return b, task_env.CURRENT_TASK
 
     def get_action(self, env: gym.Env, observation) -> torch.Tensor:
         U = env.unwrapped

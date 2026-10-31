@@ -144,7 +144,7 @@ $A -m pytest -q dxbench/tests dxbench/dxbench/teleop/vr
 ~/miniforge3/envs/dx_policy/bin/python -m pytest -q dxbench_policy/tests
 ```
 
-For data collection, conversion, training and closed-loop play, see [`docs/PIPELINE.md`](docs/PIPELINE.md). For the benchmark definition, see [`docs/BENCHMARK.md`](docs/BENCHMARK.md).
+For data collection, conversion, training and closed-loop play, see [`docs/PIPELINE.md`](docs/PIPELINE.md). For the benchmark definition, see [`docs/BENCHMARK.md`](docs/BENCHMARK.md). To add a room or a task family (e.g. the DX kitchen), see [`docs/ADDING_A_ROOM.md`](docs/ADDING_A_ROOM.md).
 
 ## VR teleoperation (Meta Quest 2 / 3)
 

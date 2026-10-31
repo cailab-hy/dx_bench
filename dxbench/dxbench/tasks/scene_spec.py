@@ -22,7 +22,7 @@ import numpy as np
 
 from dxbench.tasks.predicates import TEXT
 
-LAYOUT = Path(__file__).resolve().parent / "care_room_layout.json"
+LAYOUT = Path(__file__).resolve().parent / "care_room_layout.json"  # the care room (BED tasks); other rooms: load_layout
 
 
 # DX Building variant sets: blinds down | half | up, lighting day | day_sunny | night (| none); intensity scales every
@@ -71,8 +71,9 @@ class SceneSpec:
         return [o for o in self.objects if o.kind in kinds]
 
 
-def load_layout() -> dict:
-    return json.loads(LAYOUT.read_text())
+def load_layout(room: str = "care_room") -> dict:
+    """Layout JSON of a room (assets/scenes.py ROOMS: tasks/<room>_layout.json, tasks/extract_layout.py)."""
+    return json.loads((LAYOUT.parent / f"{room}_layout.json").read_text())
 
 
 # ------------------------------------------------------------------------------------------ floor sampling

@@ -45,7 +45,7 @@ class DriveInDiag(Bed03OraclePolicy, PolicyBase[DriveInDiagCfg]):
         self.plan_log, self.hist = [], []
 
     def get_action(self, env: gym.Env, observation) -> torch.Tensor:
-        from dxbench.tasks import bed_tasks
+        from dxbench.tasks import task_env
 
         U = env.unwrapped
         a = np.zeros(17, dtype=np.float32)
@@ -56,7 +56,7 @@ class DriveInDiag(Bed03OraclePolicy, PolicyBase[DriveInDiagCfg]):
             t = [float(v) for v in self.torso_override.split(",")]
             tterm._presets[self.preset, 1:4] = torch.tensor(t, device=U.device)
         idx = int(tterm.preset_index[0])
-        desk = bed_tasks.CURRENT_TASK.layout["parts_aabb"].get("CareDesk")
+        desk = task_env.CURRENT_TASK.layout["parts_aabb"].get("CareDesk")
         edge = float(desk[1][0])
         p, yaw = self._base(U)
         front = float(p[0]) + BASE_FRONT_X * math.cos(yaw)  # facing -x: the front is at x - 0.32

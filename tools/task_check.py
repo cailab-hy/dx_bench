@@ -35,9 +35,9 @@ def main():
 
     from dxbench.embodiments.rby1_cfg import ARM_L, ARM_R, READY_ARMS
     from dxbench.paths import REPO
-    from dxbench.tasks import bed_tasks
+    from dxbench.tasks import task_env
 
-    task = bed_tasks.CURRENT_TASK
+    task = task_env.CURRENT_TASK
     env.reset()
     hold = torch.zeros(U.num_envs, 24, device=U.device)
     hold[:, :14] = torch.tensor([[READY_ARMS.get(n, 0.0) for n in ARM_R + ARM_L]], device=U.device)

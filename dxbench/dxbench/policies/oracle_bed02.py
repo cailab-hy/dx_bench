@@ -353,7 +353,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
 
     # ------------------------------------------------------------------ main
     def get_action(self, env: gym.Env, observation) -> torch.Tensor:
-        from dxbench.tasks import bed_tasks
+        from dxbench.tasks import task_env
 
         U = env.unwrapped
         h = self._h
@@ -371,7 +371,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 return -1.0 if self.t_phase % 2 == 1 else 0.0
             return 0.0
 
-        task = bed_tasks.CURRENT_TASK
+        task = task_env.CURRENT_TASK
         if self.phase == "init":
             self.target = task.cloth_names[0]
             self._set("approach", "pick up a shirt")

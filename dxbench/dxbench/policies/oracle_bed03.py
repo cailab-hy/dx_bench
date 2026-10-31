@@ -318,9 +318,9 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
     @staticmethod
     def _basket_half():
         """Outer (long, short) half extents at the rim: the real gray basket (D-36) 49 x 36 cm, else 60 x 44 cm."""
-        from dxbench.tasks import bed_tasks
+        from dxbench.tasks import task_env
 
-        spec = getattr(bed_tasks.CURRENT_TASK, "spec", None)
+        spec = getattr(task_env.CURRENT_TASK, "spec", None)
         v = next((o.variant for o in spec.objects if o.kind == "basket"), None) if spec else None
         return (0.245, 0.18) if v == "gray" else (0.30, 0.22)
 

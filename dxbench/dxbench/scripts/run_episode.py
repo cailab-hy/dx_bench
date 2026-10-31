@@ -93,7 +93,7 @@ def main():
                     frames[k].append(obs["camera_obs"][key][0].cpu().numpy()[..., :3].astype(np.uint8))
         if observer:
             if step == 0:  # cloth nodes are current after the first step
-                from dxbench.tasks.bed_tasks import aim_observer
+                from dxbench.tasks.task_env import aim_observer
 
                 aim_observer(U, task_obj, a.observer_eye, getattr(a, "observer_target", None))
             frames["observer"].append(U.scene["observer"].data.output["rgb"].torch[0, ..., :3].cpu().numpy().astype(np.uint8))
@@ -189,9 +189,9 @@ def _find_task(U):
     """The Arena task object (BedTaskBase) — stored on the env cfg by the environment factory."""
     t = getattr(U.cfg, "dx_task", None)
     if t is None:
-        from dxbench.tasks import bed_tasks
+        from dxbench.tasks import task_env
 
-        t = bed_tasks.CURRENT_TASK
+        t = task_env.CURRENT_TASK
     return t
 
 
