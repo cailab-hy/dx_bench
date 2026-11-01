@@ -31,6 +31,8 @@ def _args(p):
     p.add_argument("--max_steps", type=int, default=None)
     p.add_argument("--record_all", action="store_true", help="keep unsuccessful recordings too (pipeline tests)")
     p.add_argument("--progress_every", type=int, default=75)
+    p.add_argument("--video_tail", type=int, default=0,
+                   help="video only: success no longer ends the episode; keep filming this many steps after it")
 
 
 def main():
@@ -79,6 +81,8 @@ def main():
     last_eval = None
     task_obj = _find_task(U)
     snap = {}
+    tail = _hold_success(U) if a.video_tail > 0 and frames is not None and not rec else None
+    success_step = None
     for step in range(max_steps):
         act = policy.get_action(env, obs)
         if rec:
@@ -97,6 +101,13 @@ def main():
 
                 aim_observer(U, task_obj, a.observer_eye, getattr(a, "observer_target", None))
             frames["observer"].append(U.scene["observer"].data.output["rgb"].torch[0, ..., :3].cpu().numpy().astype(np.uint8))
+        if tail is not None and success_step is None and tail["hit"]:
+            success_step, done = step, True  # the result is the state at success; the tail is only filmed
+            last_eval = task_obj.last_eval[0] if task_obj is not None and task_obj.last_eval else last_eval
+        if success_step is not None:
+            if step - success_step >= a.video_tail or bool(term[0]) or bool(trunc[0]):
+                break
+            continue
         if task_obj is not None and step % 5 == 0:
             last_eval = task_obj.evaluate_cached(U)[0]
             if not (bool(term[0]) or bool(trunc[0])):  # garments every 5 steps (not after the reset) -> final_state.npz
@@ -130,7 +141,9 @@ def main():
             break
     if task_obj is not None and not done:
         last_eval = task_obj.evaluate(U)[0]
-    term_name = terminated_by(U)
+    term_name = "success" if success_step is not None else terminated_by(U)
+    if success_step is not None:
+        step = success_step
     if last_eval is not None and term_name == "success":
         # the success termination term is the task predicate itself, evaluated before the env reset inside step();
         # our own last evaluation can be a few steps older. Success implies the full score in all three tasks.
@@ -183,6 +196,24 @@ def terminated_by(U) -> str | None:
     except Exception:  # noqa: BLE001
         pass
     return None
+
+
+def _hold_success(U) -> dict | None:
+    """Keep the success termination term from ending the episode; record when it fires instead (--video_tail)."""
+    tm = U.termination_manager
+    if "success" not in tm.active_terms:
+        return None
+    cfg = tm.get_term_cfg("success")
+    fn, state = cfg.func, {"hit": False}
+
+    def held(env, **kw):
+        v = fn(env, **kw)
+        state["hit"] = state["hit"] or bool(v[0])
+        return v & False
+
+    cfg.func = held
+    tm.set_term_cfg("success", cfg)
+    return state
 
 
 def _find_task(U):
