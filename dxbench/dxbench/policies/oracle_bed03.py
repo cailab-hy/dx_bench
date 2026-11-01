@@ -46,6 +46,12 @@ class Bed03OraclePolicyCfg(PolicyCfg):
     max_w: float = 0.8
     floor_preset_steps: int = 3      # torso preset index for floor picking (0 upright .. 3 deep)
     place_preset_steps: int = 2      # torso preset for placing into the basket (crouch); upright cannot reach it
+    # D-67 (user 2026-11-01): the oracle only heads for a garment the head camera can see - otherwise it turns in place
+    # (always counter-clockwise, so the policy can learn it from the images) until one comes into view. Going straight
+    # to an unseen garment from privileged positions teaches a camera-only policy to average over the scenes
+    scan: bool = True
+    scan_w: float = 0.5              # turn rate while looking around (rad/s)
+    scan_min_frac: float = 0.15      # a garment is seen when this fraction of its sampled nodes is in view
     device: str = "cuda:0"
 
 
@@ -91,12 +97,88 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         self.goal = None
         self.done_clothes: list[str] = []
         self.layout = None
+        self.scan_steps = 0
         self.plan_log: list[dict] = []
         self.last_err = None
         self.retries = 0
         self.regrasps = 0
         self.replans = 0
         self.homed_for_place = False
+
+    # head camera (link_head_2/first_person_camera): 640 x 480, fx = fy = 343.1 -> half-angle tangents
+    CAM_TAN = (320 / 343.1, 240 / 343.1)
+
+    def _head_cam(self, U):
+        """World pose (R, p) of the head camera, R's columns = forward, left, up (the prim's own axes: its x looks
+        ahead - checked against the camera sensor's world-convention pose, 2026-11-01). With cameras on, the sensor's
+        pose; otherwise link_head_2 from the articulation and the camera's offset read once from the stage (~6 cm
+        off the sensor position, nothing at room scale)."""
+        if "head" in U.scene.keys() and hasattr(U.scene["head"].data, "quat_w_world"):
+            d = U.scene["head"].data
+            return (self._qmat(_T(d.quat_w_world)[0].cpu().numpy()),
+                    (_T(d.pos_w)[0] - U.scene.env_origins[0]).cpu().numpy())
+        r = U.scene["robot"]
+        if getattr(self, "_cam_rel", None) is None:
+            import isaaclab.sim as sim_utils
+            from pxr import Usd, UsdGeom
+
+            stage = sim_utils.get_current_stage()
+            cache = UsdGeom.XformCache(Usd.TimeCode.Default())
+            root = r.cfg.prim_path.replace("{ENV_REGEX_NS}", "/World/envs/env_0")
+            link = stage.GetPrimAtPath(f"{root}/link_head_2")
+            cam = stage.GetPrimAtPath(f"{root}/link_head_2/first_person_camera")
+            m = cache.GetLocalToWorldTransform(cam) * cache.GetLocalToWorldTransform(link).GetInverse()
+            self._cam_rel = (np.array(m.ExtractRotationMatrix()).T, np.array(m.ExtractTranslation()))
+            self._head_idx = r.body_names.index("link_head_2")
+        i = self._head_idx
+        pl = (_T(r.data.body_link_pos_w)[0, i] - U.scene.env_origins[0]).cpu().numpy()
+        Rl = self._qmat(_T(r.data.body_link_quat_w)[0, i].cpu().numpy())
+        Rr, tr = self._cam_rel
+        return Rl @ Rr, pl + Rl @ tr
+
+    def _occluders(self, U):
+        """Furniture boxes (layout AABBs) that hide what is behind them; the bed only up to its mattress top."""
+        if getattr(self, "_occ", None) is None:
+            from dxbench.tasks.scene_spec import load_layout
+
+            L = self.layout or load_layout()
+            top = float(L["parts_aabb"]["Bed/Mattress"][1][2])
+            occ = []
+            for k, (lo, hi) in L["furniture_aabb"].items():
+                if k == "TShirt":  # the DX desk T-shirt is switched off
+                    continue
+                hi = list(hi)
+                if k == "Bed":
+                    hi[2] = top
+                occ.append((np.asarray(lo), np.asarray(hi)))
+            self._occ = occ
+        return self._occ
+
+    def _seen_frac(self, U, name, n_sample=60):
+        """Fraction of a garment's sampled nodes inside the head camera's view and not behind furniture."""
+        R, pc = self._head_cam(U)
+        _, n = self._cloth_xyz(U, name)
+        n = n[:: max(1, len(n) // n_sample)]
+        loc = (n - pc) @ R  # camera frame: forward, left, up
+        depth = loc[:, 0]
+        inview = (depth > 0.1) & (depth < 8.0) & (np.abs(loc[:, 1]) <= self.CAM_TAN[0] * depth) & \
+                 (np.abs(loc[:, 2]) <= self.CAM_TAN[1] * depth)
+        seen = 0
+        for q in n[inview]:
+            d = q - pc
+            hidden = False
+            for lo, hi in self._occluders(U):
+                if np.all(q >= lo - 0.02) and np.all(q <= hi + 0.02):
+                    continue  # the garment lies on / in this piece (bed, basket area): not hidden by it
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    t0, t1 = (lo - pc) / d, (hi - pc) / d
+                tmin = np.nanmax(np.minimum(t0, t1))
+                tmax = np.nanmin(np.maximum(t0, t1))
+                if tmax >= max(tmin, 0.0) and tmin < 1.0:
+                    hidden = True
+                    break
+            seen += not hidden
+        return seen / max(len(n), 1)
 
     def _set(self, phase, subtask=None):
         self.phase, self.t_phase = phase, 0
@@ -448,7 +530,24 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         if self.phase == "next":
             if not self.queue:
                 self._set("finished", "look for clothes")
-            else:
+            elif self.cfg.scan:
+                seen = {g: self._seen_frac(U, g) for g in self.queue}
+                vis = [g for g in self.queue if seen[g] >= self.cfg.scan_min_frac]
+                if vis:  # the nearest garment in view (queue is nearest-first from the start pose)
+                    p, _ = self._base(U)
+                    vis.sort(key=lambda g: float(np.linalg.norm(self._cloth_xyz(U, g)[0][:2] - p[:2])))
+                    self.plan_log.append({"seen": {k: round(v, 2) for k, v in seen.items()}, "target": vis[0],
+                                          "scan_steps": getattr(self, "scan_steps", 0)})
+                    self.scan_steps = 0
+                    self.queue.remove(vis[0])
+                    self.queue.insert(0, vis[0])
+                elif getattr(self, "scan_steps", 0) < int(2 * math.pi / self.cfg.scan_w * 15) + 15:
+                    self.scan_steps = getattr(self, "scan_steps", 0) + 1
+                    a[15:17] = (0.0, self.cfg.scan_w)  # look around: turn counter-clockwise in place
+                else:  # a full turn without seeing one (should not happen in the room): nearest, from privileged
+                    self.plan_log.append({"scan_failed": {k: round(v, 2) for k, v in seen.items()}})
+                    self.scan_steps = 0
+            if self.queue and (not self.cfg.scan or getattr(self, "scan_steps", 0) == 0):
                 self.target = self.queue.pop(0)
                 self.pick_xy = None
                 self.retries = 0

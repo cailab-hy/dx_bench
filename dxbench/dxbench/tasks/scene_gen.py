@@ -27,6 +27,9 @@ TOWELS = ("01_charcoalgray", "05_coolgray", "06_white", "07_oatmeal", "08_lightp
 BASKET_VARIANT = "gray"
 HEAD_PITCH_DESK = 0.6  # rad, BED-02 head camera tilt (D-40)
 DUVET_SIZE = (2.0, 1.55)  # m, along x before the spawn yaw (pi / 2: 2.0 m along the bed); objects.DUVET_SIZE
+HEAD_PITCH_FLOOR = 0.6  # rad, every BED-03 variant (D-67): level, the head camera missed the floor within ~2.1 m (the
+# second garment by the basket never came into view while looking around); 34 deg down it sees the floor from ~0.6 m (the
+# near variant's first garment at 0.75 m) up to the horizon. One pitch for the task: near / second had 0.85
 HEAD_PITCH_BED = 0.5  # rad, BED-01: level, the mattress top 0.9 m ahead is below the head camera's view (2026-10-22)
 HEAD_PITCH_NEAR = 0.85  # rad, BED-03 near: the first garment 0.75 m ahead on the floor in the lower middle of the view
 _COLOR_SALT = 54321
@@ -52,7 +55,8 @@ def _towel(split: str, seed: int, i: int = 0) -> str:
 
 
 def _robot_facing(target_xy, start=CARE_SPAWN[:2]):
-    return {"xy": list(start), "yaw": math.atan2(target_xy[1] - start[1], target_xy[0] - start[0]), "torso": "upright"}
+    return {"xy": list(start), "yaw": math.atan2(target_xy[1] - start[1], target_xy[0] - start[0]), "torso": "upright",
+            "head_pitch": HEAD_PITCH_FLOOR}
 
 
 def _on_mattress(rng, layout, margin=0.25):
@@ -126,7 +130,7 @@ def gen_bed03_near(diff: str, seed: int, split: str) -> SceneSpec:
     # head pitched down (2026-10-22): level, the head camera looks over a garment 0.75 m ahead on the floor; at the
     # BED-02 0.6 rad the garment is cut by the image bottom
     spec.robot = {"xy": [float(x), float(y)], "yaw": math.atan2(gy - y, gx - x), "torso": "upright",
-                  "head_pitch": HEAD_PITCH_NEAR}
+                  "head_pitch": HEAD_PITCH_FLOOR}
     spec.difficulty = "near"
     spec.scene_id = f"bed03_near_{seed:03d}" if split == "eval" else f"bed03_near_train_{seed}"
     return spec
@@ -156,7 +160,7 @@ def gen_bed03_second(diff: str, seed: int, split: str) -> SceneSpec:
         if free_floor_ok((x, y), L, 0.5, extra=others):
             break
     spec.robot = {"xy": [float(x), float(y)], "yaw": math.atan2(by - y, bx - x), "torso": "upright",
-                  "head_pitch": HEAD_PITCH_NEAR}
+                  "head_pitch": HEAD_PITCH_FLOOR}
     spec.difficulty = "second"
     spec.scene_id = f"bed03_second_{seed:03d}" if split == "eval" else f"bed03_second_train_{seed}"
     return spec

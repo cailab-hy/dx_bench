@@ -9,7 +9,8 @@
    17.660246094160797
   ],
   "yaw": -0.2099591323451438,
-  "torso": "upright"
+  "torso": "upright",
+  "head_pitch": 0.6
  },
  "objects": [
   {
