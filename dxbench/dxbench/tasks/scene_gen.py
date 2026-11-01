@@ -197,6 +197,19 @@ def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
     # (2026-10-21): level, the head camera looks over the desk and sees neither the desk top nor the garment; a
     # leaning start instead put the READY arms onto the desk and the towel.
     robot = {"xy": [float(hi[0]) + 0.75, cy], "yaw": math.pi, "torso": "upright", "head_pitch": HEAD_PITCH_DESK}
+    if diff == "easy":  # D-66 (user 2026-11-01): start where the oracle used to end its approach - leaning (kept all
+        # episode) and facing the desk; the oracle only turns in place (about the drive axle, AXLE_X 0.228 m ahead of the
+        # base origin) to the towel's long axis (yaw pi + dev). After that turn the base stands where the approach used
+        # to end: 0.33 m from the desk edge (the drive-in stalled at 0.31-0.32 m, chest at the edge; 1-2 cm back for the
+        # spawn) with the towel centre straight ahead. Starting at the towel's y instead left it up to 5 cm to one side
+        # and 2 cm further: the left hand missed the far corners (2026-11-01)
+        dev = float(objs[0].yaw) - math.pi / 2
+        bx = float(hi[0]) + 0.33
+        f = (-math.cos(dev), -math.sin(dev))
+        by = float(objs[0].xyz[1]) - (float(objs[0].xyz[0]) - bx) / f[0] * f[1]
+        axle = 0.228
+        robot = dict(robot, xy=[bx + axle * (1 - math.cos(dev)), by - axle * math.sin(dev)], torso="lean",
+                     arms="desk_reach")  # hands over the desk, grippers straight down (user 2026-11-01)
     return SceneSpec(scene_id=f"bed02_{diff}_{seed:03d}" if split == "eval" else f"bed02_{diff}_train_{seed}",
                      task="BED-02", difficulty=diff, seed=seed, robot=robot, objects=objs, language=language("BED-02"))
 
@@ -210,11 +223,13 @@ def gen_bed01(diff: str, seed: int, split: str) -> SceneSpec:
     head_y = float(hi[1]) - 0.25
     # D-55 levels after the pi0.5 "Make the Bed" rubric (pillow not scored; it stays at the head end). The 2.0 x 1.55 m
     # duvet made up: head edge 2 cm short of the mattress end, 28 cm over each long side. Start coverage <= ~0.7.
-    if diff == "easy":     # slid 57-59 cm towards the far side: pull its near edge back (no driving). The edge then
-        # lies 0.29-0.31 m in from the open side, within the crouch reach at the bed (0.78 m ahead of the base, ~0.35 m
-        # in; deep runs into the arm_3 limit) - at 60-66 cm (0.34-0.40 m in) the oracle could not reach it (2026-10-29).
-        # At 55 cm the duvet sometimes stayed >= 80 % covered (start score 0.5)
-        duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(0.57, 0.59)), float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2,
+    if diff == "easy":     # slid towards the far side: pull its near edge back (no driving). D-66 (user 2026-11-01):
+        # 48-52 cm (was 57-59, D-57), so the edge lies 0.19-0.23 m in from the open side, 0.60-0.65 m ahead of the base
+        # at the pull pose - where the crouched arm reaches it with the gripper straight down (at 0.75 m the wrist was
+        # 35-53 deg off and the orientation servo shook the arm). Start coverage of the whole top ~0.80 (< 0.95)
+        # head edge at the mattress end (not 2 cm short): the 2.0 m duvet has 12 cm over the 1.88 m mattress, and pulled
+        # sideways it slid 2-3 cm towards the foot - the head row of cells came uncovered (D-66, 100 % rule)
+        duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(0.48, 0.52)), float(hi[1]) - DUVET_SIZE[0] / 2,
                                            top + 0.02], math.pi / 2)
     elif diff == "medium":  # head part folded back over the foot half (make_cloth_states folds it)
         duvet = ObjSpec("duvet", "duvet", [cx, float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2, top + 0.02], math.pi / 2)
@@ -226,9 +241,13 @@ def gen_bed01(diff: str, seed: int, split: str) -> SceneSpec:
     if diff == "easy":  # D-63 (user): no pillow on the easy level (not scored, only clutter); drawn anyway so the seeds
         objs = [duvet]  # keep the same layouts
     # facing the open long side (+x), 0.9 m from it on every level (D-55: at 1.3 m the hard start robot hit the pillar
-    # by the window and tipped over)
-    robot = {"xy": [float(lo[0]) - 0.9, cy], "yaw": 0.0,
-             "torso": "upright", "head_pitch": HEAD_PITCH_BED}
+    # by the window and tipped over). D-66 (user): easy starts crouched (the working posture, kept all episode) 0.35 m
+    # behind the oracle's pull pose (base front 6 cm from the frame), facing the bed: drive straight in, align, pull
+    robot = {"xy": [float(lo[0]) - 0.9, cy], "yaw": 0.0, "torso": "upright", "head_pitch": HEAD_PITCH_BED}
+    if diff == "easy":
+        # in line with the duvet's centre (the pull spot, D-66): only a straight drive in
+        robot = dict(robot, xy=[float(lo[0]) - 0.025 - 0.06 - 0.32 - 0.35, float(duvet.xyz[1])], torso="crouch",
+                     arms="bed_reach")
     return SceneSpec(scene_id=f"bed01_{diff}_{seed:03d}" if split == "eval" else f"bed01_{diff}_train_{seed}",
                      task="BED-01", difficulty=diff, seed=seed, robot=robot, objects=objs, language=language("BED-01"))
 
@@ -251,11 +270,17 @@ def diversify(spec: SceneSpec, split: str) -> SceneSpec:
         dxy, dyaw = START_JITTER[spec.task]
         if spec.difficulty in ("near", "second"):
             dxy, dyaw = 0.08, 0.15
+        if spec.task in ("BED-01", "BED-02") and spec.difficulty == "easy":  # D-66: the oracle only drives straight in
+            # (BED-01) or turns in place (BED-02) - 10-15 cm off to the side, the hands over the bed caught on it while
+            # driving in at an angle (9/18 failed); at the desk any offset left the towel off-centre (18/22 failed)
+            dxy, dyaw = (0.05, 0.05) if spec.task == "BED-01" else (0.0, 0.05)
         L = load_layout()
         others = [((o.xyz[0], o.xyz[1]), 0.55) for o in spec.objects if o.xyz[2] < 0.1]
         x0, y0 = spec.robot["xy"]
         for _ in range(20):
             x, y = x0 + float(rng.uniform(-dxy, dxy)), y0 + float(rng.uniform(-dxy, dxy))
+            if spec.task == "BED-02" and spec.difficulty == "easy":  # D-66: starts at the desk: only away from it
+                x = x0 + 0.6 * abs(x - x0)
             if spec.task != "BED-03" or free_floor_ok((x, y), L, 0.5, extra=others):
                 spec.robot = dict(spec.robot, xy=[x, y], yaw=float(spec.robot["yaw"] + rng.uniform(-dyaw, dyaw)))
                 break

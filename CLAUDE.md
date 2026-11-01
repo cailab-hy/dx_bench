@@ -90,4 +90,5 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
   점을 중심으로 비틀려 0–20 %. 천 접기는 물리 주기에 매우 민감하다 — 데이터 수집과 평가 주기를 맞출 것.
 - 수건 메쉬는 대각선이 좌우 거울 대칭(D-61). Isaac Lab `MeshRectangleCfg` 기본(모든 칸 한 방향)은 좌우 접기가 거울상이 아니라
   한쪽 날개만 펴진다. 천 접기 문제를 볼 때는 단계별 노드 저장(`DX_B02_DEBUG=1 DX_B02_SNAP=<dir>`)으로 어느 동작에서 틀어지는지부터 확인.
+- 팔 시작 자세 프리셋(`rby1_cfg.ARM_PRESETS`, 장면 JSON `robot.arms`, D-66): `bed_reach`(crouch, 이불 위 수직), `desk_reach`(lean, 책상 위 수직). `request_home`도 이 자세로 돌아간다. 새 프리셋 관절값은 `policies/arm_pose_probe.py`로 실제 env에서 잰다(책상 높이 수직 그리퍼는 손목 arm_5가 한계 근처).
 - 침실 task env는 480 Hz + 카메라 + 다른 Kit 작업 동시 실행 시 RTF 0.04까지 떨어진다. 긴 에피소드는 카메라 없이, 단독으로.

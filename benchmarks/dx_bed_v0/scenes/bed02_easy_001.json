@@ -5,12 +5,13 @@
  "seed": 1,
  "robot": {
   "xy": [
-   -2.692,
-   19.07
+   -3.1114228456055537,
+   19.1378264457287
   ],
   "yaw": 3.141592653589793,
-  "torso": "upright",
-  "head_pitch": 0.6
+  "torso": "lean",
+  "head_pitch": 0.6,
+  "arms": "desk_reach"
  },
  "objects": [
   {

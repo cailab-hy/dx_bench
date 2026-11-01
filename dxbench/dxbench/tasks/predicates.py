@@ -304,8 +304,14 @@ class BedSpec:
     floor_frac: float = 0.3      # D-41: failure when this fraction of the duvet lies on the floor
 
 
-BED01_COVER = 0.80  # D-55: success = the duvet covers >= 80 % of the target area (pi0.5 "covers the sheets")
-BED01_NEAT_COVER = 0.90  # neat: >= 90 % covered and even left / right overhang (pi0.5 "straightened very neatly")
+# D-66 (user 2026-11-01): the made bed covers the whole mattress top - at 80 % the oracle stopped with the near edge
+# still 10-29 cm in (coverage 0.70-0.79 of the whole top) and the episode counted as made. A flat made-up duvet: 1.00
+BED01_COVER = 1.0  # success = the duvet covers all of the target area (5 cm cells; D-55: 80 %, user 2026-11-01: 100 %)
+# the target area leaves out a 3 cm rim of the mattress top (user A, 2026-11-01): the outermost cells sit 4.5 mm from the
+# edge, where the duvet bends down over it (head-end nodes 4-7 cm below the top) - with the rim in, a made bed scored
+# 0.96-0.99 and the oracle never reached 100 %; without it, 3 of 6 test pulls covered all of it
+BED01_RIM = 0.03
+BED01_NEAT_COVER = 1.0  # neat: covered and an even left / right overhang (pi0.5 "straightened very neatly")
 BED01_EVEN_TOL = 0.15
 
 
@@ -315,9 +321,10 @@ def evaluate_bed01(duvet: np.ndarray, spec: BedSpec) -> dict:
     overhang difference <= BED01_EVEN_TOL) +0.5. The pillow stays at the head and is not scored (the assisted grasp
     does not take the 13 cm volume pillow). Failure: >= floor_frac of the duvet on the floor. D-41: the target area
     stops at the DX blanket's head edge (pillow zone)."""
-    hi = list(spec.mattress_max)
+    lo_ = [v + BED01_RIM for v in spec.mattress_min]
+    hi = [v - BED01_RIM for v in spec.mattress_max]
     hi[spec.long_axis] -= spec.cover_head_gap
-    cov = grid_coverage(duvet, spec.mattress_min, tuple(hi), spec.mattress_top_z - 0.03, spec.mattress_top_z + 0.25)
+    cov = grid_coverage(duvet, tuple(lo_), tuple(hi), spec.mattress_top_z - 0.03, spec.mattress_top_z + 0.25)
     covers = cov >= BED01_COVER
     side = 1 - spec.long_axis  # the axis across the bed
     lo, hi = spec.mattress_min[side], spec.mattress_max[side]

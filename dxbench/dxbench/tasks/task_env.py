@@ -234,6 +234,7 @@ class RoomEnvironmentBase(ExampleEnvironmentBase):
         emb = self.asset_registry.get_asset_by_name(args_cli.embodiment)(
             enable_cameras=bool(getattr(args_cli, "enable_cameras", False)), preset=args_cli.gains,
             torso=spec.robot.get("torso", "upright"), head_pitch=float(spec.robot.get("head_pitch", 0.0)),
+            arms=spec.robot.get("arms", "ready"),
             use_tiled_camera=not args_cli.untiled_cameras,
             initial_pose=Pose(position_xyz=(x, y, 0.0), rotation_xyzw=(0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2))))
         task = entry.task_cls(spec, args_cli.episode_s or entry.episode_s)

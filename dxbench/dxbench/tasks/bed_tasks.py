@@ -157,8 +157,10 @@ class Bed01MakeBedTask(BedTaskBase):
         self.bed = P.BedSpec(mattress_min=tuple(m[0][:2]), mattress_max=tuple(m[1][:2]), mattress_top_z=float(m[1][2]),
                              headboard_center=(0.5 * (m[0][0] + m[1][0]), float(m[1][1]) - 0.25),
                              long_axis=1 if (bed[1][1] - bed[0][1]) > (bed[1][0] - bed[0][0]) else 0,
-                             # D-41: cover the mattress up to the DX blanket's head edge (pillow zone left free)
-                             cover_head_gap=float(m[1][1]) - float(self.layout["parts_aabb"]["Bed/Blanket"][1][1]))
+                             # D-41: cover the mattress up to the DX blanket's head edge (pillow zone left free);
+                             # D-66: no pillow in the scene (easy) -> the whole mattress top
+                             cover_head_gap=(float(m[1][1]) - float(self.layout["parts_aabb"]["Bed/Blanket"][1][1])
+                                             if any(o.kind == "pillow" for o in spec.objects) else 0.0))
 
     def evaluate(self, env) -> list[dict]:
         return [P.evaluate_bed01(self.nodes(env, "duvet", e), self.bed) for e in range(env.num_envs)]

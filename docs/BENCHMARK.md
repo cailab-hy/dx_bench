@@ -7,7 +7,7 @@ IsaacLab-Arena 0.3.1, PhysX). Source of the task definitions: "DX Hub 실내 서
 
 | ID | Instruction | Success | Partial score |
 |---|---|---|---|
-| BED-01 | "Make the bed." / "침대 정리해 줘" | The duvet covers ≥ 80 % of the mattress top except the pillow zone (D-55, after the π0.5 "Make the Bed" rubric; the pillow stays at the head and is not scored) | covers 0.5, neat (≥ 90 % covered and left/right overhang difference ≤ 15 cm) 0.5. **Fail** if ≥ 30 % of the duvet lies on the floor |
+| BED-01 | "Make the bed." / "침대 정리해 줘" | The duvet covers all of the mattress top (5 cm cells; a 3 cm rim along the edges, where the duvet bends over, is left out; with a pillow, also the pillow zone at the head - D-55, D-66) | covers 0.5, neat (covered and left/right overhang difference ≤ 15 cm) 0.5. **Fail** if ≥ 30 % of the duvet lies on the floor |
 | BED-02 | "Fold the clothes." / "옷 개어 줘" | Garment flattened, its folds done (mirror pairs within 5 cm, D-41), on the stack spot (desk, 40 cm in from the front edge straight behind the garments, radius 12 cm; D-32). Towels (D-64): long edges together, both ends to the middle, then once more across the middle to a ~0.2 m square; the first three folds count once reached in the episode, the last by the final footprint (long side ≤ 0.375 × the flat length, area ≤ ¼ of the flat area) | flattened 0.3, each fold 0.15, on the stack 0.25, re-weighted to sum to 1 |
 | BED-03 | "Put the clothes in the laundry basket." / "방에 있는 옷 정리해 줘" | Every loose garment is inside the basket and released (a garment still held by a hand does not count, D-60). No distractor (doll, book) and no folded towel is in it | fraction of garments in the basket − 0.2 per wrong item. **Fail** if the basket tips over (> 45°) |
 
@@ -18,8 +18,8 @@ The predicates are pure numpy and are tested in `dxbench/tests/test_predicates.p
 
 | Task | easy | medium | hard |
 |---|---|---|---|
-| BED-01 | Duvet slid 57-59 cm towards the far side (start coverage 0.73-0.75), no pillow (D-57, D-63) | Head half folded back over the foot half (0.55-0.59) | Folded, then bundled on the foot half or on the open long edge (0.31-0.58) |
-| BED-02 | Small towel flat on the desk | One T-shirt crumpled on the desk | Pile of 3 shirts and 2 towels |
+| BED-01 | Duvet slid 48-52 cm towards the far side (its near edge 0.19-0.23 m in from the open side), head edge at the mattress end, no pillow; robot crouched 0.35 m from the pull pose with both hands over the bed (D-63, D-66) | Head half folded back over the foot half (0.55-0.59) | Folded, then bundled on the foot half or on the open long edge (0.31-0.58) |
+| BED-02 | Small towel flat on the desk; robot leaning at the desk with both hands over it (D-66) | One T-shirt crumpled on the desk | Pile of 3 shirts and 2 towels |
 | BED-03 | Basket + 2 garments on the open floor, each within 2.0 m of the basket | 3 garments on the floor + 1 shirt on the bed | 4 on the floor + shirt and towel on the bed + distractors (doll, book, folded towel) |
 
 ## Splits

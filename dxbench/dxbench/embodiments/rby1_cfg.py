@@ -66,6 +66,24 @@ TORSO_PRESETS = {"upright": (0.0, 0.0, 0.0), "lean": (0.7854, -1.2217, 0.7854),
                  "crouch": (1.0472, -1.5708, 1.0472), "deep": (1.5708, -2.2689, 1.5708)}
 READY_ARMS = {"right_arm_0": -0.5, "right_arm_1": -0.2, "right_arm_3": -1.6, "right_arm_5": 0.3,
               "left_arm_0": -0.5, "left_arm_1": 0.2, "left_arm_3": -1.6, "left_arm_5": 0.3}
+# arm start presets (scene JSON robot.arms; also the target of HomingDiffIK.request_home, which uses the spawn pose).
+# bed_reach (D-66, 2026-11-01): crouched, both TCPs 0.62 m ahead of the base at y -+0.20 and z 0.62 (4 cm above the
+# duvet pinch height), grippers straight down - measured with policies/arm_pose_probe.py (arm_5 1.81 of its 1.92 limit;
+# 8 cm above the duvet the wrist sat at the limit)
+ARM_PRESETS = {
+    "ready": READY_ARMS,
+    "bed_reach": {"right_arm_0": -0.5863, "right_arm_1": -0.0335, "right_arm_2": -0.1391, "right_arm_3": -1.7862,
+                  "right_arm_4": 0.0200, "right_arm_5": 1.8126, "right_arm_6": -0.0470,
+                  "left_arm_0": -0.5864, "left_arm_1": 0.0334, "left_arm_2": 0.1390, "left_arm_3": -1.7863,
+                  "left_arm_4": -0.0203, "left_arm_5": 1.8128, "left_arm_6": 0.0470},
+    # desk_reach (D-66): leaning, both TCPs 0.65 m ahead at y -+0.20 and z 0.80 (7 cm above the towel), grippers straight
+    # down. Leaning at desk height the wrist is near its limit for any vertical grasp (arm_5 1.913; 0.50-0.60 m ahead it
+    # sat at 1.92 and the gripper tilted 5-14 deg)
+    "desk_reach": {"right_arm_0": -0.8644, "right_arm_1": -0.0947, "right_arm_2": -0.2202, "right_arm_3": -1.4506,
+                   "right_arm_4": -0.0011, "right_arm_5": 1.9127, "right_arm_6": -0.0487,
+                   "left_arm_0": -0.8657, "left_arm_1": 0.0927, "left_arm_2": 0.2192, "left_arm_3": -1.4513,
+                   "left_arm_4": -0.0025, "left_arm_5": 1.9140, "left_arm_6": 0.0496},
+}
 
 
 def _sel(table: dict, names: list[str]) -> dict:
@@ -80,8 +98,7 @@ def default_joint_pos(torso: str = "upright", arms: str = "ready", gripper_open:
     q["head_1"] = head_pitch
     t1, t2, t3 = TORSO_PRESETS[torso]
     q.update({"torso_1": t1, "torso_2": t2, "torso_3": t3})
-    if arms == "ready":
-        q.update(READY_ARMS)
+    q.update(ARM_PRESETS.get(arms, {}))
     o = 0.05 * gripper_open
     q.update({"gripper_finger_r1": -o, "gripper_finger_r2": o, "gripper_finger_l1": -o, "gripper_finger_l2": o})
     return q

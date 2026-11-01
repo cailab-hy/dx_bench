@@ -91,6 +91,9 @@ class Bed02OraclePolicyCfg(PolicyCfg):
                                   # (0/10, the half fold opened, 2026-10-29)
     side_two_hands: bool = False  # side folds with both hands on the two corners of the strip end (crumpled the towel:
                                   # fold errors ~25 cm, 0/10, 2026-10-29)
+    # D-66 (user 2026-11-01): the easy scenes start leaning at the desk in front of the towel - turn in place to its
+    # axis (no driving), keep the torso (no crouch / drive-in, no final upright)
+    turn_only: bool = True
     work_preset_steps: int = 1    # lean: crouch cannot reach z 0.8-0.9 near the centre line at x 0.6 (reach_desk_0.0.json)
     debug: bool = False           # print per-arm base-frame target / TCP / error every 15 steps
     device: str = "cuda:0"
@@ -198,6 +201,15 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             d = np.linalg.norm(n[a[ok]] - n[j[ok]], axis=1)
             out[k[5:]] = (round(float((d < 0.05).mean()), 2), round(float(np.median(d)), 3))
         return out
+
+    def _start_moves(self):
+        self.moves = (["half2", "nudge", "right_n", "right_f", "left_n", "left_f", "stack"]
+                      if self.cfg.side_corners else ["half2", "nudge", "right", "left", "stack"])
+        if self.cfg.quarter:
+            self.moves[-1:-1] = ["shift", "quarter"]
+        if self.cfg.order:
+            self.moves = self.cfg.order.split(";")
+        self._set("plan")
 
     def _arc(self):
         """Carry arc height of the current move."""
@@ -400,11 +412,21 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self.goal = (self.goal[0] - 0.25 * f, yaw)
                 self.plan_log.append({"approach_yaw_dev": round(dev, 3), "goal": self.final_goal[0].round(3).tolist()})
                 self.table_z = float(desk[1][2])
-            (v, w), ok = h._nav(U, self.goal[0], self.goal[1])
-            a[15:17] = (v, w)
-            if ok or self.t_phase > 300:
-                self.goal = None
-                self._set("crouch", "flatten the shirt")
+            if self.cfg.turn_only:
+                _, yaw_now = h._base(U)
+                e = wrap(self.goal[1] - yaw_now)
+                ok = abs(e) <= 0.02
+                a[15:17] = (0.0, 0.0 if ok else float(np.clip(2.0 * e, -self.cfg.max_w, self.cfg.max_w)))
+                if ok or self.t_phase > 150:
+                    p_, _ = h._base(U)
+                    self.plan_log.append({"base_after_turn": np.round(p_[:2], 3).tolist(), "yaw_err": round(e, 3)})
+                    self._start_moves()
+            else:
+                (v, w), ok = h._nav(U, self.goal[0], self.goal[1])
+                a[15:17] = (v, w)
+                if ok or self.t_phase > 300:
+                    self.goal = None
+                    self._set("crouch", "flatten the shirt")
         elif self.phase == "crouch":
             a[14] = torso_to(self.cfg.work_preset_steps)
             if tidx == self.cfg.work_preset_steps and self.t_phase > 60:
@@ -419,13 +441,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self.din_hist = []
                 p_, _ = h._base(U)
                 self.plan_log.append({"base_after_drive_in": np.round(p_[:2], 3).tolist()})
-                self.moves = (["half2", "nudge", "right_n", "right_f", "left_n", "left_f", "stack"]
-                              if self.cfg.side_corners else ["half2", "nudge", "right", "left", "stack"])
-                if self.cfg.quarter:
-                    self.moves[-1:-1] = ["shift", "quarter"]
-                if self.cfg.order:
-                    self.moves = self.cfg.order.split(";")
-                self._set("plan")
+                self._start_moves()
         elif self.phase == "plan":
             if not self.moves:
                 self._set("retract")
@@ -501,7 +517,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self._set("recover")
             elif self.phase == "above" and (err < 0.015 or self.t_phase > 90):
                 self._set("descend")
-            elif self.phase == "descend" and (err < 0.01 or self.t_phase > 60):
+            elif self.phase == "descend" and (err < 0.005 or self.t_phase > 60):  # D-66: 0.01 closed the pads with the
+                # tips ~4 mm above the towel (the capture margin) when the arms came down from the desk_reach hover
                 self._set("close")
             elif self.phase == "close" and self.t_phase > 10:
                 term = U.action_manager.get_term("cloth_assist")
@@ -552,7 +569,10 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             if (not any(homing) and self.t_phase > 5) or self.t_phase > 200:
                 self._set("above")
         elif self.phase == "retract":
-            a[14] = torso_to(0)
-            if tidx == 0 and self.t_phase > 60:
+            if self.cfg.turn_only:  # D-66: the torso stays leaning
                 self._set("finished")
+            else:
+                a[14] = torso_to(0)
+                if tidx == 0 and self.t_phase > 60:
+                    self._set("finished")
         return torch.as_tensor(a, device=U.device).unsqueeze(0).repeat(U.num_envs, 1)

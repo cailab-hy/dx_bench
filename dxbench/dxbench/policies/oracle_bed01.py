@@ -38,6 +38,13 @@ PRESET_DEEP = 3
 class Bed01EasyOracleCfg(PolicyCfg):
     hand_y: float = -0.20            # right hand lateral offset in the base frame (the left hand at -hand_y)
     two_arms: bool = True            # D-63: both hands pinch the edge
+    fixed_torso: bool = True         # D-66: no torso commands (the easy scenes start crouched)
+    # D-66 (user): the scene starts with both hands hovering over the bed, grippers straight down (rby1_cfg ARM_PRESETS
+    # "bed_reach": TCPs `hand_x` ahead of the base at y -+0.20, z 0.62). The base stops with the hands right above the
+    # duvet's near edge, the arms only go down (z), pinch, and the base reverses to pull
+    ready_reach: bool = True
+    hand_x: float = 0.62
+    spot_on_duvet: bool = True       # pull spots relative to the duvet's centre (along the bed), not the target area
     pitch_deg: float | None = 0.0    # gripper orientation target, tilted about the base y axis (0 = straight down; None =
                                      # keep the current orientation: no rotation command)
     rot_gain: float = 0.6            # orientation servo gain
@@ -45,15 +52,19 @@ class Bed01EasyOracleCfg(PolicyCfg):
     # D-63: arm joint velocity reversals per reach step (oracle `jitter` log, 4 scenes): full orientation servo all the
     # way 0.37-0.42 (the shaking in the demo video), soft servo on the long reach + 40 steps aligning above the edge
     # 0.09 (4/4); soft everywhere 0.10 but 3/4, no orientation servo or a 20-45 deg pitch target: no grasp at all
-    soft_above: bool = True          # the long reach above the edge with a soft orientation servo (gain 0.2, step 0.02)
-    align_steps: int = 40            # then hold above the edge with the full orientation servo this many steps
+    soft_above: bool = False         # the long reach above the edge with a soft orientation servo (gain 0.2, step 0.02)
+    align_steps: int = 0             # then hold above the edge with the full orientation servo this many steps
+                                     # (D-63 used soft + 40 at the 0.75 m reach; D-66 brings the edge to 0.60-0.65 m)
     frame_gap: float = 0.06          # base front to the bed frame
-    edge_in: float = 0.01            # pinch this far in from the duvet's near edge
+    edge_in: float = 0.02            # pinch this far in from the duvet's near edge (D-66: 0.01)
     crouch_max_x: float = 0.78       # crouch reaches 0.78 m ahead at the bed (reach_diag); deep is not used: its elbow
                                      # (arm_3) sits at the limit and the hand ran off to 0.92-0.96 m on every path
-    overhang: float = 0.25           # the near edge should end this far beyond the mattress side
+    overhang: float = 0.28           # the near edge should end this far beyond the mattress side: as far as the far side
+                                     # hangs on a made bed - less, and the heavier far part slid it back on release (D-66)
     reverse_v: float = 0.12          # base speed while pulling back (m/s)
-    spots: tuple = (0.0, 0.45, -0.45)  # pull spots along the bed (m from the target-area middle, + = head)
+    spots: tuple = (0.0, 0.0, 0.0)   # pull spots along the bed (m from the middle, + = head): the duvet's centre, again
+                                     # while not yet covered (D-66; spots 45 cm to either side turned the duvet - 2-3 %
+                                     # less cover each; 2 pulls: 8/10, the two left at 0.974 / 0.989)
     back_off: float = 0.45           # side moves go through a waypoint this far back from the bed (turning in place
                                      # 6 cm from the frame the base missed lateral goals by 0.2-0.35 m)
     max_v: float = 0.2
@@ -74,6 +85,7 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
             k, v_ = kv.split("=")
             cur = getattr(self.cfg, k)
             setattr(self.cfg, k, None if v_ == "none" else bool(int(v_)) if isinstance(cur, bool)
+                    else tuple(float(x) for x in v_.split(";")) if isinstance(cur, tuple)
                     else float(v_) if cur is None else type(cur)(v_))
         self.reset()
 
@@ -138,9 +150,11 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 self.reach_steps = getattr(self, "reach_steps", 0) + 1
             self._jv_sign = sg
         idx = int(U.action_manager.get_term("torso").preset_index[0])
+        if c.fixed_torso:  # D-66: the scene starts in the working posture (crouch) and the torso never moves
+            self.work = idx
         work = getattr(self, "work", PRESET_DEEP)
         want = work if self.phase in ("deep", "above", "align", "descend", "close", "pull", "release") else 0
-        if idx != want and self.phase not in ("plan", "side", "approach", "finished"):
+        if idx != want and self.phase not in ("plan", "side", "approach", "finished") and not c.fixed_torso:
             a[14] = (1.0 if idx < want else -1.0) if self.t_phase % 2 == 1 else 0.0
         bed, task = self._bed()
         lo, hi = bed.mattress_min, bed.mattress_max
@@ -149,14 +163,30 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 self._set("finished")
             else:
                 y_mid = 0.5 * (lo[1] + hi[1] - bed.cover_head_gap)
+                if c.spot_on_duvet:  # pulled off its centre line the duvet turned and uncovered a corner (2026-11-01)
+                    y_mid = float(self._cloth_xyz(U, "duvet")[1][:, 1].mean())
                 self.spot_y = y_mid + c.spots[self.spot_i]
                 bx = lo[0] - 0.025 - c.frame_gap - BASE_FRONT_X
                 by = self.spot_y if c.two_arms else self.spot_y - c.hand_y  # two arms: the hands straddle the spot
+                if c.ready_reach:  # stop with the hands above the near edge (not closer than the frame allows)
+                    _, n = self._cloth_xyz(U, "duvet")
+                    top_ = bed.mattress_top_z
+                    edges, self.edge_xy = [], {}
+                    for side, hy in (("right", c.hand_y), ("left", -c.hand_y)):
+                        m = (np.abs(n[:, 1] - (by + hy)) < 0.05) & (n[:, 2] > top_ - 0.005) & (n[:, 0] > lo[0] + 0.02)
+                        if m.any():
+                            edges.append(float(n[m, 0].min()))
+                            self.edge_xy[side] = np.array([edges[-1] + c.edge_in, by + hy])
+                    if edges:
+                        bx = min(bx, min(edges) + c.edge_in - c.hand_x)
+                        self.edge_x = min(edges)
                 self.goal = (np.array([bx, by]), 0.0)
                 self.via = np.array([bx - c.back_off, by])
                 self.plan_log.append({"spot": self.spot_i, "spot_y": round(self.spot_y, 3), "goal": self.goal[0].tolist()})
                 p, _ = self._base(U)
-                lateral = abs(float(p[1]) - float(self.goal[0][1])) > 0.05
+                # the first approach turns, drives straight and turns to face the bed (D-66: the training starts are
+                # +-15 cm to the side); only a later spot along the bed backs off first (turning next to the frame missed)
+                lateral = abs(float(p[1]) - float(self.goal[0][1])) > 0.05 and self.spot_i > 0
                 self._set("side" if lateral else "approach", "grasp the duvet edge")
         elif self.phase == "side":  # back off and move along the bed, facing it again
             (v, w), ok = self._nav(U, self.via, 0.0)
@@ -169,7 +199,19 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
             if ok or self.t_phase > 300:
                 p, yaw = self._base(U)
                 self.plan_log.append({"spot": self.spot_i, "base": np.round(p[:2], 3).tolist(), "yaw": round(yaw, 3)})
-                self._set("deep")
+                if c.ready_reach:  # straight down onto the edge; the arms take up what the base stop left (frame limit,
+                    # nav tolerance: 2-5 cm in x - on the bare mattress the pads caught nothing, 2026-11-01)
+                    self.picks = {}
+                    for s_ in self._sides():
+                        tcp_ = observation["policy"][f"tcp_{s_}"][0, :3].cpu().numpy()
+                        xy = getattr(self, "edge_xy", {}).get(s_)
+                        self.picks[s_] = (np.r_[self._to_base(U, [xy[0], xy[1], 0.0])[:2], tcp_[2]] if xy is not None
+                                          else tcp_)
+                    self.plan_log.append({"spot": self.spot_i, "picks_base": {k: np.round(v, 3).tolist()
+                                                                              for k, v in self.picks.items()}})
+                    self._set("descend")
+                else:
+                    self._set("deep")
         elif self.phase == "deep":
             if idx == getattr(self, "work", PRESET_DEEP) and self.t_phase > 30 and not getattr(self, "picked", False):
                 _, n = self._cloth_xyz(U, "duvet")
@@ -211,7 +253,7 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 self._set("align" if c.align_steps > 0 else "descend")
             elif self.phase == "align" and self.t_phase >= c.align_steps:
                 self._set("descend")
-        elif self.phase == "descend":
+        elif self.phase == "descend":  # ready_reach: z only - the picks are the hover TCPs (xy kept)
             _, n = self._cloth_xyz(U, "duvet")
             nb = np.array([self._to_base(U, q) for q in n])
             for pk in self.picks.values():
@@ -265,7 +307,7 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 self._set("rise")
         elif self.phase == "rise":
             self.work = PRESET_DEEP
-            if idx == 0 and self.t_phase > 45:
+            if (idx == 0 or c.fixed_torso) and self.t_phase > 45:
                 done = task.evaluate_cached(U)[0]
                 self.plan_log.append({"after_spot": self.spot_i, "coverage": round(float(done["coverage"]), 3)})
                 self._set("finished" if done["success"] and done["stages"].get("duvet_neat") else "plan")
