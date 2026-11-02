@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Oracle demonstrations (raw recording, only successful episodes kept) over training scenes, P at a time, until N saved.
 #   N=20 P=3 POLICY=dxbench.policies.oracle_bed03.Bed03OraclePolicy RAW=data/raw/bed03_oracle \
-#   (EXTRA="--physics_hz 120": task flags appended after the scene; BED-02 already defaults to 120 Hz, D-59)
+#   (EXTRA="--physics_hz 120": task flags appended after the scene; BED-02 already defaults to 120 Hz, D-59;
+#    RUN_ARGS="--success_tail 15": run_episode flags, placed before the environment arguments)
 #     tools/collect_demos.sh data/scenes_train/bed03_easy_train_*.json
 set -u
 cd "$(dirname "$0")/.."
@@ -18,13 +19,13 @@ one() {
   task=$(python3 -c "import json;print(json.load(open('$f'))['task'][-1])")
   for try in 1 2 3; do
     timeout -k 120 ${TIMEOUT:-7200} ~/miniforge3/envs/dx_arena/bin/python dxbench/dxbench/scripts/run_episode.py --policy "$POLICY" \
-      --out "$OUTD/$id" --record "$RAW" --progress_every 150 \
+      --out "$OUTD/$id" --record "$RAW" --progress_every 150 ${RUN_ARGS:-} \
       --external_environment_class_path dxbench.tasks.bed_tasks:DxBed0${task}Environment dx_bed0${task} --scene "$f" \
       --embodiment "$EMB" ${EXTRA:-} > "$OUTD/logs/$id.log" 2>&1
     grep -q "^\[episode\]" "$OUTD/logs/$id.log" && { grep "^\[episode\]" "$OUTD/logs/$id.log"; break; }
     grep -q "platforminfo\|Segmentation" "$OUTD/logs/$id.log" || break
   done
 }
-export -f one saved; export N RAW POLICY EMB TIMEOUT OUTD EXTRA
+export -f one saved; export N RAW POLICY EMB TIMEOUT OUTD EXTRA RUN_ARGS
 printf '%s\n' "$@" | xargs -P "$P" -I{} bash -c 'one {}'
 echo "[collect] saved $(saved) episodes in $RAW"

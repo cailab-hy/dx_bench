@@ -33,6 +33,11 @@ def _args(p):
     p.add_argument("--progress_every", type=int, default=75)
     p.add_argument("--video_tail", type=int, default=0,
                    help="video only: success no longer ends the episode; keep filming this many steps after it")
+    p.add_argument("--success_tail", type=int, default=0,
+                   help="recording: keep recording after success until the policy's phase is 'finished', then this "
+                        "many steps more (the release and the arms pulling back, labelled TAIL_SUBTASK); the episode is "
+                        "kept only if the task still succeeds at the end")
+    p.add_argument("--success_tail_max", type=int, default=225, help="cap on the steps recorded after success")
 
 
 def main():
@@ -81,12 +86,14 @@ def main():
     last_eval = None
     task_obj = _find_task(U)
     snap = {}
-    tail = _hold_success(U) if a.video_tail > 0 and frames is not None and not rec else None
-    success_step = None
+    film_tail = a.video_tail > 0 and frames is not None and not rec
+    rec_tail = a.success_tail > 0 and rec is not None
+    tail = _hold_success(U) if film_tail or rec_tail else None
+    success_step = finished_step = None
     for step in range(max_steps):
         act = policy.get_action(env, obs)
         if rec:
-            rec.pre_step(obs, act, getattr(policy, "subtask", None))
+            rec.pre_step(obs, act, TAIL_SUBTASK if success_step is not None else getattr(policy, "subtask", None))
         obs, rew, term, trunc, info = env.step(act)
         if rec and not (bool(term[0]) or bool(trunc[0])):
             rec.post_step()  # skipped on the terminating step: the env has reset (the frame is trimmed in finish())
@@ -105,7 +112,15 @@ def main():
             success_step, done = step, True  # the result is the state at success; the tail is only filmed
             last_eval = task_obj.last_eval[0] if task_obj is not None and task_obj.last_eval else last_eval
         if success_step is not None:
-            if step - success_step >= a.video_tail or bool(term[0]) or bool(trunc[0]):
+            if bool(term[0]) or bool(trunc[0]):
+                break
+            if rec_tail:
+                if finished_step is None and getattr(policy, "phase", None) == "finished":
+                    finished_step = step
+                if (finished_step is not None and step - finished_step >= a.success_tail
+                        or step - success_step >= a.success_tail_max):
+                    break
+            elif step - success_step >= a.video_tail:
                 break
             continue
         if task_obj is not None and step % 5 == 0:
@@ -142,7 +157,13 @@ def main():
     if task_obj is not None and not done:
         last_eval = task_obj.evaluate(U)[0]
     term_name = "success" if success_step is not None else terminated_by(U)
+    tail_info = None
     if success_step is not None:
+        if rec_tail:  # the state at the end of the tail: a garment that slid off after the release drops the demo
+            end = task_obj.evaluate(U)[0] if task_obj is not None else {"success": True}
+            tail_info = {"success_frame": success_step + 1, "tail_frames": step - success_step,
+                         "tail_finished": finished_step is not None, "success_held": bool(end["success"]),
+                         "end_stages": end.get("stages"), "end_failure": end.get("failure")}
         step = success_step
     if last_eval is not None and term_name == "success":
         # the success termination term is the task predicate itself, evaluated before the env reset inside step();
@@ -178,7 +199,10 @@ def main():
             if fr:
                 imageio.mimsave(out / f"{k}.mp4", fr, fps=15, codec="libx264", quality=7)
     if rec:
-        saved = rec.finish(success=res["success"], score=res["score"], save_only_success=not a.record_all)
+        if tail_info is not None:
+            res["success_tail"] = tail_info
+        ok = res["success"] and (tail_info is None or tail_info["success_held"])
+        saved = rec.finish(success=ok, score=res["score"], save_only_success=not a.record_all, extra=tail_info)
         res["recording"] = str(saved) if saved else None
         (out / "result.json").write_text(json.dumps(res, indent=1, default=float))
     print(f"[episode] {json.dumps({k: res[k] for k in ('scene', 'success', 'score', 'failure', 'steps', 'terminated_by')})}")
@@ -196,6 +220,9 @@ def terminated_by(U) -> str | None:
     except Exception:  # noqa: BLE001
         pass
     return None
+
+
+TAIL_SUBTASK = "release and step back"  # last entry of every task's subtask list (predicates.TEXT)
 
 
 def _hold_success(U) -> dict | None:
