@@ -28,7 +28,7 @@ import torch
 from isaaclab_arena.assets.register import register_policy
 from isaaclab_arena.policy.policy_base import PolicyBase, PolicyCfg
 
-from dxbench.policies.oracle_bed03 import BASE_FRONT_X, Bed03OraclePolicy, _T, pinch_dz, wrap
+from dxbench.policies.oracle_bed03 import AXLE_X, BASE_FRONT_X, Bed03OraclePolicy, _T, pinch_dz, wrap
 
 # TCP height above the cloth surface when pinching: oracle_bed03.pinch_dz (fingertips 8 mm above for the cylinder
 # assist, 2 mm into the cloth for the pad assist)
@@ -94,7 +94,23 @@ class Bed02OraclePolicyCfg(PolicyCfg):
     # D-66 (user 2026-11-01): the easy scenes start leaning at the desk in front of the towel - turn in place to its
     # axis (no driving), keep the torso (no crouch / drive-in, no final upright)
     turn_only: bool = True
-    work_preset_steps: int = 1    # lean: crouch cannot reach z 0.8-0.9 near the centre line at x 0.6 (reach_desk_0.0.json)
+    # D-68 (user 2026-11-02, sim2real): the easy start is jittered by +-5 cm / +-0.05 rad like BED-01. Turning in place
+    # leaves an xy offset, and 3 cm to the robot's right (or -0.1 rad, which turns the base 2 cm sideways about the
+    # axle) already failed the quarter fold, 4 cm further back the half fold (~/dx_120hz/b02reach). With `align` the
+    # base first goes to the nominal pose of the easy scenes (base origin align_desk_d from the desk front, towel centre
+    # straight ahead): sideways off it, it backs off align_back, turns towards the pose, drives there and turns back;
+    # then it fixes the remaining distance straight along its heading
+    align: bool = True
+    align_desk_d: float = 0.33    # scene_gen.gen_bed02 easy: the drive-in stalled at 0.31-0.32 m (chest at the edge)
+    align_back: float = 0.15
+    align_lat_tol: float = 0.006  # drive-axle offset sideways of the nominal pose that needs no sideways move
+    align_pos_tol: float = 0.004
+    # a pinch holding fewer than min_grasp nodes opens, comes down 3 mm lower and closes again (up to max_regrasp
+    # times). The quarter fold with 3-5 nodes left the square open in 15/15 runs, 8-12 nodes held (b02reach)
+    min_grasp: int = 6
+    max_regrasp: int = 2
+    regrasp_moves: str = "quarter"
+    work_preset_steps: int = 1   # lean: crouch cannot reach z 0.8-0.9 near the centre line at x 0.6 (reach_desk_0.0.json)
     debug: bool = False           # print per-arm base-frame target / TCP / error every 15 steps
     device: str = "cuda:0"
 
@@ -220,6 +236,54 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         if self.mv["move"].split("_")[0] in ("right", "left") and self.cfg.side_arc:
             return self.cfg.side_arc
         return self.cfg.arc_h
+
+    def _align(self, U):
+        """(v, w) of the D-68 move to the nominal pose; self.al["stage"] becomes "done" there. Steers the drive axle
+        (the point the base turns about): turning in place does not move it."""
+        p, yaw = self._h._base(U)
+        f_now = np.array([math.cos(yaw), math.sin(yaw)])
+        ax = p[:2] + AXLE_X * f_now
+        al, tgt, yaw_t = self.al, self.al["axle"], self.al["yaw"]
+        f_t = np.array([math.cos(yaw_t), math.sin(yaw_t)])
+        d = tgt - ax
+        w_max = self.cfg.max_w
+        if al["stage"] == "check":
+            al["lat0"] = round(float(d @ np.array([-f_t[1], f_t[0]])), 4)
+            al["depth0"] = round(float(d @ f_t), 4)
+            al["stage"] = "back" if abs(al["lat0"]) > self.cfg.align_lat_tol else "turn_final"
+            al["from"] = ax.copy()
+        if al["stage"] == "back":  # straight back, off the desk
+            if float((al["from"] - ax) @ f_now) >= self.cfg.align_back:
+                al["stage"] = "turn_to"
+            else:
+                return -0.10, 0.0
+        if al["stage"] == "turn_to":
+            e = wrap(math.atan2(d[1], d[0]) - yaw)
+            if abs(e) > 0.01:
+                return 0.0, float(np.clip(2.0 * e, -w_max, w_max))
+            al["stage"], al["head"] = "drive", math.atan2(d[1], d[0])
+        if al["stage"] == "drive":
+            dist = float(np.linalg.norm(d))
+            if dist > 0.03:  # steer at the target; the last 3 cm on the heading held so far
+                al["head"] = math.atan2(d[1], d[0])
+            hd = np.array([math.cos(al["head"]), math.sin(al["head"])])
+            rem = float(d @ hd)
+            if rem > self.cfg.align_pos_tol:
+                e = wrap(al["head"] - yaw)
+                return min(0.12, 0.8 * rem + 0.02) * math.cos(e) ** 2, float(np.clip(2.0 * e, -w_max, w_max))
+            al["stage"] = "turn_final"
+        if al["stage"] == "turn_final":
+            e = wrap(yaw_t - yaw)
+            if abs(e) > 0.005:
+                return 0.0, float(np.clip(2.0 * e, -w_max, w_max))
+            al["stage"] = "straight"
+        if al["stage"] == "straight":  # the distance left along the heading (forwards or backwards)
+            s_ = float(d @ f_t)
+            if abs(s_) > self.cfg.align_pos_tol:
+                v = math.copysign(max(0.015, min(0.06, abs(s_))), s_)
+                return v, float(np.clip(2.0 * wrap(yaw_t - yaw), -w_max, w_max))
+            al["stage"] = "done"
+        return 0.0, 0.0
 
     @staticmethod
     def _strip_v(pu, pv, ua, ub):
@@ -412,7 +476,22 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self.goal = (self.goal[0] - 0.25 * f, yaw)
                 self.plan_log.append({"approach_yaw_dev": round(dev, 3), "goal": self.final_goal[0].round(3).tolist()})
                 self.table_z = float(desk[1][2])
-            if self.cfg.turn_only:
+                # nominal easy pose (scene_gen.gen_bed02): its drive axle is where the axle of a canonical start is
+                bx = float(desk[1][0]) + self.cfg.align_desk_d
+                by = float(c[1]) - (float(c[0]) - bx) / f[0] * f[1]
+                self.al = {"stage": "check", "axle": np.array([bx, by]) + AXLE_X * f, "yaw": yaw}
+            if self.cfg.turn_only and self.cfg.align:
+                a[15:17] = self._align(U)
+                if self.al["stage"] == "done" or self.t_phase > 900:
+                    p_, yaw_ = h._base(U)
+                    ax_ = p_[:2] + AXLE_X * np.array([math.cos(yaw_), math.sin(yaw_)])
+                    self.plan_log.append({"base_after_align": np.round(p_[:2], 3).tolist(), "steps": self.t_phase,
+                                          "axle_err": round(float(np.linalg.norm(ax_ - self.al["axle"])), 4),
+                                          "yaw_err": round(wrap(self.al["yaw"] - yaw_), 4),
+                                          "sideways": self.al.get("lat0")})
+                    a[15:17] = (0.0, 0.0)
+                    self._start_moves()
+            elif self.cfg.turn_only:
                 _, yaw_now = h._base(U)
                 e = wrap(self.goal[1] - yaw_now)
                 ok = abs(e) <= 0.02
@@ -450,7 +529,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self.plan_log.append({"move": self.mv["move"], "arms": [
                     {k: (x.tolist() if hasattr(x, "tolist") else x) for k, x in arm.items()} for arm in self.mv["arms"]]})
                 self._set("above", self.mv["label"])
-        elif self.phase in ("above", "descend", "close", "lift", "carry", "release"):
+        elif self.phase in ("above", "descend", "close", "lift", "carry", "release", "reopen"):
             arms = self.mv["arms"]
             grip = 0.0 if self.phase in ("close", "lift", "carry") else 1.0
             targets = {}
@@ -470,6 +549,8 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                     tgt, mdp = pick + [0, 0, self.cfg.above_dz], 0.025
                 elif self.phase in ("descend", "close"):
                     tgt, mdp = pick, 0.012
+                elif self.phase == "reopen":  # too few nodes pinched: open, rise 3 cm, then come down again
+                    tgt, mdp = pick + [0, 0, 0.03 if self.t_phase > 6 else 0.0], 0.012
                 elif self.phase == "lift":  # short vertical lift so the pinched edge leaves the desk
                     tgt, mdp = pick + [0, 0, 0.03], 0.02
                 elif self.phase == "carry":
@@ -522,8 +603,20 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self._set("close")
             elif self.phase == "close" and self.t_phase > 10:
                 term = U.action_manager.get_term("cloth_assist")
-                self.plan_log[-1]["grasped"] = {s: int(term.grasped[0, 0 if s == "right" else 1]) for s in targets}
-                self._set("lift")
+                g_ = {s: int(term.grasped[0, 0 if s == "right" else 1]) for s in targets}
+                self.plan_log[-1]["grasped"] = g_
+                n_re = self.mv.get("regrasps", 0)
+                if (self.mv["move"] in self.cfg.regrasp_moves.split(",") and n_re < self.cfg.max_regrasp
+                        and any(k < self.cfg.min_grasp for k in g_.values())):
+                    self.mv["regrasps"] = n_re + 1
+                    self.plan_log[-1].setdefault("regrasp", []).append(g_)
+                    for arm in self.mv["arms"]:
+                        arm["pick"] = arm["pick"] + [0, 0, -0.003]
+                    self._set("reopen")
+                else:
+                    self._set("lift")
+            elif self.phase == "reopen" and self.t_phase > 20:
+                self._set("descend")
             elif self.phase == "lift" and (err < 0.015 or self.t_phase > 30):
                 self.arc_s = 0.0
                 self._set("carry")

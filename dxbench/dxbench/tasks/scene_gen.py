@@ -276,8 +276,9 @@ def diversify(spec: SceneSpec, split: str) -> SceneSpec:
             dxy, dyaw = 0.08, 0.15
         if spec.task in ("BED-01", "BED-02") and spec.difficulty == "easy":  # D-66: the oracle only drives straight in
             # (BED-01) or turns in place (BED-02) - 10-15 cm off to the side, the hands over the bed caught on it while
-            # driving in at an angle (9/18 failed); at the desk any offset left the towel off-centre (18/22 failed)
-            dxy, dyaw = (0.05, 0.05) if spec.task == "BED-01" else (0.0, 0.05)
+            # driving in at an angle (9/18 failed). BED-02: turning in place left any offset (18/22 failed) until the
+            # oracle aligned the base to the nominal pose first (D-68, user 2026-11-02: +-5 cm like BED-01, sim2real)
+            dxy, dyaw = 0.05, 0.05
         L = load_layout()
         others = [((o.xyz[0], o.xyz[1]), 0.55) for o in spec.objects if o.xyz[2] < 0.1]
         x0, y0 = spec.robot["xy"]

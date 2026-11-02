@@ -19,7 +19,7 @@ The predicates are pure numpy and are tested in `dxbench/tests/test_predicates.p
 | Task | easy | medium | hard |
 |---|---|---|---|
 | BED-01 | Duvet slid 48-52 cm towards the far side (its near edge 0.19-0.23 m in from the open side), head edge at the mattress end, no pillow; robot crouched 0.35 m from the pull pose with both hands over the bed (D-63, D-66) | Head half folded back over the foot half (0.55-0.59) | Folded, then bundled on the foot half or on the open long edge (0.31-0.58) |
-| BED-02 | Small towel flat on the desk; robot leaning at the desk with both hands over it (D-66) | One T-shirt crumpled on the desk | Pile of 3 shirts and 2 towels |
+| BED-02 | Small towel flat on the desk; robot leaning at the desk with both hands over it (D-66; training starts jittered ±5 cm, the oracle first aligns the base, D-68) | One T-shirt crumpled on the desk | Pile of 3 shirts and 2 towels |
 | BED-03 | Basket + 2 garments on the open floor, each within 2.0 m of the basket | 3 garments on the floor + 1 shirt on the bed | 4 on the floor + shirt and towel on the bed + distractors (doll, book, folded towel) |
 
 ## Splits
