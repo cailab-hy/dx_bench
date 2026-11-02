@@ -30,6 +30,9 @@ def _args(p):
     p.add_argument("--presettle_s", type=float, default=2.0, help="BED-02: let the spawned heap land before the drop")
     p.add_argument("--desk_lift", type=float, default=0.30, help="BED-02 drop height (m)")
     p.add_argument("--salt", type=int, default=0, help="new crumple draw (make_states.sh retries a rejected state)")
+    # D-70 (user 2026-11-02): BED-03 training garments start crumpled - a random point lifted this high and dropped
+    # (GarmentLab's 0.3 m drop); evaluation scenes stay flat
+    p.add_argument("--train_lift", type=float, default=0.30, help="BED-03 training scenes: crumple lift (m), 0 = flat")
 
 
 def shape_nodes(nodes: np.ndarray, kind: str, difficulty: str, task: str, rng: np.random.Generator,
@@ -144,7 +147,8 @@ def main():
         for _ in range(int(a.presettle_s * 15)):
             hold_step(act)
     drops = []
-    if spec.difficulty in ("medium", "hard"):
+    crumple_train = spec.task == "BED-03" and "_train_" in spec.scene_id and a.train_lift > 0
+    if spec.difficulty in ("medium", "hard") or crumple_train:
         for o in spec.objects:
             if o.kind in ("tshirt", "towel") and not (o.variant or "").startswith("folded"):
                 n0 = U.scene[o.name].data.nodal_pos_w.torch[0]
@@ -160,7 +164,7 @@ def main():
                 else:
                     k = int(rng.integers(len(n0)))
                     drift = torch.as_tensor(rng.normal(0, 0.08, 2), device=U.device, dtype=n0.dtype)
-                    lift = 0.45
+                    lift = a.train_lift if crumple_train and spec.difficulty not in ("medium", "hard") else 0.45
                 ids = torch.nonzero((n0 - n0[k]).norm(dim=-1) < 0.03).flatten()
 
                 def lift_path(p0, s_, drift=drift, lift=lift):

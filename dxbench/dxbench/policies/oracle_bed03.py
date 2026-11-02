@@ -52,6 +52,17 @@ class Bed03OraclePolicyCfg(PolicyCfg):
     scan: bool = True
     scan_w: float = 0.5              # turn rate while looking around (rad/s)
     scan_min_frac: float = 0.15      # a garment is seen when this fraction of its sampled nodes is in view
+    # D-70 (user 2026-11-02, data diversity): per episode, drawn from the scene seed - with p_miss the first pinch closes
+    # miss_dz too high (catches nothing) and is re-grasped; with p_drop the first garment is let go drop_out beyond the
+    # basket's corner on the robot's right and picked up again from the floor (recovery data). A released garment that
+    # is not in the basket goes back into the queue (up to max_requeue times; also the old rim-release failure).
+    # Strategy: nearest visible garment first, or the T-shirt first (p_tshirt_first)
+    p_miss: float = 0.12
+    p_drop: float = 0.12
+    miss_dz: float = 0.03
+    drop_out: float = 0.12
+    max_requeue: int = 2
+    p_tshirt_first: float = 0.5
     device: str = "cuda:0"
 
 
@@ -71,6 +82,65 @@ def pinch_dz(U) -> float:
 
     term = U.action_manager.get_term("cloth_assist")
     return 0.031 - 0.002 if isinstance(term, PadGraspAction) else 0.031 + 0.008
+
+
+def episode_rng(salt: int) -> np.random.Generator:
+    """D-70: the oracle's per-episode draws (strategy, injected failure) come from the scene seed, so a scene replays
+    the same demonstration."""
+    from dxbench.tasks import task_env
+
+    spec = getattr(task_env.CURRENT_TASK, "spec", None)
+    return np.random.default_rng([int(getattr(spec, "seed", 0)), salt])
+
+
+def align_step(h, U, al: dict, back: float, lat_tol: float, pos_tol: float, w_max: float):
+    """(v, w) of one step of the move to a base pose (D-68): al = {"stage": "check", "axle": target drive-axle xy,
+    "yaw": target yaw}; al["stage"] becomes "done" there. Steers the drive axle (turning in place does not move it):
+    sideways more than lat_tol, it backs off `back`, turns towards the target, drives there and turns back; the distance
+    left along the heading is then driven straight (forwards or backwards)."""
+    p, yaw = h._base(U)
+    f_now = np.array([math.cos(yaw), math.sin(yaw)])
+    ax = p[:2] + AXLE_X * f_now
+    tgt, yaw_t = al["axle"], al["yaw"]
+    f_t = np.array([math.cos(yaw_t), math.sin(yaw_t)])
+    d = tgt - ax
+    if al["stage"] == "check":
+        al["lat0"] = round(float(d @ np.array([-f_t[1], f_t[0]])), 4)
+        al["depth0"] = round(float(d @ f_t), 4)
+        al["stage"] = "back" if abs(al["lat0"]) > lat_tol else "turn_final"
+        al["from"] = ax.copy()
+    if al["stage"] == "back":  # straight back, away from the furniture in front
+        if float((al["from"] - ax) @ f_now) >= back:
+            al["stage"] = "turn_to"
+        else:
+            return -0.10, 0.0
+    if al["stage"] == "turn_to":
+        e = wrap(math.atan2(d[1], d[0]) - yaw)
+        if abs(e) > 0.01:
+            return 0.0, float(np.clip(2.0 * e, -w_max, w_max))
+        al["stage"], al["head"] = "drive", math.atan2(d[1], d[0])
+    if al["stage"] == "drive":
+        dist = float(np.linalg.norm(d))
+        if dist > 0.03:  # steer at the target; the last 3 cm on the heading held so far
+            al["head"] = math.atan2(d[1], d[0])
+        hd = np.array([math.cos(al["head"]), math.sin(al["head"])])
+        rem = float(d @ hd)
+        if rem > pos_tol:
+            e = wrap(al["head"] - yaw)
+            return min(0.12, 0.8 * rem + 0.02) * math.cos(e) ** 2, float(np.clip(2.0 * e, -w_max, w_max))
+        al["stage"] = "turn_final"
+    if al["stage"] == "turn_final":
+        e = wrap(yaw_t - yaw)
+        if abs(e) > 0.005:
+            return 0.0, float(np.clip(2.0 * e, -w_max, w_max))
+        al["stage"] = "straight"
+    if al["stage"] == "straight":
+        s_ = float(d @ f_t)
+        if abs(s_) > pos_tol:
+            v = math.copysign(max(0.015, min(0.06, abs(s_))), s_)
+            return v, float(np.clip(2.0 * wrap(yaw_t - yaw), -w_max, w_max))
+        al["stage"] = "done"
+    return 0.0, 0.0
 
 
 def wrap(a):
@@ -104,6 +174,29 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         self.regrasps = 0
         self.replans = 0
         self.homed_for_place = False
+        self.n_step = 0
+        self.meta = {}
+        self.miss_pending = self.drop_pending = False
+        self.requeues: dict[str, int] = {}
+
+    def _draw_episode(self):
+        """D-70: strategy and injected failure of this episode, from the scene seed."""
+        rng = episode_rng(3)
+        u = float(rng.random())
+        rec = "miss_high" if u < self.cfg.p_miss else "drop_outside" if u < self.cfg.p_miss + self.cfg.p_drop else None
+        self.miss_pending, self.drop_pending = rec == "miss_high", rec == "drop_outside"
+        self.meta = {"strategy": "tshirt_first" if rng.random() < self.cfg.p_tshirt_first else "nearest",
+                     "recovery": rec, "events": []}
+
+    def _order_key(self, U, g, p):
+        """Garment order: distance from the base, T-shirts first under the "tshirt_first" strategy."""
+        from dxbench.tasks import task_env
+
+        d = float(np.linalg.norm(self._cloth_xyz(U, g)[0][:2] - p[:2]))
+        if self.meta.get("strategy") != "tshirt_first":
+            return (0, d)
+        kind = task_env.CURRENT_TASK.spec.obj(g).kind
+        return (0 if kind == "tshirt" else 1, d)
 
     # head camera (link_head_2/first_person_camera): 640 x 480, fx = fy = 343.1 -> half-angle tangents
     CAM_TAN = (320 / 343.1, 240 / 343.1)
@@ -207,6 +300,17 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             if len(p):
                 pts.append(p[:, :2].cpu().numpy())
         return np.concatenate(pts) if pts else np.zeros((0, 2))
+
+    @staticmethod
+    def _top_under(n, xy, r=0.015):
+        """Cloth height under the pads at xy: the highest node within r (D-70: the 30 nearest nodes reached a fold of a
+        crumpled garment next to the pinch and the fingertips closed 0.9-1.8 cm above the cloth under them, 0 nodes)."""
+        d = np.linalg.norm(n[:, :2] - np.asarray(xy)[:2], axis=1)
+        m = d < r
+        if m.sum() < 3:
+            m = np.zeros(len(n), dtype=bool)
+            m[np.argsort(d)[:30]] = True
+        return float(n[m, 2].max())
 
     def _pick_point(self, c, n):
         """Grasp xy: the planned edge point (snapped to the nearest garment node) or the garment centre."""
@@ -397,6 +501,16 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         (release 0.55, press 0.42 m; crouch reaches z 0.45-0.75 m)."""
         return 0.05 if self._basket_half() == (0.245, 0.18) else 0.0
 
+    def _place_xy(self, U, b):
+        """Where the garment is let go: the basket centre, or (the injected drop) beyond its corner on the robot's
+        right (base -y), outside the rim."""
+        if not self.drop_pending:
+            return b
+        _, yaw = self._base(U)
+        hl, hs = self._basket_half()
+        right = np.array([math.sin(yaw), -math.cos(yaw), 0.0])
+        return np.asarray(b, dtype=float) + right * (math.hypot(hl, hs) + self.cfg.drop_out)
+
     @staticmethod
     def _basket_half():
         """Outer (long, short) half extents at the rim: the real gray basket (D-36) 49 x 36 cm, else 60 x 44 cm."""
@@ -502,6 +616,9 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         a[12:14] = 1.0  # grippers open
         grip = 1.0
         self.t_phase += 1
+        self.n_step += 1  # frame index of this action in a recording
+        if not self.meta and type(self) is Bed03OraclePolicy:
+            self._draw_episode()
         torso_term = U.action_manager.get_term("torso")
         self.torso_idx = int(torso_term.preset_index[0])
 
@@ -524,7 +641,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             hl, _hs = self._basket_half()
             garments = [n for n in garments if np.linalg.norm(self._cloth_xyz(U, n)[0][:2] - b[:2]) >= hl]
             p, _ = self._base(U)
-            garments.sort(key=lambda n: float(np.linalg.norm(self._cloth_xyz(U, n)[0][:2] - p[:2])))
+            garments.sort(key=lambda n: self._order_key(U, n, p))
             self.queue = garments
             self._set("next", "look for clothes")
         if self.phase == "next":
@@ -535,7 +652,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
                 vis = [g for g in self.queue if seen[g] >= self.cfg.scan_min_frac]
                 if vis:  # the nearest garment in view (queue is nearest-first from the start pose)
                     p, _ = self._base(U)
-                    vis.sort(key=lambda g: float(np.linalg.norm(self._cloth_xyz(U, g)[0][:2] - p[:2])))
+                    vis.sort(key=lambda g: self._order_key(U, g, p))
                     self.plan_log.append({"seen": {k: round(v, 2) for k, v in seen.items()}, "target": vis[0],
                                           "scan_steps": getattr(self, "scan_steps", 0)})
                     self.scan_steps = 0
@@ -550,6 +667,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             if self.queue and (not self.cfg.scan or getattr(self, "scan_steps", 0) == 0):
                 self.target = self.queue.pop(0)
                 self.pick_xy = None
+                self.z_fix = 0.0
                 self.retries = 0
                 self.regrasps = 0
                 self.replans = 0
@@ -577,8 +695,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         elif self.phase == "above":
             c, n = self._cloth_xyz(U, self.target)
             c = self._pick_point(c, n)
-            near = n[np.argsort(np.linalg.norm(n[:, :2] - c[:2], axis=1))[:30]]
-            top = float(near[:, 2].max())
+            top = self._top_under(n, c)
             tb = self._to_base(U, [c[0], c[1], top + 0.031 + 0.12])
             a[0:6], err = self._servo(observation, tb)
             if err < 0.02 or self.t_phase > 90:
@@ -586,12 +703,12 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         elif self.phase == "descend":
             c, n = self._cloth_xyz(U, self.target)
             c = self._pick_point(c, n)
-            near = n[np.argsort(np.linalg.norm(n[:, :2] - c[:2], axis=1))[:30]]
-            top = float(near[:, 2].max())
+            top = self._top_under(n, c) + getattr(self, "z_fix", 0.0)
             pad = pinch_dz(U) < 0.031
             # pad assist (D-34): the fingertips must end within 4 mm of the cloth, but the deep floor posture tracks to
             # ~1 cm - aim 5 mm lower (the floor stops the fingers) and close on a tighter error or the timeout
-            tb = self._to_base(U, [c[0], c[1], top + pinch_dz(U) - (0.005 if pad else 0.0)])
+            tb = self._to_base(U, [c[0], c[1], top + pinch_dz(U) - (0.005 if pad else 0.0)
+                                   + (self.cfg.miss_dz if self.miss_pending else 0.0)])
             a[0:6], err = self._servo(observation, tb, max_dp=0.012)
             self.last_err = err
             if err < (0.006 if pad else 0.012) or self.t_phase > 90:
@@ -608,7 +725,13 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
                                                                       "tcp_z_base": tcp_z}})
                 print(f"[bed03dbg] close target={self.target} nodes={got} err={self.last_err:.4f} tcp_z_b={tcp_z:.3f} "
                       f"diag={diag}", flush=True)
+                if self.miss_pending:  # D-70: the injected high pinch - the regrasp below is the recovery
+                    self.miss_pending = False
+                    self.meta["events"].append(["miss_high", self.target, got, self.n_step])
                 if got == 0 and self.regrasps < 2:
+                    gap = (diag or {}).get(f"{self.target}_tip_to_cloth")
+                    if gap is not None and gap > 0.002:  # D-70: closed above the cloth - come down by the gap
+                        self.z_fix = getattr(self, "z_fix", 0.0) - (gap - 0.002)
                     self.regrasps += 1
                     self.plan_log.append({"target": self.target, "regrasp": self.regrasps})
                     self._set("reopen")
@@ -662,6 +785,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             grip = 0.0
             a[14] = torso_to(self.cfg.place_preset_steps)
             b = (_T(U.scene["laundry_basket"].data.root_link_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
+            b = self._place_xy(U, b)
             tb = self._to_base(U, [b[0], b[1], self.cfg.place_above_z])
             a[0:6], err = self._servo(observation, tb)
             self.last_err = err
@@ -676,6 +800,7 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
         elif self.phase == "lower_basket":
             grip = 0.0
             b = (_T(U.scene["laundry_basket"].data.root_link_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
+            b = self._place_xy(U, b)
             tb = self._to_base(U, [b[0], b[1], self.cfg.place_tcp_z + self._rim_extra()])
             a[0:6], err = self._servo(observation, tb, max_dp=0.012)
             self.last_err = err
@@ -685,7 +810,12 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             grip = 1.0
             if self.t_phase > 20:
                 self.done_clothes.append(self.target)
-                self._set("press", "put it in the basket")
+                if self.drop_pending:  # D-70: let go beside the basket - no press, pick it up again
+                    self.drop_pending = False
+                    self.meta["events"].append(["drop_outside", self.target, self.n_step])
+                    self._set("retract", "look for clothes")
+                else:
+                    self._set("press", "put it in the basket")
         elif self.phase == "press":
             # a dropped wad can bridge the rim: push it down once with the open hand, then lift out
             b = (_T(U.scene["laundry_basket"].data.root_link_pos_w)[0] - U.scene.env_origins[0]).cpu().numpy()
@@ -710,6 +840,17 @@ class Bed03OraclePolicy(PolicyBase[Bed03OraclePolicyCfg]):
             # and knocked the basket over when the robot turned in place next to it (scene 001)
             a[15:17] = (-0.15, 0.0)
             if self.t_phase > 30:
+                from dxbench.tasks import task_env
+
+                # D-70: a garment that did not end up in the basket goes back into the queue
+                last = self.done_clothes[-1] if self.done_clothes else None
+                inb = task_env.CURRENT_TASK.evaluate_cached(U)[0].get("in_basket", {})
+                if last is not None and not inb.get(last, True) and self.requeues.get(last, 0) < self.cfg.max_requeue:
+                    self.requeues[last] = self.requeues.get(last, 0) + 1
+                    self.done_clothes.remove(last)
+                    self.queue.append(last)
+                    self.meta.setdefault("events", []).append(["requeue", last, self.n_step])
+                    self.plan_log.append({"requeue": last})
                 self._set("next", "look for clothes")
         elif self.phase == "finished":
             pass

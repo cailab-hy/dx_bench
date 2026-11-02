@@ -22,6 +22,12 @@ from dxbench.tasks.scene_spec import (DEFAULT_LIGHTING, ObjSpec, SceneSpec, free
 BASKET_SEP = 1.02   # garment centre to basket centre (m)
 GARMENT_SEP = 0.85  # garment to garment (m)
 SHIRTS = ("m95_wine",)  # user 2026-10-22: only the wine tee arrived (blue / green assets kept)
+SHIRTS_TRAIN = ("m95_wine", "m95_blue", "m95_green")  # D-70 (user 2026-11-02): training scenes mix the product colours
+# D-70: BED-03 training starts - one of three free spots (door side = CARE_SPAWN, east of the bed, north-west by the
+# desk), facing anywhere (the oracle looks around, D-67). Evaluation keeps CARE_SPAWN. The spot between the bed and the
+# sofa (0.4, 20.5) was dropped: the base got stuck there on geometry the layout boxes miss (tilt up to 70 deg, 1/7)
+BED03_STARTS = ((-2.6, 17.7), (2.6, 17.9), (-3.1, 20.75))
+_START_SALT = 4242
 TOWELS = ("01_charcoalgray", "05_coolgray", "06_white", "07_oatmeal", "08_lightpink", "09_ivory", "10_lavender",
           "11_applegreen", "12_skyblue", "13_sandbeige")
 BASKET_VARIANT = "gray"
@@ -47,7 +53,7 @@ def _color(seed: int, i: int, options: tuple) -> str:
 
 def _shirts(split: str, seed: int = 0):
     """Shirt variants indexed by garment number (kept as a sequence for the callers' i % len pattern)."""
-    return tuple(_color(seed, 100 + k, SHIRTS) for k in range(8))
+    return tuple(_color(seed, 100 + k, SHIRTS_TRAIN if split == "train" else SHIRTS) for k in range(8))
 
 
 def _towel(split: str, seed: int, i: int = 0) -> str:
@@ -68,7 +74,11 @@ def _on_mattress(rng, layout, margin=0.25):
 def gen_bed03(diff: str, seed: int, split: str) -> SceneSpec:
     rng = np.random.default_rng(seed)
     L = load_layout()
-    robot_disc = [((CARE_SPAWN[0], CARE_SPAWN[1]), 0.9)]
+    start, start_yaw = (CARE_SPAWN[0], CARE_SPAWN[1]), None
+    if split == "train":  # D-70: own generator, so the layout draws stay those of the seed
+        rs = np.random.default_rng([seed, _START_SALT])
+        start, start_yaw = BED03_STARTS[int(rs.integers(len(BED03_STARTS)))], float(rs.uniform(-math.pi, math.pi))
+    robot_disc = [(start, 0.9)]
     shirts = _shirts(split, seed)
     n_floor = {"easy": 2, "medium": 3, "hard": 4}[diff]
     # spacing from the garment size: basket half diagonal 0.37 m + large T-shirt radius ~0.55 m + 0.10 m, so no
@@ -104,8 +114,11 @@ def gen_bed03(diff: str, seed: int, split: str) -> SceneSpec:
                  ObjSpec("book", "book", [*extra[1], 0.0], float(rng.uniform(-3, 3))),
                  ObjSpec("folded_towel", "towel", [*extra[2], 0.01], 0.0, "folded:" + _towel(split, seed, 8))]
     first = next(o for o in objs if o.kind in ("tshirt", "towel"))
+    robot = _robot_facing(first.xyz[:2])
+    if start_yaw is not None:
+        robot = dict(robot, xy=list(start), yaw=start_yaw)
     return SceneSpec(scene_id=f"bed03_{diff}_{seed:03d}" if split == "eval" else f"bed03_{diff}_train_{seed}",
-                     task="BED-03", difficulty=diff, seed=seed, robot=_robot_facing(first.xyz[:2]), objects=objs,
+                     task="BED-03", difficulty=diff, seed=seed, robot=robot, objects=objs,
                      language=language("BED-03"))
 
 
@@ -182,8 +195,9 @@ def gen_bed02(diff: str, seed: int, split: str) -> SceneSpec:
         # +-0.2): leaning, the robot stops with its base front only ~2 cm under the desk (the chest meets the desk edge)
         # and the right arm reaches ~0.69 m ahead at desk height, so the half fold's far corners (0.70-0.81 m ahead)
         # were missed; the near long edge now lies about at the desk front, without hanging over it
+        dy = 0.15 if split == "train" else 0.1  # D-70: the oracle aligns the base to the towel (D-68)
         objs.append(ObjSpec("cloth_0", "towel", [cx + 0.04 + float(rng.uniform(-0.01, 0.01)),
-                                                 cy + float(rng.uniform(-0.1, 0.1)),
+                                                 cy + float(rng.uniform(-dy, dy)),
                                                  top + 0.005], float(rng.uniform(-0.1, 0.1)) + math.pi / 2,
                             _towel(split, seed)))
     elif diff == "medium":
@@ -233,8 +247,13 @@ def gen_bed01(diff: str, seed: int, split: str) -> SceneSpec:
         # 35-53 deg off and the orientation servo shook the arm). Start coverage of the whole top ~0.80 (< 0.95)
         # head edge at the mattress end (not 2 cm short): the 2.0 m duvet has 12 cm over the 1.88 m mattress, and pulled
         # sideways it slid 2-3 cm towards the foot - the head row of cells came uncovered (D-66, 100 % rule)
-        duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(0.48, 0.52)), float(hi[1]) - DUVET_SIZE[0] / 2,
-                                           top + 0.02], math.pi / 2)
+        # D-70 (training): 47-56 cm (beyond 56 cm the gripper no longer reaches the edge straight down; planned 40 cm,
+        # but under 48 cm the oracle left the head / foot rows bare in 7/9 gate scenes - the duvet ends up short along
+        # the bed, which pulling across it cannot fix - vs 3/9 above) and +-0.03 rad (turned more, a head corner
+        # uncovers the head row). The draws keep the evaluation sequence
+        sl, dyaw = ((0.47, 0.56), 0.03) if split == "train" else ((0.48, 0.52), 0.0)
+        duvet = ObjSpec("duvet", "duvet", [cx + float(rng.uniform(*sl)), float(hi[1]) - DUVET_SIZE[0] / 2,
+                                           top + 0.02], math.pi / 2 + (float(rng.uniform(-dyaw, dyaw)) if dyaw else 0.0))
     elif diff == "medium":  # head part folded back over the foot half (make_cloth_states folds it)
         duvet = ObjSpec("duvet", "duvet", [cx, float(hi[1]) - 0.02 - DUVET_SIZE[0] / 2, top + 0.02], math.pi / 2)
     else:                   # folded, then gathered into a bundle on the foot half or on the open long edge
@@ -278,7 +297,8 @@ def diversify(spec: SceneSpec, split: str) -> SceneSpec:
             # (BED-01) or turns in place (BED-02) - 10-15 cm off to the side, the hands over the bed caught on it while
             # driving in at an angle (9/18 failed). BED-02: turning in place left any offset (18/22 failed) until the
             # oracle aligned the base to the nominal pose first (D-68, user 2026-11-02: +-5 cm like BED-01, sim2real)
-            dxy, dyaw = 0.05, 0.05
+            # D-70: BED-01 +-10 cm / +-0.1 rad (the oracle aligns first, like BED-02), BED-02 +-8 cm / +-0.1 rad
+            dxy, dyaw = (0.10, 0.10) if spec.task == "BED-01" else (0.08, 0.10)
         L = load_layout()
         others = [((o.xyz[0], o.xyz[1]), 0.55) for o in spec.objects if o.xyz[2] < 0.1]
         x0, y0 = spec.robot["xy"]
@@ -286,6 +306,8 @@ def diversify(spec: SceneSpec, split: str) -> SceneSpec:
             x, y = x0 + float(rng.uniform(-dxy, dxy)), y0 + float(rng.uniform(-dxy, dxy))
             if spec.task == "BED-02" and spec.difficulty == "easy":  # D-66: starts at the desk: only away from it
                 x = x0 + 0.6 * abs(x - x0)
+            if spec.task == "BED-01" and spec.difficulty == "easy":  # D-70: hands 13 cm short of the mattress: not closer
+                x = x0 - 0.6 * abs(x - x0)
             if spec.task != "BED-03" or free_floor_ok((x, y), L, 0.5, extra=others):
                 spec.robot = dict(spec.robot, xy=[x, y], yaw=float(spec.robot["yaw"] + rng.uniform(-dyaw, dyaw)))
                 break

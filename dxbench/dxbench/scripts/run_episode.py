@@ -180,7 +180,7 @@ def main():
            "stages_end": last_eval.get("stages") if last_eval else None, "first_reach_step": first_reach,
            "interventions": 0, "safety": {"robot_tilt_max_deg": tilt_max, "robot_tipped": tilt_max > 10.0},
            "policy_phase_end": getattr(policy, "phase", None), "policy_plan_log": getattr(policy, "plan_log", None),
-           "policy_done": getattr(policy, "done_clothes", None)}
+           "policy_done": getattr(policy, "done_clothes", None), "oracle_meta": getattr(policy, "meta", None)}
     try:  # pad assist (pad_grasp): per-grasp nodes, fingertip-cloth gap, how far the pinned nodes left the pads
         ca = U.action_manager.get_term("cloth_assist")
         if hasattr(ca, "stats"):
@@ -202,7 +202,14 @@ def main():
         if tail_info is not None:
             res["success_tail"] = tail_info
         ok = res["success"] and (tail_info is None or tail_info["success_held"])
-        saved = rec.finish(success=ok, score=res["score"], save_only_success=not a.record_all, extra=tail_info)
+        extra = dict(tail_info or {})
+        extra["oracle_meta"] = getattr(policy, "meta", None)  # D-70: strategy, injected failure, recovery events (frames)
+        try:  # every randomized value of the scene (layout, robot start, garment variants, lighting, instruction)
+            sp = Path(a.scene) if os.path.isabs(a.scene) else REPO / a.scene
+            extra["scene_spec"] = json.loads(sp.read_text())
+        except (OSError, TypeError, ValueError):
+            pass
+        saved = rec.finish(success=ok, score=res["score"], save_only_success=not a.record_all, extra=extra)
         res["recording"] = str(saved) if saved else None
         (out / "result.json").write_text(json.dumps(res, indent=1, default=float))
     print(f"[episode] {json.dumps({k: res[k] for k in ('scene', 'success', 'score', 'failure', 'steps', 'terminated_by')})}")

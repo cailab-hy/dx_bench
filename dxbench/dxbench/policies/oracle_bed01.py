@@ -29,7 +29,7 @@ import torch
 from isaaclab_arena.assets.register import register_policy
 from isaaclab_arena.policy.policy_base import PolicyBase, PolicyCfg
 
-from dxbench.policies.oracle_bed03 import BASE_FRONT_X, Bed03OraclePolicy, pinch_dz
+from dxbench.policies.oracle_bed03 import AXLE_X, BASE_FRONT_X, Bed03OraclePolicy, align_step, episode_rng, pinch_dz
 
 PRESET_DEEP = 3
 
@@ -69,6 +69,28 @@ class Bed01EasyOracleCfg(PolicyCfg):
                                      # 6 cm from the frame the base missed lateral goals by 0.2-0.35 m)
     max_v: float = 0.2
     max_w: float = 0.6
+    # D-70 (user 2026-11-02): training starts +-10 cm / +-0.1 rad. Sideways off the pull line, the base first goes to a
+    # pose `pre_d` short of the pull pose on that line (D-68's back off / turn / drive / turn, oracle_bed03.align_step)
+    # and then drives straight in: driving in at an angle, the hands over the bed caught on it (D-66, 9/18 failed)
+    align: bool = True
+    pre_d: float = 0.25
+    align_back: float = 0.15
+    align_lat_tol: float = 0.006
+    align_pos_tol: float = 0.004
+    # D-70 (data diversity): per episode, drawn from the scene seed - with p_miss one hand pinches miss_out short of the
+    # edge (on the bare mattress) and pinches again at the edge while the other hand holds on; with p_short the first
+    # pull stops short_by short and the oracle pulls again (recovery data). Only a hand that caught nothing re-grasps:
+    # the duvet pinch holds 2-4 nodes, and re-grasping both hands at < 3 nodes moved the duvet off the head row
+    # (4/14 vs 5/5 without, 2026-11-02 gate)
+    p_miss: float = 0.13
+    p_short: float = 0.12
+    miss_out: float = 0.045
+    short_by: float = 0.10
+    min_grasp: int = 1
+    # D-70: a later pull goes where the target area is still bare - the left hand (head side) over the mean y of the
+    # uncovered cells. The wider training starts left the head corner on the open side bare after the first pull
+    # (coverage 0.95-0.99) and pulling at the centre again made it worse; the pre-D-70 oracle failed the same 6/6 scenes
+    aim_uncovered: bool = True
     device: str = "cuda:0"
 
 
@@ -96,6 +118,12 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
         self.goal = None
         self.picks = {}
         self.plan_log = []
+        self.n_step = 0
+        self.meta = {}
+        self.al = None
+        self.regrasped = 0
+        self.true_picks = {}
+        self.keep_hold = {}  # D-70: a hand that holds on while the other re-grasps
 
     def _servo_side(self, obs, target_b, side, kp=0.6, max_dp=0.025):
         """Relative IK step of one arm towards a base-frame TCP position, gripper at `pitch_deg` (D-63)."""
@@ -124,6 +152,27 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
             errs.append(e)
         return max(errs)
 
+    def _bare_cells(self, U, bed):
+        """xy of the 5 cm target cells (mattress top less the D-66 rim) with no duvet node within 5 cm (predicates
+        evaluate_bed01 / grid_coverage)."""
+        from dxbench.tasks import predicates as P
+
+        _, n = self._cloth_xyz(U, "duvet")
+        lo = [v + P.BED01_RIM for v in bed.mattress_min]
+        hi = [v - P.BED01_RIM for v in bed.mattress_max]
+        hi[bed.long_axis] -= bed.cover_head_gap
+        top = bed.mattress_top_z
+        sel = n[(n[:, 2] >= top - 0.03) & (n[:, 2] <= top + 0.25)]
+        xs = np.arange(lo[0] + 0.025, hi[0], 0.05)
+        ys = np.arange(lo[1] + 0.025, hi[1], 0.05)
+        g = np.stack(np.meshgrid(xs, ys, indexing="ij"), axis=-1).reshape(-1, 2)
+        if len(sel) == 0:
+            return g
+        from scipy.spatial import cKDTree
+
+        d, _ = cKDTree(sel[:, :2]).query(g)
+        return g[d > 0.05]
+
     def _sides(self):
         return ("right", "left") if self.cfg.two_arms else ("right",)
 
@@ -139,6 +188,14 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
         a = np.zeros(17, dtype=np.float32)
         a[12:14] = 1.0
         self.t_phase += 1
+        self.n_step += 1  # frame index of this action in a recording
+        if not self.meta:  # D-70: this episode's injected failure, from the scene seed
+            rng = episode_rng(1)
+            u = float(rng.random())
+            rec = "miss" if u < c.p_miss else "short_pull" if u < c.p_miss + c.p_short else None
+            self.miss_side = ["right", "left"][int(rng.integers(2))]
+            self.meta = {"strategy": "both_hands", "recovery": f"miss_{self.miss_side}" if rec == "miss" else rec,
+                         "events": []}
         if self.phase in ("above", "descend", "close"):  # diagnostics: arm joint velocity reversals while reaching
             ph = "jit_" + self.phase
             jv = observation["policy"]["joint_vel"][0, :14].cpu().numpy()
@@ -166,6 +223,15 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 if c.spot_on_duvet:  # pulled off its centre line the duvet turned and uncovered a corner (2026-11-01)
                     y_mid = float(self._cloth_xyz(U, "duvet")[1][:, 1].mean())
                 self.spot_y = y_mid + c.spots[self.spot_i]
+                bare = self._bare_cells(U, bed) if c.aim_uncovered and self.spot_i > 0 else None
+                if bare is not None and len(bare):
+                    # the hand nearest the bare cells over them, both hands on the mattress
+                    yb = float(bare[:, 1].mean())
+                    hy = abs(c.hand_y)
+                    side = 1.0 if yb > self.spot_y else -1.0
+                    lo_y, hi_y = lo[1] + hy + 0.05, hi[1] - hy - 0.05
+                    self.spot_y = float(np.clip(yb - side * hy, lo_y, hi_y))
+                    self.meta.setdefault("events", []).append(["aim_bare", round(yb, 3), len(bare), self.n_step])
                 bx = lo[0] - 0.025 - c.frame_gap - BASE_FRONT_X
                 by = self.spot_y if c.two_arms else self.spot_y - c.hand_y  # two arms: the hands straddle the spot
                 if c.ready_reach:  # stop with the hands above the near edge (not closer than the frame allows)
@@ -187,7 +253,19 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 # the first approach turns, drives straight and turns to face the bed (D-66: the training starts are
                 # +-15 cm to the side); only a later spot along the bed backs off first (turning next to the frame missed)
                 lateral = abs(float(p[1]) - float(self.goal[0][1])) > 0.05 and self.spot_i > 0
-                self._set("side" if lateral else "approach", "grasp the duvet edge")
+                if c.align and self.al is None:  # D-70: first approach - onto the pull line short of the bed
+                    pre_x = min(float(p[0]), float(self.goal[0][0]) - c.pre_d)
+                    self.al = {"stage": "check", "axle": np.array([pre_x + AXLE_X, float(self.goal[0][1])]), "yaw": 0.0}
+                    self._set("align_base", "grasp the duvet edge")
+                else:
+                    self._set("side" if lateral else "approach", "grasp the duvet edge")
+        elif self.phase == "align_base":
+            a[15:17] = align_step(self, U, self.al, c.align_back, c.align_lat_tol, c.align_pos_tol, c.max_w)
+            if self.al["stage"] == "done" or self.t_phase > 900:
+                p_, yaw_ = self._base(U)
+                self.plan_log.append({"base_after_align": np.round(p_[:2], 3).tolist(), "steps": self.t_phase,
+                                      "sideways": self.al.get("lat0"), "yaw_err": round(-yaw_, 4)})
+                self._set("approach")
         elif self.phase == "side":  # back off and move along the bed, facing it again
             (v, w), ok = self._nav(U, self.via, 0.0)
             a[15:17] = (v, w)
@@ -207,6 +285,12 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                         xy = getattr(self, "edge_xy", {}).get(s_)
                         self.picks[s_] = (np.r_[self._to_base(U, [xy[0], xy[1], 0.0])[:2], tcp_[2]] if xy is not None
                                           else tcp_)
+                    if (self.meta["recovery"] or "").startswith("miss") and not self.meta.get("missed") \
+                            and self.miss_side in self.picks:  # D-70: this hand comes down short of the edge
+                        self.true_picks[self.miss_side] = self.picks[self.miss_side].copy()
+                        self.picks[self.miss_side] = self.picks[self.miss_side] - [c.miss_out, 0.0, 0.0]
+                        self.meta["missed"] = True
+                        self.meta["events"].append(["miss", self.miss_side, self.n_step])
                     self.plan_log.append({"spot": self.spot_i, "picks_base": {k: np.round(v, 3).tolist()
                                                                               for k, v in self.picks.items()}})
                     self._set("descend")
@@ -260,10 +344,12 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 near = np.linalg.norm(nb[:, :2] - pk[:2], axis=1) < 0.03
                 if near.any():
                     pk[2] = float(nb[near, 2].max())
-            err = self._arms(a, observation, {s_: pk + [0, 0, pinch_dz(U) - 0.003] for s_, pk in self.picks.items()},
+            err = self._arms(a, observation, {s_: (self.keep_hold[s_] if s_ in self.keep_hold
+                                                   else pk + [0, 0, pinch_dz(U) - 0.003]) for s_, pk in self.picks.items()},
                              max_dp=0.012)
             if err < 0.006 or self.t_phase > 90:
-                self.hold = {s_: observation["policy"][f"tcp_{s_}"][0, :3].cpu().numpy() for s_ in self.picks}
+                self.hold = {s_: (self.keep_hold[s_] if s_ in self.keep_hold
+                                  else observation["policy"][f"tcp_{s_}"][0, :3].cpu().numpy()) for s_ in self.picks}
                 self._set("close")
         elif self.phase in ("close", "pull"):
             for s_ in self.picks:
@@ -276,12 +362,28 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                     self.plan_log.append({"spot": self.spot_i, "grasped": got, "jitter": getattr(self, "jitter", 0),
                                           "jit_above": getattr(self, "jit_above", 0), "jit_descend": getattr(self, "jit_descend", 0),
                                           "reach_steps": getattr(self, "reach_steps", 0)})
-                    if not any(got.values()):
+                    low = [s_ for s_, k_ in got.items() if k_ < c.min_grasp]
+                    self.keep_hold = {}
+                    if self.true_picks or (low and self.regrasped < 1 and any(got.values())):
+                        # one hand caught nothing: it opens, rises and pinches again; the other holds on (D-70)
+                        self.regrasped += 1
+                        redo = set(self.true_picks) | set(low)
+                        self.keep_hold = {s_: self.hold[s_] for s_ in self.picks if s_ not in redo}
+                        for s_, pk_ in self.true_picks.items():
+                            self.picks[s_] = pk_
+                        self.true_picks = {}
+                        self.meta["events"].append(["regrasp", got, self.n_step])
+                        self._set("reopen")
+                    elif not any(got.values()):
                         self.spot_i += 1
                         self._set("release")
                     else:
                         # total edge travel: from its x to `overhang` beyond the mattress side; the arms give part
                         travel = self.edge_x - (lo[0] - c.overhang)
+                        if self.meta["recovery"] == "short_pull" and not self.meta.get("shortened"):
+                            travel -= c.short_by  # D-70: stop short, the next spot pulls again
+                            self.meta["shortened"] = True
+                            self.meta["events"].append(["short_pull", self.n_step])
                         self.reverse_s = max(0.0, travel) / c.reverse_v
                         self.start = {s_: v.copy() for s_, v in self.hold.items()}
                         self._set("pull", "pull the duvet")
@@ -296,6 +398,14 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                     self.plan_log.append({"spot": self.spot_i, "pulled_s": round(self.reverse_s, 2)})
                     self.spot_i += 1
                     self._set("release")
+        elif self.phase == "reopen":  # the re-grasping hand opens and rises 4 cm, then comes down on its pick again
+            if self.t_phase == 1:
+                self.reopen_from = {s_: observation["policy"][f"tcp_{s_}"][0, :3].cpu().numpy() for s_ in self.picks}
+            self._arms(a, observation, {s_: (self.keep_hold[s_] if s_ in self.keep_hold
+                                             else v + [0, 0, 0.04 if self.t_phase > 6 else 0.0])
+                                        for s_, v in self.reopen_from.items()}, max_dp=0.012)
+            if self.t_phase > 25:
+                self._set("descend")
         elif self.phase == "release":
             if self.t_phase == 1:
                 self.hold = {s_: observation["policy"][f"tcp_{s_}"][0, :3].cpu().numpy() + [0, 0, 0.01]
@@ -311,4 +421,6 @@ class Bed01EasyOracle(Bed03OraclePolicy, PolicyBase[Bed01EasyOracleCfg]):  # Are
                 done = task.evaluate_cached(U)[0]
                 self.plan_log.append({"after_spot": self.spot_i, "coverage": round(float(done["coverage"]), 3)})
                 self._set("finished" if done["success"] and done["stages"].get("duvet_neat") else "plan")
+        for s_ in self.keep_hold:  # D-70: the holding hand stays closed while the other re-grasps
+            a[12 if s_ == "right" else 13] = 0.0
         return torch.as_tensor(a, device=U.device).unsqueeze(0).repeat(U.num_envs, 1)

@@ -28,7 +28,8 @@ import torch
 from isaaclab_arena.assets.register import register_policy
 from isaaclab_arena.policy.policy_base import PolicyBase, PolicyCfg
 
-from dxbench.policies.oracle_bed03 import AXLE_X, BASE_FRONT_X, Bed03OraclePolicy, _T, pinch_dz, wrap
+from dxbench.policies.oracle_bed03 import (AXLE_X, BASE_FRONT_X, Bed03OraclePolicy, _T, align_step, episode_rng,
+                                           pinch_dz, wrap)
 
 # TCP height above the cloth surface when pinching: oracle_bed03.pinch_dz (fingertips 8 mm above for the cylinder
 # assist, 2 mm into the cloth for the pad assist)
@@ -107,9 +108,18 @@ class Bed02OraclePolicyCfg(PolicyCfg):
     align_pos_tol: float = 0.004
     # a pinch holding fewer than min_grasp nodes opens, comes down 3 mm lower and closes again (up to max_regrasp
     # times). The quarter fold with 3-5 nodes left the square open in 15/15 runs, 8-12 nodes held (b02reach)
-    min_grasp: int = 6
+    # D-70: a pinch that caught nothing (any move) opens and comes down again; 1 node is enough - re-grasping a thin pinch
+    # (D-68 rule: < 6 nodes, quarter fold) did not catch more (4 -> 2 -> 1 nodes, 2026-11-02 gate)
+    min_grasp: int = 1
     max_regrasp: int = 2
-    regrasp_moves: str = "quarter"
+    regrasp_moves: str = "half2,nudge,right,left,shift,quarter,stack"
+    # D-70 (user 2026-11-02, data diversity): per episode (drawn from the scene seed), with p_miss one pinch of one move
+    # closes miss_dz too high, catches nothing and is re-grasped (recovery data; a pinch moved outwards along the towel
+    # still caught it and put the arm near its reach limit). The side folds go left first with p_left_first (two
+    # strategies, same speed)
+    p_miss: float = 0.25
+    miss_dz: float = 0.03
+    p_left_first: float = 0.5
     work_preset_steps: int = 1   # lean: crouch cannot reach z 0.8-0.9 near the centre line at x 0.6 (reach_desk_0.0.json)
     debug: bool = False           # print per-arm base-frame target / TCP / error every 15 steps
     device: str = "cuda:0"
@@ -154,6 +164,9 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         self.arc_s = 0.0
         self.axes = None
         self.tilt = {"right": 0.0, "left": 0.0}
+        self.n_step = 0
+        self.miss = None
+        self.meta = {}
 
     def _set(self, phase, subtask=None):
         self.phase, self.t_phase = phase, 0
@@ -218,9 +231,22 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
             out[k[5:]] = (round(float((d < 0.05).mean()), 2), round(float(np.median(d)), 3))
         return out
 
+    def _draw_episode(self):
+        """D-70: strategy and injected failure of this episode, from the scene seed."""
+        rng = episode_rng(2)
+        left_first = bool(rng.random() < self.cfg.p_left_first)
+        if rng.random() < self.cfg.p_miss:
+            move = ["half2", "right", "left", "stack"][int(rng.integers(4))]
+            side = {"right": "right", "left": "left"}.get(move, ["right", "left"][int(rng.integers(2))])
+            self.miss = (move, side)
+        self.meta = {"strategy": "left_first" if left_first else "right_first",
+                     "recovery": f"miss_{self.miss[0]}_{self.miss[1]}" if self.miss else None, "events": []}
+
     def _start_moves(self):
         self.moves = (["half2", "nudge", "right_n", "right_f", "left_n", "left_f", "stack"]
                       if self.cfg.side_corners else ["half2", "nudge", "right", "left", "stack"])
+        if self.meta.get("strategy") == "left_first" and not self.cfg.side_corners:
+            self.moves[2:4] = ["left", "right"]
         if self.cfg.quarter:
             self.moves[-1:-1] = ["shift", "quarter"]
         if self.cfg.order:
@@ -238,52 +264,9 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         return self.cfg.arc_h
 
     def _align(self, U):
-        """(v, w) of the D-68 move to the nominal pose; self.al["stage"] becomes "done" there. Steers the drive axle
-        (the point the base turns about): turning in place does not move it."""
-        p, yaw = self._h._base(U)
-        f_now = np.array([math.cos(yaw), math.sin(yaw)])
-        ax = p[:2] + AXLE_X * f_now
-        al, tgt, yaw_t = self.al, self.al["axle"], self.al["yaw"]
-        f_t = np.array([math.cos(yaw_t), math.sin(yaw_t)])
-        d = tgt - ax
-        w_max = self.cfg.max_w
-        if al["stage"] == "check":
-            al["lat0"] = round(float(d @ np.array([-f_t[1], f_t[0]])), 4)
-            al["depth0"] = round(float(d @ f_t), 4)
-            al["stage"] = "back" if abs(al["lat0"]) > self.cfg.align_lat_tol else "turn_final"
-            al["from"] = ax.copy()
-        if al["stage"] == "back":  # straight back, off the desk
-            if float((al["from"] - ax) @ f_now) >= self.cfg.align_back:
-                al["stage"] = "turn_to"
-            else:
-                return -0.10, 0.0
-        if al["stage"] == "turn_to":
-            e = wrap(math.atan2(d[1], d[0]) - yaw)
-            if abs(e) > 0.01:
-                return 0.0, float(np.clip(2.0 * e, -w_max, w_max))
-            al["stage"], al["head"] = "drive", math.atan2(d[1], d[0])
-        if al["stage"] == "drive":
-            dist = float(np.linalg.norm(d))
-            if dist > 0.03:  # steer at the target; the last 3 cm on the heading held so far
-                al["head"] = math.atan2(d[1], d[0])
-            hd = np.array([math.cos(al["head"]), math.sin(al["head"])])
-            rem = float(d @ hd)
-            if rem > self.cfg.align_pos_tol:
-                e = wrap(al["head"] - yaw)
-                return min(0.12, 0.8 * rem + 0.02) * math.cos(e) ** 2, float(np.clip(2.0 * e, -w_max, w_max))
-            al["stage"] = "turn_final"
-        if al["stage"] == "turn_final":
-            e = wrap(yaw_t - yaw)
-            if abs(e) > 0.005:
-                return 0.0, float(np.clip(2.0 * e, -w_max, w_max))
-            al["stage"] = "straight"
-        if al["stage"] == "straight":  # the distance left along the heading (forwards or backwards)
-            s_ = float(d @ f_t)
-            if abs(s_) > self.cfg.align_pos_tol:
-                v = math.copysign(max(0.015, min(0.06, abs(s_))), s_)
-                return v, float(np.clip(2.0 * wrap(yaw_t - yaw), -w_max, w_max))
-            al["stage"] = "done"
-        return 0.0, 0.0
+        """(v, w) of the D-68 move to the nominal pose (oracle_bed03.align_step)."""
+        c = self.cfg
+        return align_step(self._h, U, self.al, c.align_back, c.align_lat_tol, c.align_pos_tol, c.max_w)
 
     @staticmethod
     def _strip_v(pu, pv, ua, ub):
@@ -438,6 +421,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
         if getattr(self, "held", None) is not None:  # a held flap stays pinched between moves
             a[ARM[self.held[0]][1]] = 0.0
         self.t_phase += 1
+        self.n_step += 1  # frame index of this action in a recording (run_episode records before each step)
         tidx = int(U.action_manager.get_term("torso").preset_index[0])
 
         def torso_to(idx):
@@ -449,6 +433,7 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
 
         task = task_env.CURRENT_TASK
         if self.phase == "init":
+            self._draw_episode()
             self.target = task.cloth_names[0]
             self._set("approach", "pick up a shirt")
         if self.phase == "approach":
@@ -526,6 +511,12 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                 self._set("retract")
             else:
                 self.mv = self._plan(U, self.moves.pop(0), task)
+                if self.miss and self.mv["move"] == self.miss[0] and not self.meta.get("missed"):
+                    arm = next((a_ for a_ in self.mv["arms"] if a_["side"] == self.miss[1]), self.mv["arms"][0])
+                    arm["true_pick"] = arm["pick"].copy()
+                    arm["pick"] = arm["pick"] + [0.0, 0.0, self.cfg.miss_dz]
+                    self.meta["missed"] = True
+                    self.meta["events"].append(["miss", self.mv["move"], arm["side"], self.n_step])
                 self.plan_log.append({"move": self.mv["move"], "arms": [
                     {k: (x.tolist() if hasattr(x, "tolist") else x) for k, x in arm.items()} for arm in self.mv["arms"]]})
                 self._set("above", self.mv["label"])
@@ -611,7 +602,11 @@ class Bed02OraclePolicy(PolicyBase[Bed02OraclePolicyCfg]):
                     self.mv["regrasps"] = n_re + 1
                     self.plan_log[-1].setdefault("regrasp", []).append(g_)
                     for arm in self.mv["arms"]:
-                        arm["pick"] = arm["pick"] + [0, 0, -0.003]
+                        if "true_pick" in arm:  # the injected miss: back to the right spot
+                            arm["pick"] = arm.pop("true_pick")
+                        elif g_.get(arm["side"], 99) < self.cfg.min_grasp:
+                            arm["pick"] = arm["pick"] + [0, 0, -0.003]
+                    self.meta.setdefault("events", []).append(["regrasp", self.mv["move"], g_, self.n_step])
                     self._set("reopen")
                 else:
                     self._set("lift")
