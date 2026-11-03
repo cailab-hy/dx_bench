@@ -1,0 +1,12 @@
+# D-70 T1: SmolVLA fine-tuned 20k steps on bed_all_d70_dx24 (task-weighted n^0.43), the 10 easy evaluation scenes
+name: t1_bed01_eval
+policy: dxbench.policies.rby1_lerobot_remote.Rby1LerobotRemotePolicy
+policy_kw: {remote_port: 8791, open_loop_horizon: 10}
+env_args: [--embodiment, rby1_joint]
+tasks: {BED-01: [easy]}
+scenes_dir: benchmarks/dx_bed_v0/scenes
+server: ~/miniforge3/envs/dx_policy/bin/python -m dxbench_policy.serve.server --backend lerobot --checkpoint ${T1_CKPT:-outputs/train/smolvla_t1/checkpoints/last/pretrained_model} --chunk 10 --port 8791
+video: true   # the policy needs the camera images (also writes the mp4s)
+timeout_s: 7200
+parallel: 6
+max_steps: 900   # oracle succeeds in ~260 steps (17 s); 900 = the D-70 collection cap

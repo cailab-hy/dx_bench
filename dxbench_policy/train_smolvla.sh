@@ -4,6 +4,8 @@
 #   DATA=data/lerobot/bed03_oracle_v2_dx24 OUT=outputs/train/smolvla_bed03 STEPS=20000 dxbench_policy/train_smolvla.sh
 # DX_TASK_ALPHA=0.43: task-weighted frame sampling (D-70, dxbench_policy/train/weighted_sampler.py) instead of lerobot's
 # frame-proportional order; the dataset needs meta/dx_sources.json (raw_to_lerobot)
+# --tolerance_s 1e-3 (lerobot default 1e-4): in a multi-episode video file the frame timestamps run past 1800 s and the
+# decoded time differed from the query by exactly 1e-4 (float rounding), which stopped the D-70 run at step 243
 set -eu
 cd "$(dirname "$0")/.."
 PY=${PY:-$HOME/miniforge3/envs/dx_policy/bin}
@@ -19,4 +21,4 @@ TRAIN=("$PY/lerobot-train")
   --policy.path=lerobot/smolvla_base --policy.push_to_hub=false --policy.device=cuda \
   --rename_map='{"observation.images.front": "observation.images.camera1", "observation.images.right": "observation.images.camera2", "observation.images.left": "observation.images.camera3"}' \
   --output_dir="$OUT" --steps="$STEPS" --batch_size="$BS" --num_workers=${WORKERS:-6} \
-  --save_freq=${SAVE:-5000} --log_freq=200 --wandb.enable=false --seed=1 ${EXTRA:-}
+  --save_freq=${SAVE:-5000} --log_freq=200 --wandb.enable=false --seed=1 --tolerance_s=${TOL_S:-1e-3} ${EXTRA:-}
