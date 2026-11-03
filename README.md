@@ -2,7 +2,12 @@
 
 A VLA / world-action-model benchmark for the Rainbow Robotics RB-Y1 in the DX Hub 11F CareRoom digital twin. It
 runs on Isaac Sim 6.1, Isaac Lab 3.0 and IsaacLab-Arena 0.3.1 with the PhysX backend. It covers three bedroom
-tasks: BED-01 make the bed, BED-02 fold clothes, BED-03 laundry to the basket.
+tasks: BED-01 make the bed, BED-02 fold the towel, BED-03 laundry to the basket.
+
+Status (2026-11-03): scripted privileged oracles solve the Easy level of all three tasks (BED-01 9/10, BED-02 10/10,
+BED-03 8/10 evaluation scenes). Their demonstrations (D-70) vary the scene layout, robot start, lighting, garment
+colours and crumpling, mix two strategies per task and include injected failures with recovery; one demonstration per
+task is in [`samples/`](samples/README.md). Medium / Hard oracles and learned policies are next.
 
 Get it (the RB-Y1 model and IsaacLab-Arena are submodules):
 
@@ -13,7 +18,8 @@ git clone --recursive https://github.com/cailab-hy/dx_bench.git
 Not in this repository:
 - the DX Hub 11F building twin (`DX_Hub_Building_add_obj_v1`, CareRoom USD): the tasks load it from
   `~/P2-DX_project` (`dxbench/dxbench/paths.py`); ask the lab for access;
-- demonstration datasets, raw recordings, checkpoints and run logs (`data/`, `outputs/`, tens of GB);
+- demonstration datasets, raw recordings, checkpoints and run logs (`data/`, `outputs/`, tens of GB) - except one
+  sample demonstration per task in `samples/`;
 - third-party photos and videos used while matching the cloth to real garments (product photos, YouTube frames,
   our own footage): the reports keep the numbers.
 
@@ -31,8 +37,9 @@ Start here:
 |---|---|
 | `dxbench/` | `dx_arena` package: assets, RB-Y1 embodiments (`rby1_joint`, `rby1_ik`), tasks, oracles, teleop + raw recorder, policy client, benchmark runner. Never imports lerobot |
 | `dxbench_policy/` | `dx_policy` package: LeRobot v3 conversion / validation, websocket policy server (hold / replay / ACT / SmolVLA), ACT training wrapper |
+| `samples/` | One oracle demonstration per task (LeRobot v3, 17 MB) with its scene and cloth state, for viewing and replay |
 | `benchmarks/dx_bed_v0/` | Fixed evaluation scenes (3 tasks × 3 difficulties × 10), settled cloth states, experiment YAMLs, `RESULTS.md` |
-| `tools/` | Stage scripts: cloth spike, RB-Y1 regression (`rby1_check/`), state generation, oracle / demo / replay / stage 4–5 pipelines |
+| `tools/` | Stage scripts: cloth spike, RB-Y1 regression (`rby1_check/`), state generation (`make_states.sh`), demo collection (`collect_demos.sh`), episode viewer / replay (`view_episode.py`, `replay_episode.sh`), `diversity_report.py`, stage 4–5 pipelines |
 | `reports/` | Per-stage and per-study reports (`cloth_spike`, `rby1_check`, `stage3`–`stage5`, `stage_v2`, cloth material studies: `swing`, `crumple`, `duvet_match`, `tee_match`, `towel_match`) |
 | `docs/` | `action_space.md`, `BENCHMARK.md`, `PIPELINE.md`, notes |
 | `config/cloth_params.yaml` | Cloth simulation parameters (stage 1) |
@@ -143,6 +150,76 @@ $A -m dxbench.bench.run_benchmark benchmarks/dx_bed_v0/experiments/oracle_bed03.
 $A -m pytest -q dxbench/tests dxbench/dxbench/teleop/vr
 ~/miniforge3/envs/dx_policy/bin/python -m pytest -q dxbench_policy/tests
 ```
+
+## Sample data: view and replay an oracle demonstration
+
+[`samples/oracle_d70_dx24`](samples/README.md) is a LeRobot v3 dataset with one oracle demonstration per task
+(episode 0 BED-01, 1 BED-02, 2 BED-03): 24-D state / action (`dx24`, see [`docs/action_space.md`](docs/action_space.md)),
+head and wrist cameras (240 × 320), the subtask index per frame, and in `meta/dx_episodes/` each episode's scene values,
+oracle strategy and success frame. `scenes/` holds the three scene JSONs with their settled cloth states.
+
+**Look at it without the simulator** (`dx_policy`):
+
+```bash
+conda activate dx_policy
+python tools/view_episode.py samples/oracle_d70_dx24 2 outputs/view_bed03.mp4    # cameras + instruction, subtask, commands
+python - <<'PY'
+from lerobot.datasets.lerobot_dataset import LeRobotDataset
+ds = LeRobotDataset("dxbench/oracle_d70_sample", root="samples/oracle_d70_dx24")
+s = ds[0]
+print(ds.num_episodes, len(ds), s["task"], s["action"].shape, s["observation.images.front"].shape)
+PY
+```
+
+**Replay it in the simulator** (both environments, the DX Hub twin installed): the policy server streams the recorded
+actions and `run_episode.py` plays them open loop on `rby1_joint` in the episode's scene, filming the three robot
+cameras and a third-person view:
+
+```bash
+tools/replay_episode.sh samples/oracle_d70_dx24 0 samples/oracle_d70_dx24/scenes/bed01_easy_train_10057.json outputs/replay/bed01
+tools/replay_episode.sh samples/oracle_d70_dx24 1 samples/oracle_d70_dx24/scenes/bed02_easy_train_10053.json outputs/replay/bed02
+tools/replay_episode.sh samples/oracle_d70_dx24 2 samples/oracle_d70_dx24/scenes/bed03_easy_train_10008.json outputs/replay/bed03
+# -> outputs/replay/<name>/observer.mp4, head.mp4, left_wrist.mp4, right_wrist.mp4, result.json
+```
+
+Cloth physics on the GPU is not bit-reproducible, so an open-loop replay follows the recorded arm and base motion but
+the cloth can end up differently and the task may not succeed. BED-01 runs its physics at 480 Hz and replays slowly.
+
+**Re-run the oracle itself** on the same scene (closed loop; it records the demonstration again with `--record`):
+
+```bash
+conda activate dx_arena
+python dxbench/dxbench/scripts/run_episode.py --policy dxbench.policies.oracle_bed03.Bed03OraclePolicy \
+  --out outputs/oracle_bed03 --video --success_tail 15 [--record data/raw/my_demos] \
+  --external_environment_class_path dxbench.tasks.bed_tasks:DxBed03Environment dx_bed03 \
+  --scene samples/oracle_d70_dx24/scenes/bed03_easy_train_10008.json --observer
+# BED-01: dxbench.policies.oracle_bed01.Bed01EasyOracle with DxBed01Environment dx_bed01
+# BED-02: dxbench.policies.oracle_bed02.Bed02OraclePolicy with DxBed02Environment dx_bed02
+```
+
+The oracle draws its strategy and injected failure from the scene seed, so the same scene gives the same kind of
+demonstration (D-70). `--success_tail 15` keeps recording after success until the hands are released and pulled back,
+plus 1 s (D-69).
+
+## Collecting oracle demonstrations
+
+```bash
+conda activate dx_arena
+# training scenes (seeds 10000+, never the evaluation seeds) and their settled cloth states
+python -m dxbench.tasks.scene_gen --task BED-03 --difficulty easy --n 105 --seed0 10000 --split train --out data/scenes_train_d70
+STATES=data/states_d70 tools/make_states.sh data/scenes_train_d70/bed03_easy_train_*.json
+# successful episodes only, P simulations at a time, until N are saved
+N=80 P=6 POLICY=dxbench.policies.oracle_bed03.Bed03OraclePolicy RAW=data/raw/bed03_oracle_easy_d70 \
+  OUTD=outputs/demos_bed03_oracle_easy_d70 RUN_ARGS="--success_tail 15" \
+  tools/collect_demos.sh data/scenes_train_d70/bed03_easy_train_*.json
+conda activate dx_policy
+python -m dxbench_policy.convert.raw_to_lerobot --raw data/raw/bed03_oracle_easy_d70 --out data/lerobot/bed03_oracle_easy_d70_dx24 --fmt dx24 --image_scale 0.5
+python -m dxbench_policy.convert.validate --out data/lerobot/bed03_oracle_easy_d70_dx24 --raw data/raw/bed03_oracle_easy_d70
+python3 tools/diversity_report.py data/lerobot/bed03_oracle_easy_d70_dx24     # filled bins per randomized condition
+```
+
+`raw_to_lerobot` takes several `--raw` roots to build one multi-task dataset. Training with task-weighted sampling
+(each task's share ∝ its frames^0.43, D-70): `DX_TASK_ALPHA=0.43 DATA=<dataset> OUT=<dir> dxbench_policy/train_smolvla.sh`.
 
 For data collection, conversion, training and closed-loop play, see [`docs/PIPELINE.md`](docs/PIPELINE.md). For the benchmark definition, see [`docs/BENCHMARK.md`](docs/BENCHMARK.md). To add a room or a task family (e.g. the DX kitchen), see [`docs/ADDING_A_ROOM.md`](docs/ADDING_A_ROOM.md).
 

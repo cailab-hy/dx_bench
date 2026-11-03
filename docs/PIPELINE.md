@@ -59,6 +59,8 @@ Extra columns are named `dx.*`.
 ## 4. Replay check (`dx_arena` + `dx_policy`)
 
 ```bash
+# any task, video only (the task environment comes from the scene JSON):
+tools/replay_episode.sh samples/oracle_d70_dx24 2 samples/oracle_d70_dx24/scenes/bed03_easy_train_10008.json outputs/replay/bed03
 # one command: serve episode <i> of the dataset, replay it on rby1_joint, compare with the raw recording
 tools/replay_check.sh data/lerobot/bed03_oracle_dx24 0 data/raw/bed03_oracle data/scenes_train/<scene of episode 0>.json ep0
 #   -> reports/stage4/replay_check_ep0.json (base xy, joint, TCP errors; pass thresholds in compare_replay.py)
@@ -73,6 +75,8 @@ $A dxbench/dxbench/scripts/run_episode.py --policy dxbench.policies.rby1_lerobot
 ## 5. Training (`dx_policy`)
 
 ```bash
+# task-weighted frame sampling for a multi-task dataset (D-70: each task's share ∝ its frames^alpha; 1 = lerobot's default)
+DX_TASK_ALPHA=0.43 DATA=data/lerobot/<dataset> OUT=outputs/train/smolvla_x STEPS=20000 dxbench_policy/train_smolvla.sh
 DATA=data/lerobot/bed03_oracle_dx24 OUT=outputs/train/act_bed03 STEPS=20000 dxbench_policy/train_act.sh
 # SmolVLA fine-tune (camera names mapped to camera1..3)
 lerobot-train --dataset.root=data/lerobot/bed03_oracle_dx24 --dataset.repo_id=dxbench/local --policy.path=lerobot/smolvla_base \

@@ -1,0 +1,78 @@
+{
+ "scene_id": "bed03_easy_train_10008",
+ "task": "BED-03",
+ "difficulty": "easy",
+ "seed": 10008,
+ "robot": {
+  "xy": [
+   2.5550745832976585,
+   18.08565141825254
+  ],
+  "yaw": 2.3722415748153867,
+  "torso": "upright",
+  "head_pitch": 0.6
+ },
+ "objects": [
+  {
+   "name": "laundry_basket",
+   "kind": "basket",
+   "xyz": [
+    0.876527011129439,
+    18.129074443052783,
+    0.0
+   ],
+   "yaw": -2.1602035851105383,
+   "variant": "gray",
+   "cloth_state": null
+  },
+  {
+   "name": "cloth_0",
+   "kind": "tshirt",
+   "xyz": [
+    -0.4321130917691871,
+    17.591209580178017,
+    0.01
+   ],
+   "yaw": 0.1459866749017391,
+   "variant": "m95_wine",
+   "cloth_state": "samples/oracle_d70_dx24/scenes/states/bed03_easy_train_10008_cloth_0.npz"
+  },
+  {
+   "name": "cloth_1",
+   "kind": "towel",
+   "xyz": [
+    -0.9082385261014929,
+    18.72889655592184,
+    0.01
+   ],
+   "yaw": -1.5076445993782244,
+   "variant": "09_ivory",
+   "cloth_state": "samples/oracle_d70_dx24/scenes/states/bed03_easy_train_10008_cloth_1.npz"
+  }
+ ],
+ "lighting": {
+  "blinds": "half",
+  "lighting": "day_sunny",
+  "intensity": 0.7
+ },
+ "language": {
+  "high": "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918",
+  "high_alternatives": [
+   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918",
+   "Pick up the clothes from the floor and put them in the basket.",
+   "Tidy up the laundry on the floor.",
+   "Collect the clothes into the laundry basket.",
+   "Can you put the dirty clothes in the basket?",
+   "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918"
+  ],
+  "subtasks": [
+   "look for clothes",
+   "go to the shirt",
+   "pick up the shirt",
+   "go to the basket",
+   "put it in the basket",
+   "carry the basket to the door",
+   "release and step back"
+  ]
+ }
+}

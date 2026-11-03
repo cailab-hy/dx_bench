@@ -1,0 +1,54 @@
+{
+ "scene_id": "bed01_easy_train_10057",
+ "task": "BED-01",
+ "difficulty": "easy",
+ "seed": 10057,
+ "robot": {
+  "xy": [
+   0.7090811858133941,
+   19.983034596293013
+  ],
+  "yaw": 0.06750890626215938,
+  "torso": "crouch",
+  "head_pitch": 0.5,
+  "arms": "bed_reach"
+ },
+ "objects": [
+  {
+   "name": "duvet",
+   "kind": "duvet",
+   "xyz": [
+    2.4790020065089644,
+    19.908499997615813,
+    0.5500000014901162
+   ],
+   "yaw": 1.5635598546572627,
+   "variant": null,
+   "cloth_state": "samples/oracle_d70_dx24/scenes/states/bed01_easy_train_10057_duvet.npz"
+  }
+ ],
+ "lighting": {
+  "blinds": "down",
+  "lighting": "day_sunny",
+  "intensity": 0.81
+ },
+ "language": {
+  "high": "Spread the blanket over the bed.",
+  "high_alternatives": [
+   "\uce68\ub300 \uc815\ub9ac\ud574 \uc918",
+   "Please make the bed.",
+   "Tidy up the bed.",
+   "Straighten the duvet.",
+   "Can you make the bed for me?",
+   "Spread the blanket over the bed.",
+   "\uc774\ubd88 \ud3b4 \uc918"
+  ],
+  "subtasks": [
+   "grasp the duvet edge",
+   "pull the duvet",
+   "spread the duvet",
+   "straighten the duvet",
+   "release and step back"
+  ]
+ }
+}

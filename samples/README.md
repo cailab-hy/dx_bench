@@ -21,6 +21,8 @@ Each episode was chosen as the median-length one of its task, without an injecte
   stored at half size), H.264 video.
 - `dx.*` (not policy inputs): `dx.stage_id` subtask index into the task's subtask list (dxbench/tasks/predicates.py
   `TEXT`; the last entry, "release and step back", marks the frames recorded after success), base pose, TCP poses.
+- `scenes/`: the three scene JSONs and their settled cloth states (`scenes/states/`), so the episodes can be replayed
+  or the oracle re-run in the same scene.
 - `meta/dx_episodes/*.json`: the raw recording metadata of each episode - the scene's randomized values
   (`scene_spec`: layout, robot start, garment variants, lighting, instruction), the oracle's strategy and injected
   failure (`oracle_meta`), `success_frame` and the number of frames recorded after it (`tail_frames`, D-69).
@@ -31,4 +33,12 @@ The demonstrations come from a privileged oracle (it reads the cloth nodes) in t
 ```python
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 ds = LeRobotDataset("dxbench/oracle_d70_sample", root="samples/oracle_d70_dx24")
+```
+
+View an episode as a video without the simulator, or replay it open loop in the simulator (see the main README,
+"Sample data: view and replay an oracle demonstration"):
+
+```bash
+~/miniforge3/envs/dx_policy/bin/python tools/view_episode.py samples/oracle_d70_dx24 2 outputs/view_bed03.mp4
+tools/replay_episode.sh samples/oracle_d70_dx24 2 samples/oracle_d70_dx24/scenes/bed03_easy_train_10008.json outputs/replay/bed03
 ```

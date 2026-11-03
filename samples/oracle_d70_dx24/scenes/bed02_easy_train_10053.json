@@ -1,0 +1,56 @@
+{
+ "scene_id": "bed02_easy_train_10053",
+ "task": "BED-02",
+ "difficulty": "easy",
+ "seed": 10053,
+ "robot": {
+  "xy": [
+   -3.096971618390319,
+   19.100594967488455
+  ],
+  "yaw": 3.123104847384044,
+  "torso": "lean",
+  "head_pitch": 0.6,
+  "arms": "desk_reach"
+ },
+ "objects": [
+  {
+   "name": "cloth_0",
+   "kind": "towel",
+   "xyz": [
+    -3.653637350962114,
+    19.181348946312653,
+    0.7300000238418579
+   ],
+   "yaw": 1.480113357086197,
+   "variant": "12_skyblue",
+   "cloth_state": "samples/oracle_d70_dx24/scenes/states/bed02_easy_train_10053_cloth_0.npz"
+  }
+ ],
+ "lighting": {
+  "blinds": "up",
+  "lighting": "day_sunny",
+  "intensity": 0.94
+ },
+ "language": {
+  "high": "\ucc45\uc0c1 \uc704 \ube68\ub798 \uac1c \uc918",
+  "high_alternatives": [
+   "\uc637 \uac1c\uc5b4 \uc918",
+   "Please fold the laundry on the desk.",
+   "Fold the clothes on the table.",
+   "Can you fold these clothes?",
+   "Fold the towels and shirts and stack them.",
+   "\ucc45\uc0c1 \uc704 \ube68\ub798 \uac1c \uc918"
+  ],
+  "subtasks": [
+   "pick up a shirt",
+   "flatten the shirt",
+   "align the shirt",
+   "fold the left side",
+   "fold the right side",
+   "fold in half",
+   "place on the stack",
+   "release and step back"
+  ]
+ }
+}
