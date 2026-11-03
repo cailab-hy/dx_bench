@@ -83,7 +83,8 @@ class Bed01EasyOracleCfg(PolicyCfg):
     # the duvet pinch holds 2-4 nodes, and re-grasping both hands at < 3 nodes moved the duvet off the head row
     # (4/14 vs 5/5 without, 2026-11-02 gate)
     p_miss: float = 0.13
-    p_short: float = 0.12
+    p_short: float = 0.0             # D-70 collection: 0 (planned 0.12) - the pull after a short one finished the bed in
+                                     # 1/7 runs (it starts from an almost covered duvet), so these runs were only waste
     miss_out: float = 0.045
     short_by: float = 0.10
     min_grasp: int = 1

@@ -1,0 +1,48 @@
+{
+ "dataset": "samples/oracle_d70_dx24",
+ "fmt": "dx24",
+ "episodes": 3,
+ "frames": 3295,
+ "ok": true,
+ "per_episode": [
+  {
+   "episode": 0,
+   "raw": "episode-1-bed01",
+   "frames": 345,
+   "raw_frames": 345,
+   "count_ok": true,
+   "state_exact": true,
+   "action_exact": true,
+   "timestamps_ok": true,
+   "video_mse_max": 4.4236979484558105,
+   "video_ok": true,
+   "ok": true
+  },
+  {
+   "episode": 1,
+   "raw": "episode-2-bed02",
+   "frames": 1182,
+   "raw_frames": 1182,
+   "count_ok": true,
+   "state_exact": true,
+   "action_exact": true,
+   "timestamps_ok": true,
+   "video_mse_max": 5.426479816436768,
+   "video_ok": true,
+   "ok": true
+  },
+  {
+   "episode": 2,
+   "raw": "episode-3-bed03",
+   "frames": 1768,
+   "raw_frames": 1768,
+   "count_ok": true,
+   "state_exact": true,
+   "action_exact": true,
+   "timestamps_ok": true,
+   "video_mse_max": 6.048941135406494,
+   "video_ok": true,
+   "ok": true
+  }
+ ]
+}

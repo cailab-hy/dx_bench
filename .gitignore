@@ -7,6 +7,8 @@ _ext/
 # large generated data (datasets, checkpoints, videos) — see data/README.md
 data/
 outputs/
+# public sample datasets (samples/README.md): their LeRobot data/ folder is kept
+!samples/**/data/
 *.ckpt
 *.safetensors
 # stray mesh dump written to the cwd by a Kit/PhysX extension during runs
@@ -25,3 +27,4 @@ reports/professor_*/
 reports/crumple/compare.jpg
 reports/towel_match/compare*.jpg
 reports/towel_match/compare_*.mp4
+reports/towel_match/real_row.jpg

@@ -1,0 +1,178 @@
+{
+ "task": "BED-03",
+ "difficulty": "easy",
+ "scene_id": "bed03_easy_train_10008",
+ "language": {
+  "high": "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918",
+  "high_alternatives": [
+   "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918",
+   "Pick up the clothes from the floor and put them in the basket.",
+   "Tidy up the laundry on the floor.",
+   "Collect the clothes into the laundry basket.",
+   "Can you put the dirty clothes in the basket?",
+   "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918"
+  ],
+  "subtasks": [
+   "look for clothes",
+   "go to the shirt",
+   "pick up the shirt",
+   "go to the basket",
+   "put it in the basket",
+   "carry the basket to the door",
+   "release and step back"
+  ]
+ },
+ "fps": 15,
+ "physics_dt": 0.008333333333333333,
+ "policy": "dxbench.policies.oracle_bed03.Bed03OraclePolicy",
+ "teleop_device": "scripted",
+ "embodiment_action_dim": 17,
+ "joint_names": [
+  "left_wheel",
+  "right_wheel",
+  "torso_0",
+  "torso_1",
+  "torso_2",
+  "torso_3",
+  "torso_4",
+  "torso_5",
+  "left_arm_0",
+  "right_arm_0",
+  "head_0",
+  "left_arm_1",
+  "right_arm_1",
+  "head_1",
+  "left_arm_2",
+  "right_arm_2",
+  "left_arm_3",
+  "right_arm_3",
+  "left_arm_4",
+  "right_arm_4",
+  "left_arm_5",
+  "right_arm_5",
+  "left_arm_6",
+  "right_arm_6",
+  "gripper_finger_l1",
+  "gripper_finger_l2",
+  "gripper_finger_r1",
+  "gripper_finger_r2"
+ ],
+ "feature_descriptions": {
+  "observation.state16": "rby1 16-D state: right arm 7, left arm 7, gripper open [r, l] (sim: half gap / 0.05)",
+  "observation.torso": "torso_0..5 joint positions (rad)",
+  "observation.joint_pos": "all 28 joint positions, Isaac Lab order (joint_names in episode.json)",
+  "observation.joint_vel": "all 28 joint velocities",
+  "observation.base_vel": "[forward m/s, yaw rate rad/s]",
+  "observation.base_pose": "[x, y, yaw] env frame",
+  "observation.tcp_right": "[x, y, z, qx, qy, qz, qw] base frame",
+  "observation.tcp_left": "same, left",
+  "action": "the embodiment action sent to env.step (rby1_ik 17-D or rby1_joint 24-D)",
+  "action.joint_target": "resulting joint position targets of the 28 joints (absolute, rad / m)",
+  "action.rby1_16": "absolute 16-D action in rby1 order: arm targets 14 + gripper command [r, l] (1 = open)",
+  "action.torso": "torso joint targets (6)",
+  "action.base": "base (v, omega) command",
+  "stage_id": "index of the current subtask label (-1 unknown)",
+  "intervention": "1 when a human intervened",
+  "sim_time": "simulation time (s)"
+ },
+ "robot_type": "rby1",
+ "sim": "isaacsim-6.1/isaaclab-3.0/arena-0.3.1",
+ "episode_id": "594f8954f137",
+ "frames": 1768,
+ "status": "saved",
+ "success": true,
+ "score": 1.0,
+ "wall_s": 694.0639564990997,
+ "success_frame": 1543,
+ "tail_frames": 225,
+ "tail_finished": false,
+ "success_held": true,
+ "end_stages": {
+  "in_basket/cloth_0": true,
+  "in_basket/cloth_1": true
+ },
+ "end_failure": null,
+ "oracle_meta": {
+  "strategy": "tshirt_first",
+  "recovery": null,
+  "events": []
+ },
+ "scene_spec": {
+  "scene_id": "bed03_easy_train_10008",
+  "task": "BED-03",
+  "difficulty": "easy",
+  "seed": 10008,
+  "robot": {
+   "xy": [
+    2.5550745832976585,
+    18.08565141825254
+   ],
+   "yaw": 2.3722415748153867,
+   "torso": "upright",
+   "head_pitch": 0.6
+  },
+  "objects": [
+   {
+    "name": "laundry_basket",
+    "kind": "basket",
+    "xyz": [
+     0.876527011129439,
+     18.129074443052783,
+     0.0
+    ],
+    "yaw": -2.1602035851105383,
+    "variant": "gray",
+    "cloth_state": null
+   },
+   {
+    "name": "cloth_0",
+    "kind": "tshirt",
+    "xyz": [
+     -0.4321130917691871,
+     17.591209580178017,
+     0.01
+    ],
+    "yaw": 0.1459866749017391,
+    "variant": "m95_wine",
+    "cloth_state": "data/states_d70/bed03_easy_train_10008_cloth_0.npz"
+   },
+   {
+    "name": "cloth_1",
+    "kind": "towel",
+    "xyz": [
+     -0.9082385261014929,
+     18.72889655592184,
+     0.01
+    ],
+    "yaw": -1.5076445993782244,
+    "variant": "09_ivory",
+    "cloth_state": "data/states_d70/bed03_easy_train_10008_cloth_1.npz"
+   }
+  ],
+  "lighting": {
+   "blinds": "half",
+   "lighting": "day_sunny",
+   "intensity": 0.7
+  },
+  "language": {
+   "high": "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918",
+   "high_alternatives": [
+    "\ubc29\uc5d0 \uc788\ub294 \uc637 \uc815\ub9ac\ud574 \uc918",
+    "Pick up the clothes from the floor and put them in the basket.",
+    "Tidy up the laundry on the floor.",
+    "Collect the clothes into the laundry basket.",
+    "Can you put the dirty clothes in the basket?",
+    "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918"
+   ],
+   "subtasks": [
+    "look for clothes",
+    "go to the shirt",
+    "pick up the shirt",
+    "go to the basket",
+    "put it in the basket",
+    "carry the basket to the door",
+    "release and step back"
+   ]
+  }
+ }
+}

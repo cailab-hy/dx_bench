@@ -1,0 +1,259 @@
+{
+    "codebase_version": "v3.0",
+    "fps": 15,
+    "features": {
+        "observation.state": {
+            "dtype": "float32",
+            "shape": [
+                24
+            ],
+            "names": [
+                "right_arm_0",
+                "right_arm_1",
+                "right_arm_2",
+                "right_arm_3",
+                "right_arm_4",
+                "right_arm_5",
+                "right_arm_6",
+                "left_arm_0",
+                "left_arm_1",
+                "left_arm_2",
+                "left_arm_3",
+                "left_arm_4",
+                "left_arm_5",
+                "left_arm_6",
+                "right_gripper_0",
+                "left_gripper_0",
+                "torso_0",
+                "torso_1",
+                "torso_2",
+                "torso_3",
+                "torso_4",
+                "torso_5",
+                "base_v",
+                "base_omega"
+            ]
+        },
+        "action": {
+            "dtype": "float32",
+            "shape": [
+                24
+            ],
+            "names": [
+                "right_arm_0",
+                "right_arm_1",
+                "right_arm_2",
+                "right_arm_3",
+                "right_arm_4",
+                "right_arm_5",
+                "right_arm_6",
+                "left_arm_0",
+                "left_arm_1",
+                "left_arm_2",
+                "left_arm_3",
+                "left_arm_4",
+                "left_arm_5",
+                "left_arm_6",
+                "right_gripper_0",
+                "left_gripper_0",
+                "torso_0",
+                "torso_1",
+                "torso_2",
+                "torso_3",
+                "torso_4",
+                "torso_5",
+                "base_v",
+                "base_omega"
+            ]
+        },
+        "dx.stage_id": {
+            "dtype": "int64",
+            "shape": [
+                1
+            ],
+            "names": null
+        },
+        "dx.intervention": {
+            "dtype": "int64",
+            "shape": [
+                1
+            ],
+            "names": null
+        },
+        "dx.base_pose": {
+            "dtype": "float32",
+            "shape": [
+                3
+            ],
+            "names": [
+                "x",
+                "y",
+                "yaw"
+            ]
+        },
+        "dx.tcp_right": {
+            "dtype": "float32",
+            "shape": [
+                7
+            ],
+            "names": [
+                "x",
+                "y",
+                "z",
+                "qx",
+                "qy",
+                "qz",
+                "qw"
+            ]
+        },
+        "dx.tcp_left": {
+            "dtype": "float32",
+            "shape": [
+                7
+            ],
+            "names": [
+                "x",
+                "y",
+                "z",
+                "qx",
+                "qy",
+                "qz",
+                "qw"
+            ]
+        },
+        "observation.images.front": {
+            "dtype": "video",
+            "shape": [
+                240,
+                320,
+                3
+            ],
+            "names": [
+                "height",
+                "width",
+                "channels"
+            ],
+            "info": {
+                "video.height": 240,
+                "video.width": 320,
+                "video.codec": "av1",
+                "video.pix_fmt": "yuv420p",
+                "video.fps": 15,
+                "video.channels": 3,
+                "has_audio": false,
+                "video.g": 2,
+                "video.crf": 30,
+                "video.preset": 12,
+                "video.fast_decode": 0,
+                "video.video_backend": "pyav",
+                "video.extra_options": {},
+                "is_depth_map": false
+            }
+        },
+        "observation.images.right": {
+            "dtype": "video",
+            "shape": [
+                240,
+                320,
+                3
+            ],
+            "names": [
+                "height",
+                "width",
+                "channels"
+            ],
+            "info": {
+                "video.height": 240,
+                "video.width": 320,
+                "video.codec": "av1",
+                "video.pix_fmt": "yuv420p",
+                "video.fps": 15,
+                "video.channels": 3,
+                "has_audio": false,
+                "video.g": 2,
+                "video.crf": 30,
+                "video.preset": 12,
+                "video.fast_decode": 0,
+                "video.video_backend": "pyav",
+                "video.extra_options": {},
+                "is_depth_map": false
+            }
+        },
+        "observation.images.left": {
+            "dtype": "video",
+            "shape": [
+                240,
+                320,
+                3
+            ],
+            "names": [
+                "height",
+                "width",
+                "channels"
+            ],
+            "info": {
+                "video.height": 240,
+                "video.width": 320,
+                "video.codec": "av1",
+                "video.pix_fmt": "yuv420p",
+                "video.fps": 15,
+                "video.channels": 3,
+                "has_audio": false,
+                "video.g": 2,
+                "video.crf": 30,
+                "video.preset": 12,
+                "video.fast_decode": 0,
+                "video.video_backend": "pyav",
+                "video.extra_options": {},
+                "is_depth_map": false
+            }
+        },
+        "timestamp": {
+            "dtype": "float32",
+            "shape": [
+                1
+            ],
+            "names": null
+        },
+        "frame_index": {
+            "dtype": "int64",
+            "shape": [
+                1
+            ],
+            "names": null
+        },
+        "episode_index": {
+            "dtype": "int64",
+            "shape": [
+                1
+            ],
+            "names": null
+        },
+        "index": {
+            "dtype": "int64",
+            "shape": [
+                1
+            ],
+            "names": null
+        },
+        "task_index": {
+            "dtype": "int64",
+            "shape": [
+                1
+            ],
+            "names": null
+        }
+    },
+    "total_episodes": 3,
+    "total_frames": 3295,
+    "total_tasks": 3,
+    "chunks_size": 1000,
+    "data_files_size_in_mb": 100,
+    "video_files_size_in_mb": 200,
+    "data_path": "data/chunk-{chunk_index:03d}/file-{file_index:03d}.parquet",
+    "video_path": "videos/{video_key}/chunk-{chunk_index:03d}/file-{file_index:03d}.mp4",
+    "robot_type": "rby1",
+    "splits": {
+        "train": "0:3"
+    }
+}

@@ -1,0 +1,29 @@
+[
+ {
+  "episode_index": 0,
+  "raw": "episode-1-bed01",
+  "frames": 345,
+  "task": "BED-01",
+  "scene_id": "bed01_easy_train_10057",
+  "score": 1.0,
+  "language": "Spread the blanket over the bed."
+ },
+ {
+  "episode_index": 1,
+  "raw": "episode-2-bed02",
+  "frames": 1182,
+  "task": "BED-02",
+  "scene_id": "bed02_easy_train_10053",
+  "score": 1.0,
+  "language": "\ucc45\uc0c1 \uc704 \ube68\ub798 \uac1c \uc918"
+ },
+ {
+  "episode_index": 2,
+  "raw": "episode-3-bed03",
+  "frames": 1768,
+  "task": "BED-03",
+  "scene_id": "bed03_easy_train_10008",
+  "score": 1.0,
+  "language": "\ubc14\ub2e5\uc5d0 \uc788\ub294 \uc637 \ubc14\uad6c\ub2c8\uc5d0 \ub123\uc5b4 \uc918"
+ }
+]
