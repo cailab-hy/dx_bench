@@ -15,7 +15,7 @@ DX허브 11층 디지털 트윈에서 Rainbow Robotics RB-Y1으로 VLA·World Ac
 - git: 단계마다 로컬 커밋 `stage N: ...`, **push 금지**(공개 레포 github.com/cailab-hy/dx_bench 는 사용자가 직접 push, 2026-10-26).
   공개 레포에 넣지 말 것: 실행·학습 로그(`*.log`, `logs/`), 교수님 보고 폴더(`reports/professor_*`), 쇼핑몰 제품 사진·유튜브 프레임·
   사용자가 찍은 실물 영상 프레임(`.gitignore`에 등록, 로컬 보관). 기록 정리 전 전체 백업: `outputs/backup/dx_bench_before_public_*.bundle`.
-- 용량: 5 GB 넘는 모델/데이터 다운로드 금지, 데이터·결과 합계 50 GB 이하(`data/`, `outputs/`는 gitignore).
+- 용량: 5 GB 넘는 모델/데이터 다운로드 금지, 데이터·결과 합계 100 GB 이하(사용자 2026-11-03, 이전 50 GB; `data/`, `outputs/`는 gitignore).
 
 ## RB-Y1 사실 (0단계 `reports/rby1_check/REPORT.md`)
 
