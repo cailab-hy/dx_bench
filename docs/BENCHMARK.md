@@ -25,10 +25,14 @@ The predicates are pure numpy and are tested in `dxbench/tests/test_predicates.p
 ## Splits
 
 - **Evaluation:** `benchmarks/dx_bed_v0/scenes/<task>_<difficulty>_<seed>.json`, 10 fixed scenes per task × difficulty (90 in total), seeds 0–9.
-- **Training / demonstration:** `data/scenes_train/`, seeds 10000+. Seeds never overlap with evaluation.
-- **Garment variants (OOD):**
-  - Training uses T-shirts `m_blue` and `s_red`, and full-size towels.
-  - Evaluation uses the unseen T-shirts `l_gray` (115 % scale) and `m_white`, and small towels.
+- **Training / demonstration:** `data/scenes_train_d70/` (D-70; `data/scenes_train/` before), seeds 10000+. Seeds never
+  overlap with evaluation. Training scenes vary more than the evaluation ones (D-68, D-70): BED-01 duvet slid 47-56 cm,
+  ±0.03 rad, robot ±10 cm / ±0.1 rad; BED-02 towel ±15 cm sideways, robot ±8 cm / ±0.1 rad; BED-03 three start spots
+  facing anywhere, crumpled garments, three T-shirt colours. The oracles mix two strategies and inject failures they
+  recover from; one demonstration per task is in `samples/`.
+- **Garment variants:** the T-shirt is the real product's `m95` tee (D-36): evaluation scenes use the wine one, training
+  scenes wine, blue and green (D-70). Towels come in ten colours in both splits. (Until 2026-10-22 evaluation used unseen
+  T-shirt sizes / colours, `l_gray` and `m_white`; only the wine tee arrived as a real product.)
 - **Cloth initial states:** "drop and settle" node positions in `benchmarks/dx_bed_v0/states/*.npz`. Every reset loads them, so evaluation scenes are deterministic (`tools/make_states.sh`).
 
 ## Robot and interfaces

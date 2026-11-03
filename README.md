@@ -183,7 +183,9 @@ tools/replay_episode.sh samples/oracle_d70_dx24 2 samples/oracle_d70_dx24/scenes
 ```
 
 Cloth physics on the GPU is not bit-reproducible, so an open-loop replay follows the recorded arm and base motion but
-the cloth can end up differently and the task may not succeed. BED-01 runs its physics at 480 Hz and replays slowly.
+the cloth can end up differently and the task may not succeed. In our check (2026-11-03) all three sample replays
+succeeded within two steps of the recorded success frame (262 / 1114 / 1543). BED-01 runs its physics at 480 Hz and
+replays slowly.
 
 **Re-run the oracle itself** on the same scene (closed loop; it records the demonstration again with `--record`):
 
